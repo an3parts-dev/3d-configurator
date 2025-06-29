@@ -11,8 +11,7 @@ interface ModelViewerProps {
 
 const BrakeLineModel: React.FC<{ configuration: Configuration }> = ({ configuration }) => {
   const groupRef = useRef<Group>(null);
-  // Updated to use local model path - fallback to external if local doesn't exist
-  const { scene } = useGLTF('/models/brake-line.glb');
+  const { scene } = useGLTF('/models/brakeline.glb');
   
   useFrame((state) => {
     if (groupRef.current) {

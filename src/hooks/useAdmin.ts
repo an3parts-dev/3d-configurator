@@ -5,7 +5,7 @@ const mockProducts: Product[] = [
   {
     id: '1',
     name: 'Brake Line Configurator',
-    modelUrl: '/models/brake-line.glb', // Updated to use local path
+    modelUrl: '/models/brakeline.glb',
     description: 'Custom brake line configurator with multiple fitting options',
     basePrice: 45.00,
     isActive: true,
