@@ -305,12 +305,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 
   const renderOptionGroup = (group: any, childOptions: any[]) => (
-    <motion.div
-      key={group.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
-    >
+    <div key={group.id} className="space-y-6">
       {/* Group Title - Only show if showTitle is not false */}
       {group.showTitle !== false && (
         <div className="flex items-center space-x-3 mb-6">
@@ -328,7 +323,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       <div className="space-y-6">
         {childOptions.map(option => renderOption(option))}
       </div>
-    </motion.div>
+    </div>
   );
 
   const renderOption = (option: any) => {
@@ -480,8 +475,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 3D Canvas - 50% screen height */}
-      <div className="relative" style={{ height: '50vh' }}>
+      {/* Sticky 3D Canvas - Fixed height */}
+      <div className="sticky top-0 z-10 bg-gray-800" style={{ height: '50vh' }}>
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
@@ -590,54 +585,52 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
       </div>
 
-      {/* Options Panel - 50% screen height */}
-      <div className="bg-gray-900 border-t border-gray-700 flex flex-col" style={{ height: '50vh' }}>
-        <div className="flex-1 overflow-auto p-6">
-          {visibleOptions.length === 0 && groupedOptions.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-8 h-8 border-2 border-gray-500 border-t-blue-400 rounded-full"
-                />
-              </div>
-              <p className="text-lg font-medium">No options available</p>
-              <p className="text-sm mt-1">
-                {configuratorData.options.length > 0 
-                  ? 'Options are hidden by conditional logic'
-                  : 'Add options in the left panel to see them here'
-                }
-              </p>
+      {/* Scrollable Options Panel - Takes remaining space */}
+      <div className="flex-1 bg-gray-900 p-6">
+        {visibleOptions.length === 0 && groupedOptions.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-8 h-8 border-2 border-gray-500 border-t-blue-400 rounded-full"
+              />
             </div>
-          ) : (
-            <div className="space-y-8">
-              {/* Render grouped options */}
-              {groupedOptions.map((option) => {
-                if (option.isGroup) {
-                  const childOptions = ConditionalLogicEngine.getChildOptions(option.id, configuratorData.options)
-                    .filter(child => ConditionalLogicEngine.shouldShowOption(child, selectedValues, configuratorData.options));
-                  
-                  if (childOptions.length === 0) return null;
-                  
-                  return renderOptionGroup(option, childOptions);
-                } else {
-                  // Render standalone options in their own container
-                  return (
-                    <motion.div
-                      key={option.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
-                    >
-                      {renderOption(option)}
-                    </motion.div>
-                  );
-                }
-              })}
-            </div>
-          )}
-        </div>
+            <p className="text-lg font-medium">No options available</p>
+            <p className="text-sm mt-1">
+              {configuratorData.options.length > 0 
+                ? 'Options are hidden by conditional logic'
+                : 'Add options in the left panel to see them here'
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Render grouped options */}
+            {groupedOptions.map((option) => {
+              if (option.isGroup) {
+                const childOptions = ConditionalLogicEngine.getChildOptions(option.id, configuratorData.options)
+                  .filter(child => ConditionalLogicEngine.shouldShowOption(child, selectedValues, configuratorData.options));
+                
+                if (childOptions.length === 0) return null;
+                
+                return renderOptionGroup(option, childOptions);
+              } else {
+                // Render standalone options in their own container
+                return (
+                  <motion.div
+                    key={option.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gray-750 p-6 rounded-xl border border-gray-600"
+                  >
+                    {renderOption(option)}
+                  </motion.div>
+                );
+              }
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
