@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   GripVertical,
   Edit,
@@ -22,12 +22,14 @@ interface DragItem {
   type: string;
   isChild: boolean;
   originalParentId?: string;
+  groupId?: string;
 }
 
 interface DragDropOptionProps {
   option: ConfiguratorOption;
   index: number;
   onMove: (dragIndex: number, hoverIndex: number) => void;
+  onMoveWithinGroup?: (groupId: string, dragIndex: number, hoverIndex: number) => void;
   onEdit: (option: ConfiguratorOption) => void;
   onDelete: (optionId: string) => void;
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
@@ -35,13 +37,15 @@ interface DragDropOptionProps {
   allOptions?: ConfiguratorOption[];
   childOptions?: ConfiguratorOption[];
   isChild?: boolean;
-  visualIndex: number; // New prop for visual ordering
+  visualIndex: number;
+  groupId?: string;
 }
 
 const DragDropOption: React.FC<DragDropOptionProps> = ({
   option,
   index,
   onMove,
+  onMoveWithinGroup,
   onEdit,
   onDelete,
   onEditConditionalLogic,
@@ -49,23 +53,27 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   allOptions = [],
   childOptions = [],
   isChild = false,
-  visualIndex
+  visualIndex,
+  groupId
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
+  const [isDragHovered, setIsDragHovered] = useState(false);
 
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
     item: (): DragItem => ({ 
       id: option.id, 
-      index: visualIndex, // Use visual index instead of array index
+      index: isChild ? index : visualIndex,
       type: 'option',
       isChild,
-      originalParentId: option.parentId 
+      originalParentId: option.parentId,
+      groupId: groupId
     }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    canDrag: () => !isChild, // Only allow dragging root-level items
+    canDrag: () => true, // Allow dragging both root and child items
   });
 
   const [{ isOver, canDrop }, drop] = useDrop({
@@ -73,37 +81,67 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     hover: (item: DragItem, monitor) => {
       if (!ref.current) return;
       
-      // Don't allow reordering if this is a child item or the dragged item is a child
-      if (isChild || item.isChild) return;
-      
       const dragIndex = item.index;
-      const hoverIndex = visualIndex;
+      const hoverIndex = isChild ? index : visualIndex;
 
       if (dragIndex === hoverIndex) return;
 
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) return;
-      
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      // Handle reordering within the same group
+      if (isChild && item.isChild && item.groupId === groupId) {
+        if (onMoveWithinGroup && groupId) {
+          const hoverBoundingRect = ref.current.getBoundingClientRect();
+          const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+          const clientOffset = monitor.getClientOffset();
+          if (!clientOffset) return;
+          
+          const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+          if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+            return;
+          }
+          if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+            return;
+          }
+
+          onMoveWithinGroup(groupId, dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        }
         return;
       }
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
 
-      onMove(dragIndex, hoverIndex);
-      item.index = hoverIndex;
+      // Handle root-level reordering
+      if (!isChild && !item.isChild) {
+        const hoverBoundingRect = ref.current.getBoundingClientRect();
+        const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+        const clientOffset = monitor.getClientOffset();
+        if (!clientOffset) return;
+        
+        const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+          return;
+        }
+        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+          return;
+        }
+
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
+      }
     },
     drop: (item: DragItem) => {
-      // Handle group operations
+      // Handle group operations for root-level items
       if (option.isGroup && item.id !== option.id && !item.isChild) {
-        // Moving item into a group
         if (onMoveToGroup) {
           onMoveToGroup(item.id, option.id);
+        }
+        return;
+      }
+
+      // Handle moving child items out of groups
+      if (!option.isGroup && !isChild && item.isChild && item.originalParentId) {
+        if (onMoveToGroup) {
+          onMoveToGroup(item.id, null);
         }
         return;
       }
@@ -116,10 +154,12 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   // Combine drag and drop refs
   const dragDropRef = drop(ref);
-  drag(dragDropRef);
+
+  // Only attach drag to the handle
+  drag(dragHandleRef);
 
   // Create invisible drag preview
-  React.useEffect(() => {
+  useEffect(() => {
     const emptyImg = new Image();
     emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
     dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
@@ -129,36 +169,36 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   // Determine drop zone states
   const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
+  const showUngroupDropZone = isOver && canDrop && !option.isGroup && !isChild;
 
   return (
     <div ref={dragDropRef}>
       <motion.div
+        layout
         initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: 1,
+          opacity: isDragging ? 0.3 : 1,
           y: 0,
-          scale: 1,
-          rotate: 0,
-          zIndex: 1
+          scale: isDragHovered ? 1.02 : 1,
         }}
+        exit={{ opacity: 0, y: -20 }}
         transition={{ 
           type: "spring", 
           stiffness: 300, 
-          damping: 30
+          damping: 30,
+          layout: { duration: 0.2 }
         }}
         className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
           showGroupDropZone
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
+            : showUngroupDropZone
+            ? 'border-green-400 shadow-lg shadow-green-400/20 bg-green-500/10'
             : option.isGroup
             ? 'bg-purple-900/20 border-purple-500/30 hover:border-purple-400'
             : isChild
             ? 'bg-gray-750 border-gray-600 hover:border-gray-500'
             : 'border-gray-700 hover:border-gray-600 shadow-sm'
         }`}
-        style={{
-          cursor: isDragging ? 'grabbing' : (isChild ? 'default' : 'grab'),
-          opacity: isDragging ? 0.3 : 1,
-        }}
       >
         {/* Conditional Logic Indicator */}
         {hasConditionalLogic && (
@@ -176,29 +216,43 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           </div>
         )}
 
+        {/* Ungroup Drop Zone Indicator */}
+        {showUngroupDropZone && (
+          <div className="absolute inset-0 bg-green-500/20 border-2 border-green-400 border-dashed rounded-xl flex items-center justify-center z-10">
+            <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg">
+              Drop here to remove from group
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {!isChild && (
-              <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors">
-                <GripVertical className="w-5 h-5 text-gray-500" />
-              </div>
-            )}
+            {/* Drag Handle - Only this part is draggable */}
+            <div 
+              ref={dragHandleRef}
+              className="cursor-grab active:cursor-grabbing p-2 rounded-lg hover:bg-gray-700 transition-colors flex-shrink-0"
+              onMouseEnter={() => setIsDragHovered(true)}
+              onMouseLeave={() => setIsDragHovered(false)}
+            >
+              <GripVertical className="w-5 h-5 text-gray-500" />
+            </div>
+            
             {isChild && (
-              <div className="w-7 flex justify-center">
+              <div className="w-4 flex justify-center">
                 <div className="w-px h-6 bg-purple-500/50"></div>
               </div>
             )}
             
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">
                 {option.isGroup ? (
                   <FolderOpen className="w-5 h-5 text-purple-400" />
                 ) : (
                   <Layers className="w-5 h-5 text-blue-400" />
                 )}
-                <h4 className="text-white font-semibold text-lg">{option.name}</h4>
+                <h4 className="text-white font-semibold text-lg truncate">{option.name}</h4>
                 {hasConditionalLogic && (
-                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
+                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30 flex-shrink-0">
                     Conditional Logic
                   </span>
                 )}
@@ -238,7 +292,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-shrink-0">
             <div className="text-right">
               {!option.isGroup && (
                 <>
@@ -280,23 +334,30 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
       {/* Child Options for Groups */}
       {option.isGroup && childOptions.length > 0 && (
-        <div className="ml-8 mt-4 space-y-3 border-l-2 border-purple-500/30 pl-6">
-          {childOptions.map((childOption, childIndex) => (
-            <DragDropOption
-              key={childOption.id}
-              option={childOption}
-              index={childIndex}
-              visualIndex={-1} // Child options don't participate in visual ordering
-              onMove={() => {}} // Child options don't reorder
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onEditConditionalLogic={onEditConditionalLogic}
-              onMoveToGroup={onMoveToGroup}
-              allOptions={allOptions}
-              isChild={true}
-            />
-          ))}
-        </div>
+        <motion.div 
+          layout
+          className="ml-8 mt-4 space-y-3 border-l-2 border-purple-500/30 pl-6"
+        >
+          <AnimatePresence>
+            {childOptions.map((childOption, childIndex) => (
+              <DragDropOption
+                key={childOption.id}
+                option={childOption}
+                index={childIndex}
+                visualIndex={-1}
+                onMove={onMove}
+                onMoveWithinGroup={onMoveWithinGroup}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onEditConditionalLogic={onEditConditionalLogic}
+                onMoveToGroup={onMoveToGroup}
+                allOptions={allOptions}
+                isChild={true}
+                groupId={option.id}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

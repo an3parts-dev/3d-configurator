@@ -93,6 +93,58 @@ export class OptionOrderingManager {
   }
 
   /**
+   * Reorders options within a group
+   */
+  static reorderOptionsWithinGroup(
+    options: ConfiguratorOption[],
+    groupId: string,
+    dragIndex: number,
+    hoverIndex: number
+  ): ConfiguratorOption[] {
+    const groupChildren = options.filter(opt => opt.parentId === groupId);
+    
+    if (dragIndex >= groupChildren.length || hoverIndex >= groupChildren.length) {
+      return options;
+    }
+
+    // Create new order for children
+    const newChildren = [...groupChildren];
+    const draggedChild = newChildren[dragIndex];
+    newChildren.splice(dragIndex, 1);
+    newChildren.splice(hoverIndex, 0, draggedChild);
+
+    // Rebuild the options array with new child order
+    const otherOptions = options.filter(opt => opt.parentId !== groupId);
+    const result: ConfiguratorOption[] = [];
+
+    // Add options in their original order, but replace group children with reordered ones
+    for (const option of options) {
+      if (option.parentId !== groupId) {
+        result.push(option);
+      }
+    }
+
+    // Insert reordered children at the correct positions
+    let insertIndex = 0;
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].parentId === groupId) {
+        if (insertIndex === 0) {
+          // Found first child position, insert all reordered children here
+          result.splice(i, 0, ...newChildren);
+          break;
+        }
+      }
+    }
+
+    // If no children were found in original positions, append them
+    if (result.filter(opt => opt.parentId === groupId).length === 0) {
+      result.push(...newChildren);
+    }
+
+    return result;
+  }
+
+  /**
    * Moves an option to/from a group
    */
   static moveOptionToGroup(
