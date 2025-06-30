@@ -3,7 +3,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Layers, Image as ImageIcon } from 'lucide-react';
+import { Zap, Layers, Image as ImageIcon, RotateCcw } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -256,6 +256,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const controlsRef = useRef<any>(null);
 
   const handleComponentsLoaded = useCallback((components: ModelComponent[]) => {
     console.log('📦 Components loaded in preview:', components.length);
@@ -291,6 +292,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       ...prev,
       [optionId]: valueId
     }));
+  }, []);
+
+  const handleResetView = useCallback(() => {
+    if (controlsRef.current) {
+      controlsRef.current.reset();
+    }
   }, []);
 
   // Get visible options based on conditional logic (excluding groups for display)
@@ -480,8 +487,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 3D Canvas - 50% screen height */}
-      <div className="relative" style={{ height: '50vh' }}>
+      {/* 3D Canvas - Full height */}
+      <div className="relative h-full">
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
@@ -491,6 +498,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             far={100}
           />
           <OrbitControls 
+            ref={controlsRef}
             enablePan={true} 
             enableZoom={true} 
             enableRotate={true}
@@ -558,9 +566,21 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           </div>
         </div>
 
+        {/* Reset View Button */}
+        <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md rounded-xl px-4 py-3 border border-gray-600">
+          <button
+            onClick={handleResetView}
+            className="text-white flex items-center space-x-2 hover:bg-gray-700 transition-colors px-2 py-1 rounded-lg"
+            title="Reset camera view"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span className="text-sm font-medium">Reset View</span>
+          </button>
+        </div>
+
         {/* Conditional Logic Status */}
         {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-          <div className="absolute top-4 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
+          <div className="absolute top-20 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
             <div className="flex items-center space-x-2 text-purple-300">
               <motion.div
                 animate={{ rotate: 360 }}
@@ -587,71 +607,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <span>Scroll to zoom</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Options Panel - 50% screen height */}
-      <div className="bg-gray-900 border-t border-gray-700 flex flex-col" style={{ height: '50vh' }}>
-        <div className="p-4 border-b border-gray-700 flex-shrink-0 bg-gray-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-semibold text-lg">Configuration Options</h3>
-              <p className="text-gray-400 text-sm">Customize your 3D model with advanced conditional logic</p>
-            </div>
-            {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-              <div className="flex items-center space-x-2 text-purple-300 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
-                <Zap className="w-4 h-4" />
-                <span className="text-sm font-medium">Smart Options</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-auto p-6">
-          {visibleOptions.length === 0 && groupedOptions.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-8 h-8 border-2 border-gray-500 border-t-blue-400 rounded-full"
-                />
-              </div>
-              <p className="text-lg font-medium">No options available</p>
-              <p className="text-sm mt-1">
-                {configuratorData.options.length > 0 
-                  ? 'Options are hidden by conditional logic'
-                  : 'Add options in the left panel to see them here'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {/* Render grouped options */}
-              {groupedOptions.map((option) => {
-                if (option.isGroup) {
-                  const childOptions = ConditionalLogicEngine.getChildOptions(option.id, configuratorData.options)
-                    .filter(child => ConditionalLogicEngine.shouldShowOption(child, selectedValues, configuratorData.options));
-                  
-                  if (childOptions.length === 0) return null;
-                  
-                  return renderOptionGroup(option, childOptions);
-                } else {
-                  // Render standalone options in their own container
-                  return (
-                    <motion.div
-                      key={option.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
-                    >
-                      {renderOption(option)}
-                    </motion.div>
-                  );
-                }
-              })}
-            </div>
-          )}
         </div>
       </div>
     </div>

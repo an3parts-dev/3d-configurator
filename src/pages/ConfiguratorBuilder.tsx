@@ -510,7 +510,7 @@ const ConfiguratorBuilder = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-auto">
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-6">
             {/* Model Information */}
             <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
               <h3 className="text-white font-medium mb-4 flex items-center">
@@ -573,7 +573,7 @@ const ConfiguratorBuilder = () => {
             </div>
 
             {/* Options List - Display in visual order */}
-            <div className="space-y-4">
+            <div className="space-y-4 min-h-[200px]">
               {getOptionsInDisplayOrder().map((item) => {
                 if (item.isInGroup) {
                   // Skip child options here, they'll be rendered by their parent group
@@ -620,7 +620,7 @@ const ConfiguratorBuilder = () => {
       <div className="w-1/2 bg-gray-800 flex flex-col">
         <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <h2 className="text-white font-medium">Live Preview</h2>
-          <p className="text-gray-400 text-sm">Real-time 3D model with advanced conditional logic</p>
+          <p className="text-gray-400 text-sm">Real-time 3D model visualization</p>
         </div>
         <div className="flex-1">
           <ThreeJSPreview 
