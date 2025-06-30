@@ -90,43 +90,29 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
       if (dragIndex === hoverIndex) return;
 
-      // Get hover position for smooth animations
+      // Get hover position for immediate reordering
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
       
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-      const isHoveringUpperHalf = hoverClientY < hoverMiddleY;
-
       // Set hovering state for visual feedback
       setIsHovering(true);
 
       // Handle reordering within the same group
       if (isChild && item.isChild && item.groupId === groupId) {
         if (onMoveWithinGroup && groupId) {
-          // Only trigger reorder when crossing the middle threshold
-          if (dragIndex < hoverIndex && !isHoveringUpperHalf) {
-            onMoveWithinGroup(groupId, dragIndex, hoverIndex);
-            item.index = hoverIndex;
-          } else if (dragIndex > hoverIndex && isHoveringUpperHalf) {
-            onMoveWithinGroup(groupId, dragIndex, hoverIndex);
-            item.index = hoverIndex;
-          }
+          // Trigger reorder immediately when hovering over element
+          onMoveWithinGroup(groupId, dragIndex, hoverIndex);
+          item.index = hoverIndex;
         }
         return;
       }
 
       // Handle root-level reordering
       if (!isChild && !item.isChild) {
-        // Only trigger reorder when crossing the middle threshold
-        if (dragIndex < hoverIndex && !isHoveringUpperHalf) {
-          onMove(dragIndex, hoverIndex);
-          item.index = hoverIndex;
-        } else if (dragIndex > hoverIndex && isHoveringUpperHalf) {
-          onMove(dragIndex, hoverIndex);
-          item.index = hoverIndex;
-        }
+        // Trigger reorder immediately when hovering over element
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
       }
     },
     drop: (item: DragItem) => {
@@ -136,14 +122,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       if (option.isGroup && item.id !== option.id && !item.isChild) {
         if (onMoveToGroup) {
           onMoveToGroup(item.id, option.id);
-        }
-        return;
-      }
-
-      // Handle moving child items out of groups
-      if (!option.isGroup && !isChild && item.isChild && item.originalParentId) {
-        if (onMoveToGroup) {
-          onMoveToGroup(item.id, null);
         }
         return;
       }
@@ -176,9 +154,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
-  // Determine drop zone states
+  // Determine drop zone states - removed green color and ungroup message
   const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
-  const showUngroupDropZone = isOver && canDrop && !option.isGroup && !isChild;
 
   // Calculate transform for smooth displacement
   const getTransform = () => {
@@ -201,25 +178,23 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         exit={{ opacity: 0, y: -20 }}
         transition={{ 
           type: "spring", 
-          stiffness: 200,
-          damping: 25,
+          stiffness: 150,
+          damping: 20,
           mass: 1,
           layout: { 
             type: "spring",
-            stiffness: 200,
-            damping: 25,
+            stiffness: 150,
+            damping: 20,
             mass: 1
           }
         }}
         style={{
           transform: getTransform(),
-          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
-        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-300 relative ${
+        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
           showGroupDropZone
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
-            : showUngroupDropZone
-            ? 'border-green-400 shadow-lg shadow-green-400/20 bg-green-500/10'
             : isHovering
             ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
             : option.isGroup
@@ -241,15 +216,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           <div className="absolute inset-0 bg-purple-500/20 border-2 border-purple-400 border-dashed rounded-xl flex items-center justify-center z-10">
             <div className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg">
               Drop here to add to group
-            </div>
-          </div>
-        )}
-
-        {/* Ungroup Drop Zone Indicator */}
-        {showUngroupDropZone && (
-          <div className="absolute inset-0 bg-green-500/20 border-2 border-green-400 border-dashed rounded-xl flex items-center justify-center z-10">
-            <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg">
-              Drop here to remove from group
             </div>
           </div>
         )}
@@ -367,8 +333,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           layout
           transition={{ 
             type: "spring", 
-            stiffness: 200,
-            damping: 25,
+            stiffness: 150,
+            damping: 20,
             mass: 1
           }}
           className="ml-8 mt-4 space-y-3 border-l-2 border-purple-500/30 pl-6"
