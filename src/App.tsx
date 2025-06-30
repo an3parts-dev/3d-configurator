@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
-import { Configurator } from './components/Configurator';
-import { AdminPanel } from './components/AdminPanel';
-import { TabNavigation } from './components/TabNavigation';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import ConfiguratorBuilder from './pages/ConfiguratorBuilder';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'configurator' | 'admin'>('configurator');
-
   return (
-    <div className="min-h-screen bg-gray-900">
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      
-      {activeTab === 'configurator' && <Configurator />}
-      {activeTab === 'admin' && <AdminPanel />}
-    </div>
+    <DndProvider backend={HTML5Backend}>
+      <Router>
+        <div className="min-h-screen bg-gray-900">
+          <Routes>
+            <Route path="/" element={<ConfiguratorBuilder />} />
+            <Route path="/configurator/:id?" element={<ConfiguratorBuilder />} />
+          </Routes>
+        </div>
+      </Router>
+    </DndProvider>
   );
 }
 
