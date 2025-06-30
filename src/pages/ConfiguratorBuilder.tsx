@@ -167,6 +167,7 @@ const ConfiguratorBuilder = () => {
       targetComponents: [],
       isGroup: true,
       children: [],
+      showTitle: true, // Default to showing title
       conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
       values: []
     };
@@ -811,6 +812,57 @@ const ConfiguratorBuilder = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Group Title Toggle for Groups */}
+                {editingOption.isGroup && (
+                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-white font-semibold text-lg flex items-center">
+                          <Settings className="w-5 h-5 mr-2 text-purple-400" />
+                          Group Display Settings
+                        </h4>
+                        <p className="text-gray-400 text-sm">Control how this group appears in the live preview</p>
+                      </div>
+                      <button
+                        onClick={() => setEditingOption(prev => prev ? { 
+                          ...prev, 
+                          showTitle: !prev.showTitle 
+                        } : null)}
+                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
+                          editingOption.showTitle !== false
+                            ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
+                            : 'bg-gray-600/20 text-gray-400 border border-gray-600/30 hover:bg-gray-600/30'
+                        }`}
+                      >
+                        {editingOption.showTitle !== false ? (
+                          <>
+                            <span className="font-medium">Show Title</span>
+                            <ToggleRight className="w-6 h-6" />
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium">Hide Title</span>
+                            <ToggleLeft className="w-6 h-6" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="mt-4 bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                      <p className="text-gray-300 text-sm">
+                        {editingOption.showTitle !== false ? (
+                          <>
+                            <strong>Show Title:</strong> The group name "{editingOption.name}" will appear above the options in the live preview.
+                          </>
+                        ) : (
+                          <>
+                            <strong>Hide Title:</strong> Only the options will be shown in a single container without the group name.
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Image Settings for Images Display Type */}
                 {!editingOption.isGroup && editingOption.displayType === 'images' && (

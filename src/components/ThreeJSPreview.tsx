@@ -309,19 +309,23 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       key={group.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-4 bg-gray-750 p-6 rounded-xl border border-gray-600"
+      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
     >
-      <div className="flex items-center space-x-3 mb-4">
-        <div className="p-2 bg-purple-600 rounded-lg">
-          <Layers className="w-5 h-5 text-white" />
+      {/* Group Title - Only show if showTitle is not false */}
+      {group.showTitle !== false && (
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-2 bg-purple-600 rounded-lg">
+            <Layers className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-white font-semibold text-lg">{group.name}</h3>
+            <p className="text-gray-400 text-sm">{childOptions.length} options</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-white font-semibold text-lg">{group.name}</h3>
-          <p className="text-gray-400 text-sm">{childOptions.length} options</p>
-        </div>
-      </div>
+      )}
       
-      <div className="space-y-6 pl-4 border-l-2 border-purple-500/30">
+      {/* Child Options - All in the same container */}
+      <div className="space-y-6">
         {childOptions.map(option => renderOption(option))}
       </div>
     </motion.div>
@@ -337,12 +341,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     if (visibleValues.length === 0) return null;
 
     return (
-      <motion.div
-        key={option.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-4 bg-gray-800 p-6 rounded-xl border border-gray-700"
-      >
+      <div key={option.id} className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="text-white font-semibold text-lg flex items-center">
             <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
@@ -475,7 +474,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </select>
         )}
-      </motion.div>
+      </div>
     );
   };
 
@@ -638,7 +637,17 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                   
                   return renderOptionGroup(option, childOptions);
                 } else {
-                  return renderOption(option);
+                  // Render standalone options in their own container
+                  return (
+                    <motion.div
+                      key={option.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
+                    >
+                      {renderOption(option)}
+                    </motion.div>
+                  );
                 }
               })}
             </div>
