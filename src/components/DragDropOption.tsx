@@ -11,9 +11,7 @@ import {
   Zap,
   Users,
   FolderOpen,
-  ChevronRight,
-  Plus,
-  ArrowUpRight
+  ChevronRight
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
 
@@ -44,7 +42,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
     item: () => ({ 
       id: option.id, 
@@ -108,12 +106,20 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     }),
   });
 
-  const dragDropRef = drag(drop(ref));
+  // Combine drag and drop refs, but use separate preview
+  const dragDropRef = drop(ref);
+  drag(dragDropRef);
+
+  // Create a custom drag preview that's invisible (we'll show the actual element)
+  React.useEffect(() => {
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
+  }, [dragPreview]);
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
   // Determine if this can be a drop target
-  const isDropTarget = option.isGroup || (!option.isGroup && !isChild);
   const showDropZone = isOver && canDrop && option.isGroup;
   const showRemoveFromGroup = isOver && canDrop && !option.isGroup && !isChild;
 
@@ -122,24 +128,19 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: isDragging ? 0.5 : 1, 
+          opacity: 1,
           y: 0,
-          scale: isDragging ? 1.02 : 1,
-          rotate: isDragging ? 2 : 0,
-          zIndex: isDragging ? 50 : 1
+          scale: 1,
+          rotate: 0,
+          zIndex: 1
         }}
         transition={{ 
           type: "spring", 
           stiffness: 300, 
-          damping: 30,
-          opacity: { duration: 0.2 },
-          scale: { duration: 0.2 },
-          rotate: { duration: 0.2 }
+          damping: 30
         }}
         className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
-          isDragging 
-            ? 'border-blue-500 shadow-2xl shadow-blue-500/20 cursor-grabbing' 
-            : showDropZone
+          showDropZone
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
             : showRemoveFromGroup
             ? 'border-green-400 shadow-lg shadow-green-400/20 bg-green-500/10'
@@ -151,8 +152,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         }`}
         style={{
           cursor: isDragging ? 'grabbing' : 'grab',
-          transform: isDragging ? 'rotate(2deg) scale(1.02)' : undefined,
-          boxShadow: isDragging ? '0 25px 50px -12px rgba(59, 130, 246, 0.25)' : undefined
+          opacity: isDragging ? 0.3 : 1,
         }}
       >
         {/* Conditional Logic Indicator */}
@@ -175,8 +175,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         {showRemoveFromGroup && (
           <div className="absolute inset-0 bg-green-500/20 border-2 border-green-400 border-dashed rounded-xl flex items-center justify-center z-10">
             <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg flex items-center space-x-2">
-              <ArrowUpRight className="w-4 h-4" />
-              <span>Drop here to remove from group</span>
+              <span>Remove from group</span>
             </div>
           </div>
         )}
@@ -197,11 +196,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
                 {hasConditionalLogic && (
                   <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
                     Conditional Logic
-                  </span>
-                )}
-                {option.isGroup && (
-                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
-                    Group ({childOptions.length} items)
                   </span>
                 )}
               </div>
@@ -237,12 +231,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
                     <span>In Group</span>
                   </div>
                 )}
-                {option.isGroup && childOptions.length === 0 && (
-                  <div className="flex items-center space-x-2 text-purple-400 text-sm bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
-                    <Plus className="w-3 h-3" />
-                    <span>Drag options here</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -253,9 +241,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
                   <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
                   <p className="text-gray-500 text-xs">{option.targetComponents.length} targets</p>
                 </>
-              )}
-              {option.isGroup && (
-                <span className="text-purple-400 text-sm font-medium">{childOptions.length} child options</span>
               )}
             </div>
             <div className="flex items-center space-x-2">

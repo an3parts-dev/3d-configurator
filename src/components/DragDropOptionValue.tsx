@@ -47,7 +47,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   const ref = useRef<HTMLDivElement>(null);
   const [showConditionalLogicModal, setShowConditionalLogicModal] = useState(false);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'optionValue',
     item: () => ({ id: value.id, index }),
     collect: (monitor) => ({
@@ -87,8 +87,16 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }),
   });
 
-  // Combine drag and drop refs
-  const dragDropRef = drag(drop(ref));
+  // Combine drag and drop refs, but use separate preview
+  const dragDropRef = drop(ref);
+  drag(dragDropRef);
+
+  // Create a custom drag preview that's invisible (we'll show the actual element)
+  React.useEffect(() => {
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
+  }, [dragPreview]);
 
   // Filter available components to only show EXACT matches with target components
   const filteredComponents = availableComponents.filter(component => {
@@ -130,14 +138,13 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       <div 
         ref={dragDropRef}
         className={`p-6 bg-gray-700 rounded-xl space-y-6 transition-all duration-200 border relative cursor-move ${
-          isDragging 
-            ? 'opacity-50 scale-95 shadow-lg border-blue-500 rotate-2' 
-            : isOver
+          isOver
             ? 'border-blue-400 shadow-lg shadow-blue-400/10 scale-102'
             : 'border-gray-600 hover:border-gray-500 shadow-sm'
         }`}
         style={{
-          transform: isDragging ? 'rotate(2deg) scale(0.98)' : isOver ? 'scale(1.02)' : undefined,
+          opacity: isDragging ? 0.3 : 1,
+          transform: isOver ? 'scale(1.02)' : undefined,
         }}
       >
         {/* Conditional Logic Indicator */}

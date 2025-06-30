@@ -25,9 +25,9 @@ import {
   AlertTriangle,
   Image as ImageIcon,
   Users,
-  FolderPlus,
-  ArrowUpRight
+  FolderPlus
 } from 'lucide-react';
+import { useDrop } from 'react-dnd';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
 import DragDropOption from '../components/DragDropOption';
@@ -85,6 +85,21 @@ const ConfiguratorBuilder = () => {
   });
 
   const activeConfigurator = configurators.find(c => c.id === activeConfiguratorId) || configurators[0];
+
+  // Drop zone for the options list area
+  const [{ isOver: isOptionsListOver, canDrop: canDropInOptionsList }, dropOptionsListRef] = useDrop({
+    accept: 'option',
+    drop: (item: { id: string; originalParentId?: string }) => {
+      // If dropping an item that was in a group, remove it from the group
+      if (item.originalParentId) {
+        moveToGroup(item.id, null);
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
+    }),
+  });
 
   // Load data on component mount
   useEffect(() => {
@@ -561,8 +576,15 @@ const ConfiguratorBuilder = () => {
               </div>
             </div>
 
-            {/* Options List - Show root options with their children */}
-            <div className="space-y-4">
+            {/* Options List - Enhanced with drop zone functionality */}
+            <div 
+              ref={dropOptionsListRef}
+              className={`space-y-4 transition-all duration-200 ${
+                isOptionsListOver && canDropInOptionsList 
+                  ? 'bg-green-500/5 border-2 border-green-400 border-dashed rounded-xl p-4' 
+                  : ''
+              }`}
+            >
               {getRootOptionsWithChildren().map((option, index) => (
                 <DragDropOption
                   key={option.id}
@@ -585,15 +607,15 @@ const ConfiguratorBuilder = () => {
                   <p className="text-sm">Click "Add Option" or "Add Group" to create your first configuration</p>
                 </div>
               )}
-            </div>
 
-            {/* Drop Zone for Removing from Groups */}
-            <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-xl p-8 text-center">
-              <div className="text-gray-500">
-                <ArrowUpRight className="w-8 h-8 mx-auto mb-2" />
-                <p className="font-medium">Drop Zone</p>
-                <p className="text-sm">Drag options here to remove them from groups</p>
-              </div>
+              {/* Drop indicator when hovering over options list */}
+              {isOptionsListOver && canDropInOptionsList && (
+                <div className="text-center py-4 text-green-400">
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg inline-block">
+                    Drop here to remove from group
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
