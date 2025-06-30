@@ -14,7 +14,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
-import { OptionOrderingManager } from '../utils/OptionOrderingManager';
 
 interface DragItem {
   id: string;
@@ -39,6 +38,8 @@ interface DragDropOptionProps {
   isChild?: boolean;
   visualIndex: number;
   groupId?: string;
+  isDraggedOver?: boolean;
+  dragDirection?: 'up' | 'down' | null;
 }
 
 const DragDropOption: React.FC<DragDropOptionProps> = ({
@@ -54,11 +55,14 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   childOptions = [],
   isChild = false,
   visualIndex,
-  groupId
+  groupId,
+  isDraggedOver = false,
+  dragDirection = null
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const [isDragHovered, setIsDragHovered] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
@@ -73,7 +77,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    canDrag: () => true, // Allow dragging both root and child items
+    canDrag: () => true,
   });
 
   const [{ isOver, canDrop }, drop] = useDrop({
@@ -86,50 +90,48 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
       if (dragIndex === hoverIndex) return;
 
+      // Get hover position for smooth animations
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) return;
+      
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      const isHoveringUpperHalf = hoverClientY < hoverMiddleY;
+
+      // Set hovering state for visual feedback
+      setIsHovering(true);
+
       // Handle reordering within the same group
       if (isChild && item.isChild && item.groupId === groupId) {
         if (onMoveWithinGroup && groupId) {
-          const hoverBoundingRect = ref.current.getBoundingClientRect();
-          const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-          const clientOffset = monitor.getClientOffset();
-          if (!clientOffset) return;
-          
-          const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-          if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-            return;
+          // Only trigger reorder when crossing the middle threshold
+          if (dragIndex < hoverIndex && !isHoveringUpperHalf) {
+            onMoveWithinGroup(groupId, dragIndex, hoverIndex);
+            item.index = hoverIndex;
+          } else if (dragIndex > hoverIndex && isHoveringUpperHalf) {
+            onMoveWithinGroup(groupId, dragIndex, hoverIndex);
+            item.index = hoverIndex;
           }
-          if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-            return;
-          }
-
-          onMoveWithinGroup(groupId, dragIndex, hoverIndex);
-          item.index = hoverIndex;
         }
         return;
       }
 
       // Handle root-level reordering
       if (!isChild && !item.isChild) {
-        const hoverBoundingRect = ref.current.getBoundingClientRect();
-        const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-        const clientOffset = monitor.getClientOffset();
-        if (!clientOffset) return;
-        
-        const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-          return;
+        // Only trigger reorder when crossing the middle threshold
+        if (dragIndex < hoverIndex && !isHoveringUpperHalf) {
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        } else if (dragIndex > hoverIndex && isHoveringUpperHalf) {
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
         }
-        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-          return;
-        }
-
-        onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
       }
     },
     drop: (item: DragItem) => {
+      setIsHovering(false);
+      
       // Handle group operations for root-level items
       if (option.isGroup && item.id !== option.id && !item.isChild) {
         if (onMoveToGroup) {
@@ -152,6 +154,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     }),
   });
 
+  // Reset hovering state when drag ends
+  useEffect(() => {
+    if (!isOver) {
+      setIsHovering(false);
+    }
+  }, [isOver]);
+
   // Combine drag and drop refs
   const dragDropRef = drop(ref);
 
@@ -171,6 +180,14 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
   const showUngroupDropZone = isOver && canDrop && !option.isGroup && !isChild;
 
+  // Calculate transform for smooth displacement
+  const getTransform = () => {
+    if (isDraggedOver && dragDirection) {
+      return dragDirection === 'down' ? 'translateY(80px)' : 'translateY(-80px)';
+    }
+    return 'translateY(0px)';
+  };
+
   return (
     <div ref={dragDropRef}>
       <motion.div
@@ -184,15 +201,27 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         exit={{ opacity: 0, y: -20 }}
         transition={{ 
           type: "spring", 
-          stiffness: 300, 
-          damping: 30,
-          layout: { duration: 0.2 }
+          stiffness: 200,
+          damping: 25,
+          mass: 1,
+          layout: { 
+            type: "spring",
+            stiffness: 200,
+            damping: 25,
+            mass: 1
+          }
         }}
-        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
+        style={{
+          transform: getTransform(),
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-300 relative ${
           showGroupDropZone
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
             : showUngroupDropZone
             ? 'border-green-400 shadow-lg shadow-green-400/20 bg-green-500/10'
+            : isHovering
+            ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
             : option.isGroup
             ? 'bg-purple-900/20 border-purple-500/30 hover:border-purple-400'
             : isChild
@@ -336,6 +365,12 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       {option.isGroup && childOptions.length > 0 && (
         <motion.div 
           layout
+          transition={{ 
+            type: "spring", 
+            stiffness: 200,
+            damping: 25,
+            mass: 1
+          }}
           className="ml-8 mt-4 space-y-3 border-l-2 border-purple-500/30 pl-6"
         >
           <AnimatePresence>

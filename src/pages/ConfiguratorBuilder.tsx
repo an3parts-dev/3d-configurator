@@ -27,7 +27,7 @@ import {
   Users,
   FolderPlus
 } from 'lucide-react';
-import { useDrop } from 'react-dnd';
+import { useDrop, useDragLayer } from 'react-dnd';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
 import DragDropOption from '../components/DragDropOption';
@@ -70,6 +70,7 @@ const ConfiguratorBuilder = () => {
   const [editingOption, setEditingOption] = useState<ConfiguratorOption | null>(null);
   const [availableComponents, setAvailableComponents] = useState<ModelComponent[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [draggedOverItems, setDraggedOverItems] = useState<Set<string>>(new Set());
   
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -87,6 +88,13 @@ const ConfiguratorBuilder = () => {
   });
 
   const activeConfigurator = configurators.find(c => c.id === activeConfiguratorId) || configurators[0];
+
+  // Monitor drag layer for smooth animations
+  const { isDragging, draggedItem, currentOffset } = useDragLayer((monitor) => ({
+    isDragging: monitor.isDragging(),
+    draggedItem: monitor.getItem(),
+    currentOffset: monitor.getClientOffset(),
+  }));
 
   // Drop zone for the options list area - only for ungrouping
   const [{ isOver: isOptionsListOver, canDrop: canDropInOptionsList }, dropOptionsListRef] = useDrop({
@@ -613,13 +621,13 @@ const ConfiguratorBuilder = () => {
             {/* Options List - Enhanced with drop zone functionality */}
             <div 
               ref={dropOptionsListRef}
-              className={`space-y-4 transition-all duration-200 ${
+              className={`space-y-4 transition-all duration-300 ${
                 isOptionsListOver && canDropInOptionsList 
                   ? 'bg-green-500/5 border-2 border-green-400 border-dashed rounded-xl p-4' 
                   : ''
               }`}
             >
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {getOptionsInVisualOrder().map((item) => (
                   <DragDropOption
                     key={item.option.id}
@@ -992,7 +1000,7 @@ const ConfiguratorBuilder = () => {
                     </div>
                     
                     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                      <AnimatePresence>
+                      <AnimatePresence mode="popLayout">
                         {editingOption.values.map((value, index) => (
                           <DragDropOptionValue
                             key={value.id}
