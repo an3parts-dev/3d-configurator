@@ -36,6 +36,7 @@ import ConfirmationDialog from '../components/ConfirmationDialog';
 import ConditionalLogicModal from '../components/ConditionalLogicModal';
 import { ConfiguratorOption, ConfiguratorData, ModelComponent, ConditionalLogic, ImageSettings } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
+import { OptionOrderingManager } from '../utils/OptionOrderingManager';
 import { useConfiguratorPersistence } from '../hooks/useConfiguratorPersistence';
 
 const ConfiguratorBuilder = () => {
@@ -86,18 +87,18 @@ const ConfiguratorBuilder = () => {
 
   const activeConfigurator = configurators.find(c => c.id === activeConfiguratorId) || configurators[0];
 
-  // Drop zone for the options list area
+  // Drop zone for the options list area - only for ungrouping
   const [{ isOver: isOptionsListOver, canDrop: canDropInOptionsList }, dropOptionsListRef] = useDrop({
     accept: 'option',
-    drop: (item: { id: string; originalParentId?: string }) => {
-      // If dropping an item that was in a group, remove it from the group
-      if (item.originalParentId) {
+    drop: (item: { id: string; originalParentId?: string; isChild?: boolean }) => {
+      // Only handle ungrouping operations
+      if (item.originalParentId && !item.isChild) {
         moveToGroup(item.id, null);
       }
     },
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
+      canDrop: monitor.canDrop() && monitor.getItem()?.originalParentId,
     }),
   });
 
@@ -235,22 +236,13 @@ const ConfiguratorBuilder = () => {
     setConfigurators(prev => prev.map(config => {
       if (config.id !== activeConfiguratorId) return config;
       
-      // Only work with root options (no parentId)
-      const rootOptions = config.options.filter(opt => !opt.parentId);
-      const childOptions = config.options.filter(opt => opt.parentId);
+      const newOptions = OptionOrderingManager.reorderOptions(
+        config.options,
+        dragIndex,
+        hoverIndex
+      );
       
-      if (dragIndex >= rootOptions.length || hoverIndex >= rootOptions.length) return config;
-      
-      const newRootOptions = [...rootOptions];
-      const draggedOption = newRootOptions[dragIndex];
-      
-      newRootOptions.splice(dragIndex, 1);
-      newRootOptions.splice(hoverIndex, 0, draggedOption);
-      
-      return { 
-        ...config, 
-        options: [...newRootOptions, ...childOptions]
-      };
+      return { ...config, options: newOptions };
     }));
   }, [activeConfiguratorId]);
 
@@ -259,8 +251,10 @@ const ConfiguratorBuilder = () => {
       config.id === activeConfiguratorId 
         ? {
             ...config,
-            options: config.options.map(option => 
-              option.id === optionId ? { ...option, parentId: groupId || undefined } : option
+            options: OptionOrderingManager.moveOptionToGroup(
+              config.options,
+              optionId,
+              groupId
             )
           }
         : config
@@ -422,13 +416,34 @@ const ConfiguratorBuilder = () => {
     });
   };
 
-  // Get root options (no parent) and their children
-  const getRootOptionsWithChildren = () => {
-    const rootOptions = activeConfigurator.options.filter(opt => !opt.parentId);
-    return rootOptions.map(option => ({
-      ...option,
-      childOptions: activeConfigurator.options.filter(child => child.parentId === option.id)
-    }));
+  // Get options in visual order for display
+  const getOptionsInVisualOrder = () => {
+    const visualOptions = OptionOrderingManager.getOptionsInVisualOrder(activeConfigurator.options);
+    
+    // Group the visual options by their structure
+    const result: Array<{
+      option: ConfiguratorOption;
+      visualIndex: number;
+      childOptions: ConfiguratorOption[];
+    }> = [];
+
+    for (const item of visualOptions) {
+      if (!item.isInGroup) {
+        const childOptions = item.option.isGroup 
+          ? visualOptions
+              .filter(child => child.isInGroup && child.groupId === item.option.id)
+              .map(child => child.option)
+          : [];
+
+        result.push({
+          option: item.option,
+          visualIndex: item.visualIndex,
+          childOptions
+        });
+      }
+    }
+
+    return result;
   };
 
   if (persistenceLoading) {
@@ -585,18 +600,19 @@ const ConfiguratorBuilder = () => {
                   : ''
               }`}
             >
-              {getRootOptionsWithChildren().map((option, index) => (
+              {getOptionsInVisualOrder().map((item) => (
                 <DragDropOption
-                  key={option.id}
-                  option={option}
-                  index={index}
+                  key={item.option.id}
+                  option={item.option}
+                  index={-1} // Not used anymore
+                  visualIndex={item.visualIndex}
                   onMove={moveOption}
                   onEdit={openOptionEditModal}
                   onDelete={deleteOption}
                   onEditConditionalLogic={openConditionalLogicModal}
                   onMoveToGroup={moveToGroup}
                   allOptions={activeConfigurator.options}
-                  childOptions={option.childOptions}
+                  childOptions={item.childOptions}
                 />
               ))}
 

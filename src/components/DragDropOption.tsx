@@ -14,6 +14,15 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
+import { OptionOrderingManager } from '../utils/OptionOrderingManager';
+
+interface DragItem {
+  id: string;
+  index: number;
+  type: string;
+  isChild: boolean;
+  originalParentId?: string;
+}
 
 interface DragDropOptionProps {
   option: ConfiguratorOption;
@@ -26,6 +35,7 @@ interface DragDropOptionProps {
   allOptions?: ConfiguratorOption[];
   childOptions?: ConfiguratorOption[];
   isChild?: boolean;
+  visualIndex: number; // New prop for visual ordering
 }
 
 const DragDropOption: React.FC<DragDropOptionProps> = ({
@@ -38,15 +48,16 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   onMoveToGroup,
   allOptions = [],
   childOptions = [],
-  isChild = false
+  isChild = false,
+  visualIndex
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
-    item: () => ({ 
+    item: (): DragItem => ({ 
       id: option.id, 
-      index, 
+      index: visualIndex, // Use visual index instead of array index
       type: 'option',
       isChild,
       originalParentId: option.parentId 
@@ -54,18 +65,19 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    canDrag: () => !isChild, // Only allow dragging root-level items
   });
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
-    hover: (item: { id: string; index: number; isChild: boolean }, monitor) => {
+    hover: (item: DragItem, monitor) => {
       if (!ref.current) return;
       
       // Don't allow reordering if this is a child item or the dragged item is a child
       if (isChild || item.isChild) return;
       
       const dragIndex = item.index;
-      const hoverIndex = index;
+      const hoverIndex = visualIndex;
 
       if (dragIndex === hoverIndex) return;
 
@@ -86,18 +98,14 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       onMove(dragIndex, hoverIndex);
       item.index = hoverIndex;
     },
-    drop: (item: { id: string; index: number; type: string; originalParentId?: string }) => {
-      // If dropping an option onto a group, move it to that group
-      if (option.isGroup && item.type === 'option' && item.id !== option.id) {
+    drop: (item: DragItem) => {
+      // Handle group operations
+      if (option.isGroup && item.id !== option.id && !item.isChild) {
+        // Moving item into a group
         if (onMoveToGroup) {
           onMoveToGroup(item.id, option.id);
         }
         return;
-      }
-      
-      // If dropping onto a non-group and the item was in a group, remove it from the group
-      if (!option.isGroup && item.originalParentId && onMoveToGroup) {
-        onMoveToGroup(item.id, null);
       }
     },
     collect: (monitor) => ({
@@ -106,11 +114,11 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     }),
   });
 
-  // Combine drag and drop refs, but use separate preview
+  // Combine drag and drop refs
   const dragDropRef = drop(ref);
   drag(dragDropRef);
 
-  // Create a custom drag preview that's invisible (we'll show the actual element)
+  // Create invisible drag preview
   React.useEffect(() => {
     const emptyImg = new Image();
     emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
@@ -119,9 +127,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
-  // Determine if this can be a drop target
-  const showDropZone = isOver && canDrop && option.isGroup;
-  const showRemoveFromGroup = isOver && canDrop && !option.isGroup && !isChild;
+  // Determine drop zone states
+  const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
 
   return (
     <div ref={dragDropRef}>
@@ -140,10 +147,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           damping: 30
         }}
         className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
-          showDropZone
+          showGroupDropZone
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
-            : showRemoveFromGroup
-            ? 'border-green-400 shadow-lg shadow-green-400/20 bg-green-500/10'
             : option.isGroup
             ? 'bg-purple-900/20 border-purple-500/30 hover:border-purple-400'
             : isChild
@@ -151,7 +156,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
             : 'border-gray-700 hover:border-gray-600 shadow-sm'
         }`}
         style={{
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: isDragging ? 'grabbing' : (isChild ? 'default' : 'grab'),
           opacity: isDragging ? 0.3 : 1,
         }}
       >
@@ -162,8 +167,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           </div>
         )}
 
-        {/* Drop Zone Indicator for Groups */}
-        {showDropZone && (
+        {/* Group Drop Zone Indicator */}
+        {showGroupDropZone && (
           <div className="absolute inset-0 bg-purple-500/20 border-2 border-purple-400 border-dashed rounded-xl flex items-center justify-center z-10">
             <div className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg">
               Drop here to add to group
@@ -171,20 +176,19 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           </div>
         )}
 
-        {/* Remove from Group Indicator */}
-        {showRemoveFromGroup && (
-          <div className="absolute inset-0 bg-green-500/20 border-2 border-green-400 border-dashed rounded-xl flex items-center justify-center z-10">
-            <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg flex items-center space-x-2">
-              <span>Remove from group</span>
-            </div>
-          </div>
-        )}
-
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors">
-              <GripVertical className="w-5 h-5 text-gray-500" />
-            </div>
+            {!isChild && (
+              <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors">
+                <GripVertical className="w-5 h-5 text-gray-500" />
+              </div>
+            )}
+            {isChild && (
+              <div className="w-7 flex justify-center">
+                <div className="w-px h-6 bg-purple-500/50"></div>
+              </div>
+            )}
+            
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 {option.isGroup ? (
@@ -282,7 +286,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
               key={childOption.id}
               option={childOption}
               index={childIndex}
-              onMove={() => {}} // Child options don't reorder within groups for now
+              visualIndex={-1} // Child options don't participate in visual ordering
+              onMove={() => {}} // Child options don't reorder
               onEdit={onEdit}
               onDelete={onDelete}
               onEditConditionalLogic={onEditConditionalLogic}
