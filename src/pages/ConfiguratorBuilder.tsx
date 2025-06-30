@@ -96,21 +96,6 @@ const ConfiguratorBuilder = () => {
     currentOffset: monitor.getClientOffset(),
   }));
 
-  // Drop zone for the options list area - only for ungrouping
-  const [{ isOver: isOptionsListOver, canDrop: canDropInOptionsList }, dropOptionsListRef] = useDrop({
-    accept: 'option',
-    drop: (item: { id: string; originalParentId?: string; isChild?: boolean }) => {
-      // Only handle ungrouping operations
-      if (item.originalParentId && !item.isChild) {
-        moveToGroup(item.id, null);
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop() && monitor.getItem()?.originalParentId,
-    }),
-  });
-
   // Load data on component mount
   useEffect(() => {
     if (!persistenceLoading) {
@@ -618,15 +603,8 @@ const ConfiguratorBuilder = () => {
               </div>
             </div>
 
-            {/* Options List - Enhanced with drop zone functionality */}
-            <div 
-              ref={dropOptionsListRef}
-              className={`space-y-4 transition-all duration-300 ${
-                isOptionsListOver && canDropInOptionsList 
-                  ? 'bg-green-500/5 border-2 border-green-400 border-dashed rounded-xl p-4' 
-                  : ''
-              }`}
-            >
+            {/* Options List */}
+            <div className="space-y-4">
               <AnimatePresence mode="popLayout">
                 {getOptionsInVisualOrder().map((item) => (
                   <DragDropOption
@@ -652,19 +630,6 @@ const ConfiguratorBuilder = () => {
                   <p>No configuration options yet</p>
                   <p className="text-sm">Click "Add Option" or "Add Group" to create your first configuration</p>
                 </div>
-              )}
-
-              {/* Drop indicator when hovering over options list */}
-              {isOptionsListOver && canDropInOptionsList && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center py-4 text-green-400"
-                >
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg inline-block">
-                    Drop here to remove from group
-                  </div>
-                </motion.div>
               )}
             </div>
           </div>

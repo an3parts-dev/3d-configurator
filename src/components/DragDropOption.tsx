@@ -90,11 +90,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
       if (dragIndex === hoverIndex) return;
 
-      // Get hover position for immediate reordering
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) return;
-      
       // Set hovering state for visual feedback
       setIsHovering(true);
 
@@ -104,6 +99,32 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           // Trigger reorder immediately when hovering over element
           onMoveWithinGroup(groupId, dragIndex, hoverIndex);
           item.index = hoverIndex;
+        }
+        return;
+      }
+
+      // Handle moving child options to root level or other positions
+      if (item.isChild && !isChild) {
+        // Child option being moved to root level
+        if (onMoveToGroup) {
+          onMoveToGroup(item.id, null); // Remove from group first
+        }
+        // Then handle the reordering
+        if (onMove) {
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+          item.isChild = false;
+          item.originalParentId = undefined;
+          item.groupId = undefined;
+        }
+        return;
+      }
+
+      // Handle moving root options to child positions
+      if (!item.isChild && isChild && groupId) {
+        // Root option being moved into a group
+        if (onMoveToGroup) {
+          onMoveToGroup(item.id, groupId);
         }
         return;
       }
@@ -154,7 +175,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
-  // Determine drop zone states - removed green color and ungroup message
+  // Only show group drop zone for groups
   const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
 
   // Calculate transform for smooth displacement

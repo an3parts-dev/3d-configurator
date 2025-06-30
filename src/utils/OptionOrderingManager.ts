@@ -14,7 +14,7 @@ export interface OptionWithPosition {
 
 export class OptionOrderingManager {
   /**
-   * Gets options in their visual display order (not grouped first)
+   * Gets options in their visual display order (maintains original order, not groups first)
    */
   static getOptionsInVisualOrder(options: ConfiguratorOption[]): OptionWithPosition[] {
     const result: OptionWithPosition[] = [];
@@ -58,6 +58,7 @@ export class OptionOrderingManager {
 
   /**
    * Reorders options while maintaining group structure
+   * Now supports moving any option to any position
    */
   static reorderOptions(
     options: ConfiguratorOption[],
@@ -73,20 +74,29 @@ export class OptionOrderingManager {
     const draggedItem = visualOptions[dragIndex];
     const hoverItem = visualOptions[hoverIndex];
 
-    // Don't allow reordering if dragged item is in a group
-    if (draggedItem.isInGroup) {
-      return options;
-    }
-
-    // Don't allow dropping on items that are in groups
-    if (hoverItem.isInGroup) {
-      return options;
-    }
-
-    // Create new visual order
+    // Create new visual order by moving the dragged item
     const newVisualOrder = [...visualOptions];
     newVisualOrder.splice(dragIndex, 1);
     newVisualOrder.splice(hoverIndex, 0, draggedItem);
+
+    // Update the dragged item's group status based on where it's dropped
+    if (hoverItem.isInGroup && hoverItem.groupId) {
+      // Dropping into a group
+      draggedItem.option = {
+        ...draggedItem.option,
+        parentId: hoverItem.groupId
+      };
+      draggedItem.isInGroup = true;
+      draggedItem.groupId = hoverItem.groupId;
+    } else if (!hoverItem.isInGroup) {
+      // Dropping at root level
+      draggedItem.option = {
+        ...draggedItem.option,
+        parentId: undefined
+      };
+      draggedItem.isInGroup = false;
+      draggedItem.groupId = undefined;
+    }
 
     // Convert back to flat option array
     return this.convertVisualOrderToOptionArray(newVisualOrder, options);
@@ -117,27 +127,24 @@ export class OptionOrderingManager {
     const otherOptions = options.filter(opt => opt.parentId !== groupId);
     const result: ConfiguratorOption[] = [];
 
-    // Add options in their original order, but replace group children with reordered ones
-    for (const option of options) {
-      if (option.parentId !== groupId) {
+    // Find the position where the first child was and replace all children with reordered ones
+    let childrenInserted = false;
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      if (option.parentId === groupId) {
+        if (!childrenInserted) {
+          // Insert all reordered children at the first child position
+          result.push(...newChildren);
+          childrenInserted = true;
+        }
+        // Skip original children as they're already added
+      } else {
         result.push(option);
       }
     }
 
-    // Insert reordered children at the correct positions
-    let insertIndex = 0;
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].parentId === groupId) {
-        if (insertIndex === 0) {
-          // Found first child position, insert all reordered children here
-          result.splice(i, 0, ...newChildren);
-          break;
-        }
-      }
-    }
-
     // If no children were found in original positions, append them
-    if (result.filter(opt => opt.parentId === groupId).length === 0) {
+    if (!childrenInserted) {
       result.push(...newChildren);
     }
 
@@ -181,15 +188,24 @@ export class OptionOrderingManager {
         result.push(item.option);
         processedIds.add(item.option.id);
 
-        // If it's a group, add all its children
+        // If it's a group, add all its children that appear after it in visual order
         if (item.option.isGroup) {
-          const children = originalOptions.filter(opt => opt.parentId === item.option.id);
+          const children = visualOrder
+            .filter(child => child.isInGroup && child.groupId === item.option.id)
+            .map(child => child.option);
+          
           children.forEach(child => {
             if (!processedIds.has(child.id)) {
               result.push(child);
               processedIds.add(child.id);
             }
           });
+        }
+      } else {
+        // This is a child option, add it if not already processed
+        if (!processedIds.has(item.option.id)) {
+          result.push(item.option);
+          processedIds.add(item.option.id);
         }
       }
     }
@@ -214,8 +230,8 @@ export class OptionOrderingManager {
   ): boolean {
     switch (operation) {
       case 'reorder':
-        // Can only reorder root-level items
-        return !draggedItem.isInGroup && !targetItem.isInGroup;
+        // Can reorder any items now
+        return true;
       
       case 'group':
         // Can only add non-group items to groups
