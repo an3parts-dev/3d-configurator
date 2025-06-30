@@ -20,6 +20,7 @@ interface DragItem {
   index: number;
   type: string;
   isChild: boolean;
+  isGroup: boolean; // Add this to track if the dragged item is a group
   originalParentId?: string;
   groupId?: string;
 }
@@ -71,6 +72,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       index: isChild ? index : visualIndex,
       type: 'option',
       isChild,
+      isGroup: option.isGroup || false, // Track if this is a group
       originalParentId: option.parentId,
       groupId: groupId
     }),
@@ -110,9 +112,10 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         return;
       }
 
-      // Handle moving child options to root level or other positions
-      if (item.isChild && !isChild) {
-        // Child option being moved to root level
+      // ✅ FIX: Prevent groups from being ungrouped accidentally
+      // Only handle ungrouping for non-group child options
+      if (item.isChild && !isChild && !item.isGroup) {
+        // Child option (not a group) being moved to root level
         if (onMoveToGroup) {
           onMoveToGroup(item.id, null); // Remove from group first
         }
@@ -127,27 +130,30 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         return;
       }
 
-      // Handle moving root options to child positions
-      if (!item.isChild && isChild && groupId) {
-        // Root option being moved into a group
+      // Handle moving root options to child positions (but not groups into groups)
+      if (!item.isChild && isChild && groupId && !item.isGroup) {
+        // Root option (not a group) being moved into a group
         if (onMoveToGroup) {
           onMoveToGroup(item.id, groupId);
         }
         return;
       }
 
-      // Handle root-level reordering (but not for groups)
-      if (!isChild && !item.isChild && !option.isGroup) {
-        // Trigger reorder immediately when hovering over element
-        onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
+      // Handle root-level reordering (including groups)
+      if (!isChild && !item.isChild) {
+        // For groups, only allow reordering with other root-level items
+        if (option.isGroup || !item.isGroup) {
+          // Trigger reorder immediately when hovering over element
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        }
       }
     },
     drop: (item: DragItem) => {
       setIsHovering(false);
       
-      // Handle group operations for root-level items
-      if (option.isGroup && item.id !== option.id && !item.isChild) {
+      // Handle group operations for root-level items (but not groups into groups)
+      if (option.isGroup && item.id !== option.id && !item.isChild && !item.isGroup) {
         if (onMoveToGroup) {
           onMoveToGroup(item.id, option.id);
         }
@@ -182,7 +188,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
-  // Only show group drop zone for groups
+  // Only show group drop zone for groups when non-group items are being dragged
   const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
 
   // Calculate transform for smooth displacement - but NOT for groups
