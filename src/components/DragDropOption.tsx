@@ -90,6 +90,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
       if (dragIndex === hoverIndex) return;
 
+      // For groups, don't move them away when hovering - they should stay in place
+      // to allow dropping items into them
+      if (option.isGroup && !item.isChild) {
+        // Don't trigger reordering for groups when non-child items hover over them
+        return;
+      }
+
       // Set hovering state for visual feedback
       setIsHovering(true);
 
@@ -129,8 +136,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         return;
       }
 
-      // Handle root-level reordering
-      if (!isChild && !item.isChild) {
+      // Handle root-level reordering (but not for groups)
+      if (!isChild && !item.isChild && !option.isGroup) {
         // Trigger reorder immediately when hovering over element
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
@@ -178,8 +185,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   // Only show group drop zone for groups
   const showGroupDropZone = isOver && canDrop && option.isGroup && !isChild;
 
-  // Calculate transform for smooth displacement
+  // Calculate transform for smooth displacement - but NOT for groups
   const getTransform = () => {
+    if (option.isGroup) {
+      // Groups should never move away
+      return 'translateY(0px)';
+    }
+    
     if (isDraggedOver && dragDirection) {
       return dragDirection === 'down' ? 'translateY(80px)' : 'translateY(-80px)';
     }
@@ -216,7 +228,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
           showGroupDropZone
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
-            : isHovering
+            : isHovering && !option.isGroup
             ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
             : option.isGroup
             ? 'bg-purple-900/20 border-purple-500/30 hover:border-purple-400'
