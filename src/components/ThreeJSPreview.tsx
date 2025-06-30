@@ -592,21 +592,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
       {/* Options Panel - 50% screen height */}
       <div className="bg-gray-900 border-t border-gray-700 flex flex-col" style={{ height: '50vh' }}>
-        <div className="p-4 border-b border-gray-700 flex-shrink-0 bg-gray-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-semibold text-lg">Configuration Options</h3>
-              <p className="text-gray-400 text-sm">Customize your 3D model with advanced conditional logic</p>
-            </div>
-            {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-              <div className="flex items-center space-x-2 text-purple-300 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
-                <Zap className="w-4 h-4" />
-                <span className="text-sm font-medium">Smart Options</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
         <div className="flex-1 overflow-auto p-6">
           {visibleOptions.length === 0 && groupedOptions.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
