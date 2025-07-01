@@ -33,7 +33,7 @@ import DragDropOptionValue from '../components/DragDropOptionValue';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import ConditionalLogicModal from '../components/ConditionalLogicModal';
 import MeasurePointEditor from '../components/MeasurePointEditor';
-import { ConfiguratorOption, ConfiguratorData, ModelComponent, ConditionalLogic, ImageSettings } from '../types/ConfiguratorTypes';
+import { ConfiguratorOption, ConfiguratorData, ModelComponent, ConditionalLogic, ImageSettings, LengthSettings } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 import { useConfiguratorPersistence } from '../hooks/useConfiguratorPersistence';
 
@@ -127,32 +127,16 @@ const ConfiguratorBuilder = () => {
   };
 
   const addNewOption = (optionData: Omit<ConfiguratorOption, 'id' | 'values'>) => {
-    console.log('🔧 Creating new option with data:', optionData);
-    
     const newOption: ConfiguratorOption = {
       ...optionData,
       id: `option_${Date.now()}`,
+      defaultBehavior: optionData.manipulationType === 'visibility' ? 'hide' : undefined,
       conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
-      values: []
-    };
-
-    // Set default behavior for visibility options
-    if (optionData.manipulationType === 'visibility') {
-      newOption.defaultBehavior = 'hide';
-    }
-
-    // Set image settings for image display type
-    if (optionData.displayType === 'images') {
-      newOption.imageSettings = {
+      imageSettings: optionData.displayType === 'images' ? {
         size: 'medium',
         aspectRatio: '1:1'
-      };
-    }
-
-    // Set length settings for length manipulation type
-    if (optionData.manipulationType === 'length') {
-      newOption.displayType = 'length_input';
-      newOption.lengthSettings = {
+      } : undefined,
+      lengthSettings: optionData.manipulationType === 'length' ? {
         measurementType: 'cc',
         defaultValue: 100,
         minValue: 10,
@@ -160,10 +144,9 @@ const ConfiguratorBuilder = () => {
         step: 1,
         unit: 'mm',
         measurePoints: []
-      };
-    }
-
-    console.log('✅ Created new option:', newOption);
+      } : undefined,
+      values: optionData.manipulationType === 'length' ? [] : []
+    };
 
     setConfigurators(prev => prev.map(config => 
       config.id === activeConfiguratorId 
@@ -397,52 +380,6 @@ const ConfiguratorBuilder = () => {
     });
   };
 
-  // Handle form submission for new option
-  const handleNewOptionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log('📝 Form submitted');
-    
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const manipulationType = formData.get('manipulationType') as 'visibility' | 'material' | 'length';
-    const displayType = formData.get('displayType') as 'list' | 'buttons' | 'images';
-    
-    console.log('📋 Form data:', { name, manipulationType, displayType });
-    
-    // Validation
-    if (!name || !name.trim()) {
-      console.error('❌ Name is required');
-      return;
-    }
-    
-    if (!manipulationType) {
-      console.error('❌ Manipulation type is required');
-      return;
-    }
-    
-    // For length manipulation, displayType is automatically set
-    const finalDisplayType = manipulationType === 'length' ? 'length_input' : displayType;
-    
-    if (!finalDisplayType) {
-      console.error('❌ Display type is required');
-      return;
-    }
-    
-    console.log('✅ Creating option with:', { name, manipulationType, displayType: finalDisplayType });
-    
-    try {
-      addNewOption({
-        name: name.trim(),
-        manipulationType,
-        displayType: finalDisplayType,
-        targetComponents: []
-      });
-      console.log('🎉 Option created successfully');
-    } catch (error) {
-      console.error('❌ Error creating option:', error);
-    }
-  };
-
   if (persistenceLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-900">
@@ -625,7 +562,18 @@ const ConfiguratorBuilder = () => {
             className="bg-gray-800 p-6 rounded-xl border border-gray-700 w-full max-w-md"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Add New Configuration Option</h3>
-            <form onSubmit={handleNewOptionSubmit}>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const manipulationType = formData.get('manipulationType') as 'visibility' | 'material' | 'length';
+              
+              addNewOption({
+                name: formData.get('name') as string,
+                displayType: manipulationType === 'length' ? 'length_input' : formData.get('displayType') as 'list' | 'buttons' | 'images',
+                manipulationType,
+                targetComponents: []
+              });
+            }}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">Option Name</label>
@@ -634,7 +582,7 @@ const ConfiguratorBuilder = () => {
                     type="text"
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    placeholder="e.g., Brake Line Length"
+                    placeholder="e.g., Fitting A, Length, Color"
                   />
                 </div>
                 <div>
@@ -644,15 +592,18 @@ const ConfiguratorBuilder = () => {
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     onChange={(e) => {
-                      const isLength = e.target.value === 'length';
-                      const displayTypeSelect = e.target.form?.querySelector('select[name="displayType"]') as HTMLSelectElement;
-                      if (displayTypeSelect) {
-                        displayTypeSelect.style.display = isLength ? 'none' : 'block';
-                        displayTypeSelect.previousElementSibling!.style.display = isLength ? 'none' : 'block';
+                      const displayTypeSelect = document.querySelector('select[name="displayType"]') as HTMLSelectElement;
+                      if (e.target.value === 'length') {
+                        displayTypeSelect.style.display = 'none';
+                        displayTypeSelect.value = 'length_input';
+                      } else {
+                        displayTypeSelect.style.display = 'block';
+                        if (displayTypeSelect.value === 'length_input') {
+                          displayTypeSelect.value = 'buttons';
+                        }
                       }
                     }}
                   >
-                    <option value="">Select manipulation type</option>
                     <option value="visibility">Visibility (Show/Hide Components)</option>
                     <option value="material">Material (Change Colors/Materials)</option>
                     <option value="length">Length (Brake Line Length Input)</option>
@@ -665,7 +616,6 @@ const ConfiguratorBuilder = () => {
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                   >
-                    <option value="">Select display type</option>
                     <option value="buttons">Buttons</option>
                     <option value="list">List</option>
                     <option value="images">Images</option>
@@ -811,7 +761,6 @@ const ConfiguratorBuilder = () => {
                         </select>
                       </div>
                     </div>
-                    
                     <div className="grid grid-cols-4 gap-4 mt-4">
                       <div>
                         <label className="block text-gray-400 text-sm mb-2 font-medium">Default Value</label>
@@ -822,10 +771,10 @@ const ConfiguratorBuilder = () => {
                             ...prev,
                             lengthSettings: prev.lengthSettings ? {
                               ...prev.lengthSettings,
-                              defaultValue: parseFloat(e.target.value) || 0
+                              defaultValue: parseFloat(e.target.value) || 100
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <div>
@@ -840,7 +789,7 @@ const ConfiguratorBuilder = () => {
                               minValue: parseFloat(e.target.value) || 0
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <div>
@@ -855,7 +804,7 @@ const ConfiguratorBuilder = () => {
                               maxValue: parseFloat(e.target.value) || 1000
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <div>
@@ -870,7 +819,7 @@ const ConfiguratorBuilder = () => {
                               step: parseFloat(e.target.value) || 1
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           step="0.1"
                         />
                       </div>
@@ -985,7 +934,7 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Component Selector for non-length options */}
+                {/* Component Selector - Only for non-length options */}
                 {editingOption.manipulationType !== 'length' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                     <ComponentSelector
@@ -999,7 +948,7 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Measure Points Editor for Length Options */}
+                {/* Measure Point Editor for Length Options */}
                 {editingOption.manipulationType === 'length' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                     <MeasurePointEditor
@@ -1016,14 +965,14 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Option Values */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-white font-semibold text-lg">Option Values</h4>
-                      <p className="text-gray-400 text-sm">Configure the different states for this option</p>
-                    </div>
-                    {editingOption.manipulationType !== 'length' && (
+                {/* Option Values - Only for non-length options */}
+                {editingOption.manipulationType !== 'length' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-white font-semibold text-lg">Option Values</h4>
+                        <p className="text-gray-400 text-sm">Configure the different states for this option</p>
+                      </div>
                       <button 
                         onClick={() => {
                           if (!editingOption) return;
@@ -1045,23 +994,8 @@ const ConfiguratorBuilder = () => {
                         <Plus className="w-4 h-4" />
                         <span>Add Value</span>
                       </button>
-                    )}
-                  </div>
-                  
-                  {editingOption.manipulationType === 'length' ? (
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                      <div className="flex items-center space-x-3">
-                        <Ruler className="w-5 h-5 text-blue-400" />
-                        <div>
-                          <h5 className="text-blue-300 font-semibold">Length Input Option</h5>
-                          <p className="text-blue-200/80 text-sm">
-                            Length options use a single input field instead of multiple values. 
-                            Configure the measurement settings above.
-                          </p>
-                        </div>
-                      </div>
                     </div>
-                  ) : (
+                    
                     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                       {editingOption.values.map((value, index) => (
                         <DragDropOptionValue
@@ -1097,8 +1031,8 @@ const ConfiguratorBuilder = () => {
                         />
                       ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
