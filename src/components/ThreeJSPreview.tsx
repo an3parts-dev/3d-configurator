@@ -340,11 +340,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-lg overflow-hidden border-2 ${
-                  selectedValues[option.id] === value.id
-                    ? 'border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'border-gray-600 hover:border-gray-500 hover:scale-102'
-                }`}
+                className="relative group transition-all duration-200 rounded-lg overflow-hidden"
               >
                 <div className={`
                   ${option.imageSettings?.size === 'small' ? 'h-16' : 
@@ -372,23 +368,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     <p className="text-white text-xs font-medium truncate">
                       {value.name}
                     </p>
-                  </div>
-                )}
-                
-                {selectedValues[option.id] === value.id && (
-                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                    <div className="bg-blue-500 text-white p-1 rounded-full">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-
-                {/* Conditional Logic Indicator */}
-                {value.conditionalLogic?.enabled && (
-                  <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
-                    <Zap className="w-2 h-2" />
                   </div>
                 )}
               </button>
