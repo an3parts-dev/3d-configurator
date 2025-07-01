@@ -126,28 +126,22 @@ const ConfiguratorBuilder = () => {
     setShowNewConfiguratorModal(false);
   };
 
-  const addNewOption = (optionData: {
-    name: string;
-    displayType: 'list' | 'buttons' | 'images' | 'length_input';
-    manipulationType: 'visibility' | 'material' | 'length';
-  }) => {
-    console.log('🔧 Creating new option:', optionData);
+  const addNewOption = (optionData: Omit<ConfiguratorOption, 'id' | 'values'>) => {
+    console.log('🔧 Creating new option with data:', optionData);
     
     const newOption: ConfiguratorOption = {
+      ...optionData,
       id: `option_${Date.now()}`,
-      name: optionData.name,
-      displayType: optionData.displayType,
-      manipulationType: optionData.manipulationType,
-      targetComponents: [],
       conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
       values: []
     };
 
-    // Add specific settings based on manipulation type
+    // Set default behavior for visibility options
     if (optionData.manipulationType === 'visibility') {
       newOption.defaultBehavior = 'hide';
     }
 
+    // Set image settings for image display type
     if (optionData.displayType === 'images') {
       newOption.imageSettings = {
         size: 'medium',
@@ -155,7 +149,9 @@ const ConfiguratorBuilder = () => {
       };
     }
 
+    // Set length settings for length manipulation type
     if (optionData.manipulationType === 'length') {
+      newOption.displayType = 'length_input';
       newOption.lengthSettings = {
         measurementType: 'cc',
         defaultValue: 100,
@@ -165,17 +161,15 @@ const ConfiguratorBuilder = () => {
         unit: 'mm',
         measurePoints: []
       };
-      newOption.displayType = 'length_input';
     }
 
-    console.log('✅ New option created:', newOption);
+    console.log('✅ Created new option:', newOption);
 
     setConfigurators(prev => prev.map(config => 
       config.id === activeConfiguratorId 
         ? { ...config, options: [...config.options, newOption] }
         : config
     ));
-    
     setShowNewOptionModal(false);
   };
 
@@ -256,6 +250,10 @@ const ConfiguratorBuilder = () => {
       ...(option.manipulationType === 'visibility' && { 
         visibleComponents: [],
         hiddenComponents: []
+      }),
+      ...(option.manipulationType === 'length' && { 
+        lengthValue: option.lengthSettings?.defaultValue || 100,
+        measurePoints: []
       }),
       conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
     };
@@ -397,6 +395,52 @@ const ConfiguratorBuilder = () => {
         setActiveConfiguratorId('default');
       }
     });
+  };
+
+  // Handle form submission for new option
+  const handleNewOptionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log('📝 Form submitted');
+    
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const manipulationType = formData.get('manipulationType') as 'visibility' | 'material' | 'length';
+    const displayType = formData.get('displayType') as 'list' | 'buttons' | 'images';
+    
+    console.log('📋 Form data:', { name, manipulationType, displayType });
+    
+    // Validation
+    if (!name || !name.trim()) {
+      console.error('❌ Name is required');
+      return;
+    }
+    
+    if (!manipulationType) {
+      console.error('❌ Manipulation type is required');
+      return;
+    }
+    
+    // For length manipulation, displayType is automatically set
+    const finalDisplayType = manipulationType === 'length' ? 'length_input' : displayType;
+    
+    if (!finalDisplayType) {
+      console.error('❌ Display type is required');
+      return;
+    }
+    
+    console.log('✅ Creating option with:', { name, manipulationType, displayType: finalDisplayType });
+    
+    try {
+      addNewOption({
+        name: name.trim(),
+        manipulationType,
+        displayType: finalDisplayType,
+        targetComponents: []
+      });
+      console.log('🎉 Option created successfully');
+    } catch (error) {
+      console.error('❌ Error creating option:', error);
+    }
   };
 
   if (persistenceLoading) {
@@ -581,31 +625,7 @@ const ConfiguratorBuilder = () => {
             className="bg-gray-800 p-6 rounded-xl border border-gray-700 w-full max-w-md"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Add New Configuration Option</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              console.log('🚀 Form submitted');
-              
-              const formData = new FormData(e.currentTarget);
-              const name = formData.get('name') as string;
-              const manipulationType = formData.get('manipulationType') as 'visibility' | 'material' | 'length';
-              const displayType = formData.get('displayType') as 'list' | 'buttons' | 'images' | 'length_input';
-              
-              console.log('📝 Form data:', { name, manipulationType, displayType });
-              
-              if (!name || !manipulationType) {
-                console.error('❌ Missing required fields');
-                return;
-              }
-              
-              // For length manipulation, force displayType to length_input
-              const finalDisplayType = manipulationType === 'length' ? 'length_input' : displayType;
-              
-              addNewOption({
-                name,
-                manipulationType,
-                displayType: finalDisplayType
-              });
-            }}>
+            <form onSubmit={handleNewOptionSubmit}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">Option Name</label>
@@ -685,7 +705,11 @@ const ConfiguratorBuilder = () => {
             <div className="p-6 border-b border-gray-700 flex items-center justify-between bg-gray-750 rounded-t-xl">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-600 rounded-lg">
-                  <Edit className="w-5 h-5 text-white" />
+                  {editingOption.manipulationType === 'length' ? (
+                    <Ruler className="w-5 h-5 text-white" />
+                  ) : (
+                    <Edit className="w-5 h-5 text-white" />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-white font-semibold text-xl">Edit Option</h3>
@@ -715,14 +739,9 @@ const ConfiguratorBuilder = () => {
                       placeholder="Option name"
                     />
                   </div>
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                    {editingOption.manipulationType === 'length' ? (
-                      <div className="w-full bg-gray-600 border border-gray-500 rounded-lg px-4 py-3 text-gray-400 flex items-center">
-                        <Ruler className="w-4 h-4 mr-2" />
-                        Length Input (Fixed)
-                      </div>
-                    ) : (
+                  {editingOption.manipulationType !== 'length' && (
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
                       <select
                         value={editingOption.displayType}
                         onChange={(e) => {
@@ -742,8 +761,8 @@ const ConfiguratorBuilder = () => {
                         <option value="list">List</option>
                         <option value="images">Images</option>
                       </select>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Length Settings for Length Options */}
@@ -753,7 +772,7 @@ const ConfiguratorBuilder = () => {
                       <Ruler className="w-5 h-5 mr-2 text-blue-400" />
                       Length Settings
                     </h4>
-                    <div className="grid grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-2 gap-6">
                       <div>
                         <label className="block text-gray-400 text-sm mb-2 font-medium">Measurement Type</label>
                         <select
@@ -793,7 +812,7 @@ const ConfiguratorBuilder = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-4 gap-4 mt-4">
                       <div>
                         <label className="block text-gray-400 text-sm mb-2 font-medium">Default Value</label>
                         <input
@@ -806,7 +825,7 @@ const ConfiguratorBuilder = () => {
                               defaultValue: parseFloat(e.target.value) || 0
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <div>
@@ -821,7 +840,7 @@ const ConfiguratorBuilder = () => {
                               minValue: parseFloat(e.target.value) || 0
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <div>
@@ -836,7 +855,7 @@ const ConfiguratorBuilder = () => {
                               maxValue: parseFloat(e.target.value) || 1000
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <div>
@@ -851,24 +870,11 @@ const ConfiguratorBuilder = () => {
                               step: parseFloat(e.target.value) || 1
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           step="0.1"
                         />
                       </div>
                     </div>
-
-                    {/* Measure Points Editor */}
-                    <MeasurePointEditor
-                      measurePoints={editingOption.lengthSettings.measurePoints}
-                      onMeasurePointsChange={(points) => setEditingOption(prev => prev ? {
-                        ...prev,
-                        lengthSettings: prev.lengthSettings ? {
-                          ...prev.lengthSettings,
-                          measurePoints: points
-                        } : undefined
-                      } : null)}
-                      availableComponents={editingOption.targetComponents}
-                    />
                   </div>
                 )}
 
@@ -979,7 +985,7 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Component Selector - Only for non-length options */}
+                {/* Component Selector for non-length options */}
                 {editingOption.manipulationType !== 'length' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                     <ComponentSelector
@@ -993,14 +999,31 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Option Values - Only for non-length options */}
-                {editingOption.manipulationType !== 'length' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-white font-semibold text-lg">Option Values</h4>
-                        <p className="text-gray-400 text-sm">Configure the different states for this option</p>
-                      </div>
+                {/* Measure Points Editor for Length Options */}
+                {editingOption.manipulationType === 'length' && (
+                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                    <MeasurePointEditor
+                      measurePoints={editingOption.lengthSettings?.measurePoints || []}
+                      onMeasurePointsChange={(points) => setEditingOption(prev => prev ? {
+                        ...prev,
+                        lengthSettings: prev.lengthSettings ? {
+                          ...prev.lengthSettings,
+                          measurePoints: points
+                        } : undefined
+                      } : null)}
+                      availableComponents={availableComponents.map(c => c.name)}
+                    />
+                  </div>
+                )}
+
+                {/* Option Values */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-semibold text-lg">Option Values</h4>
+                      <p className="text-gray-400 text-sm">Configure the different states for this option</p>
+                    </div>
+                    {editingOption.manipulationType !== 'length' && (
                       <button 
                         onClick={() => {
                           if (!editingOption) return;
@@ -1022,8 +1045,23 @@ const ConfiguratorBuilder = () => {
                         <Plus className="w-4 h-4" />
                         <span>Add Value</span>
                       </button>
+                    )}
+                  </div>
+                  
+                  {editingOption.manipulationType === 'length' ? (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                      <div className="flex items-center space-x-3">
+                        <Ruler className="w-5 h-5 text-blue-400" />
+                        <div>
+                          <h5 className="text-blue-300 font-semibold">Length Input Option</h5>
+                          <p className="text-blue-200/80 text-sm">
+                            Length options use a single input field instead of multiple values. 
+                            Configure the measurement settings above.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    
+                  ) : (
                     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                       {editingOption.values.map((value, index) => (
                         <DragDropOptionValue
@@ -1059,8 +1097,8 @@ const ConfiguratorBuilder = () => {
                         />
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 
