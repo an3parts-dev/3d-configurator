@@ -340,10 +340,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-lg overflow-hidden border-2 ${
+                className={`relative group transition-all duration-200 rounded-lg overflow-hidden ${
                   selectedValues[option.id] === value.id
-                    ? 'border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'border-gray-600 hover:border-gray-500 hover:scale-102'
+                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                    : 'hover:scale-102'
                 }`}
               >
                 <div className={`
@@ -353,22 +353,29 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
                     option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
                     option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
-                    option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' : ''}
-                  bg-gray-700 flex items-center justify-center
+                    option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
+                    option.imageSettings?.aspectRatio === 'full' ? '' : 'aspect-square'}
+                  flex items-center justify-center
                 `}>
                   {value.image ? (
                     <img
                       src={value.image}
                       alt={value.name}
-                      className="w-full h-full object-cover object-center"
+                      className={`w-full h-full ${
+                        option.imageSettings?.aspectRatio === 'full' 
+                          ? 'object-contain' 
+                          : 'object-cover'
+                      }`}
                     />
                   ) : (
-                    <ImageIcon className="w-6 h-6 text-gray-500" />
+                    <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                      <ImageIcon className="w-6 h-6 text-gray-500" />
+                    </div>
                   )}
                 </div>
                 
                 {!value.hideTitle && (
-                  <div className="p-2 bg-gray-800/90">
+                  <div className="p-2">
                     <p className="text-white text-xs font-medium truncate">
                       {value.name}
                     </p>

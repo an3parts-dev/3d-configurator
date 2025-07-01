@@ -138,8 +138,15 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }
   };
 
-  const getImageContainerClass = () => {
+  const getUploadBoxClass = () => {
     const sizeClass = getImageSizeClass();
+    
+    // Always square when no image is uploaded
+    if (!value.image) {
+      return `${sizeClass} aspect-square`;
+    }
+    
+    // Use current aspect ratio when image is uploaded
     const aspectClass = getAspectRatioClass();
     
     if (imageSettings?.aspectRatio === 'full') {
@@ -271,7 +278,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 
                 <div
                   onClick={handleImageClick}
-                  className={`${getImageContainerClass()} border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
+                  className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
                 >
                   {value.image ? (
                     <>
