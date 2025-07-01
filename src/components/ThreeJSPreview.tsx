@@ -3,10 +3,12 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Image as ImageIcon } from 'lucide-react';
+import { Zap, Image as ImageIcon, Ruler } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
+import LengthMeasurementOverlay from './LengthMeasurementOverlay';
+import LengthInputControl from './LengthInputControl';
 
 interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
@@ -213,6 +215,7 @@ const GLBModel = ({
           }
         });
       }
+      // Length manipulation is handled in the UI, not in 3D scene
     });
 
     // Update component state for UI
@@ -271,6 +274,9 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       const validValues = option.values.filter(Boolean);
       if (validValues.length > 0) {
         defaultSelections[option.id] = validValues[0].id;
+      } else if (option.manipulationType === 'length' && option.lengthSettings) {
+        // For length options, use the default value as a string
+        defaultSelections[option.id] = option.lengthSettings.defaultValue.toString();
       }
     });
     
@@ -288,6 +294,14 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }));
   }, []);
 
+  const handleLengthChange = useCallback((optionId: string, length: number) => {
+    console.log(`📏 Length changed: ${optionId} → ${length}`);
+    setSelectedValues(prev => ({
+      ...prev,
+      [optionId]: length.toString()
+    }));
+  }, []);
+
   // Get visible options based on conditional logic
   const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
     configuratorData.options,
@@ -295,6 +309,55 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 
   const renderOption = (option: any) => {
+    if (option.manipulationType === 'length') {
+      if (!option.lengthSettings) return null;
+
+      const currentLength = parseFloat(selectedValues[option.id]) || option.lengthSettings.defaultValue;
+      
+      // Get measure points from selected fitting values
+      const allMeasurePoints = option.values.reduce((points: any[], value: any) => {
+        if (value.measurePoints) {
+          return [...points, ...value.measurePoints];
+        }
+        return points;
+      }, []);
+
+      return (
+        <div key={option.id} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-white font-semibold text-xl flex items-center">
+              <Ruler className="w-5 h-5 mr-2 text-blue-400" />
+              {option.name}
+              {option.conditionalLogic?.enabled && (
+                <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
+                  <Zap className="w-3 h-3 text-purple-400" />
+                </span>
+              )}
+            </h4>
+            <div className="flex items-center space-x-2 text-xs text-gray-400">
+              <span className="px-2 py-1 bg-blue-700 rounded-full capitalize font-medium flex items-center space-x-1">
+                <Ruler className="w-3 h-3" />
+                <span>Length</span>
+              </span>
+              <span className="px-2 py-1 bg-gray-700 rounded-full font-medium">
+                {option.lengthSettings.measurementType.toUpperCase()}
+              </span>
+            </div>
+          </div>
+          
+          <LengthInputControl
+            lengthSettings={option.lengthSettings}
+            currentValue={currentLength}
+            onValueChange={(value) => handleLengthChange(option.id, value)}
+            onSettingsChange={(settings) => {
+              // This would update the option's length settings
+              console.log('Length settings changed:', settings);
+            }}
+          />
+        </div>
+      );
+    }
+
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
       selectedValues,
@@ -440,6 +503,31 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
+  // Get current length measurements for overlay
+  const getCurrentLengthMeasurements = () => {
+    const lengthOptions = visibleOptions.filter(opt => opt.manipulationType === 'length');
+    return lengthOptions.map(option => {
+      const currentLength = parseFloat(selectedValues[option.id]) || option.lengthSettings?.defaultValue || 0;
+      
+      // Get measure points from all values (they should be consistent for the same fitting type)
+      const allMeasurePoints = option.values.reduce((points: any[], value: any) => {
+        if (value.measurePoints) {
+          return [...points, ...value.measurePoints];
+        }
+        return points;
+      }, []);
+
+      return {
+        measurePoints: allMeasurePoints,
+        lengthValue: currentLength,
+        lengthSettings: option.lengthSettings!,
+        isVisible: true
+      };
+    });
+  };
+
+  const lengthMeasurements = getCurrentLengthMeasurements();
+
   return (
     <div className="h-full flex flex-col">
       {/* 3D Canvas - 50% screen height */}
@@ -494,6 +582,17 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             onComponentsLoaded={handleComponentsLoaded}
             configuratorData={configuratorData}
           />
+
+          {/* Length Measurement Overlays */}
+          {lengthMeasurements.map((measurement, index) => (
+            <LengthMeasurementOverlay
+              key={index}
+              measurePoints={measurement.measurePoints}
+              lengthValue={measurement.lengthValue}
+              lengthSettings={measurement.lengthSettings}
+              isVisible={measurement.isVisible}
+            />
+          ))}
         </Canvas>
         
         {/* Loading overlay */}
