@@ -53,22 +53,26 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
       if (dragIndex === hoverIndex) return;
 
+      // Get the bounding rectangle of the hovered element
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      
+      // Get the mouse position
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
       
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
+      // Much more sensitive switching - switch places when crossing just 20% of the target
+      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.2) {
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
       }
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
+      
+      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.8) {
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
       }
-
-      onMove(dragIndex, hoverIndex);
-      item.index = hoverIndex;
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),

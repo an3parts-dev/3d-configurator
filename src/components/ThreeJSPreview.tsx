@@ -306,13 +306,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     return (
       <div key={option.id} className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-white font-semibold text-lg flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+          <h4 className="text-white font-semibold text-xl">
             {option.name}
             {option.conditionalLogic?.enabled && (
-              <div className="ml-2 p-1 bg-purple-500/20 rounded-full">
+              <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
                 <Zap className="w-3 h-3 text-purple-400" />
-              </div>
+              </span>
             )}
           </h4>
           <div className="flex items-center space-x-2 text-xs text-gray-400">
@@ -336,20 +335,20 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-xl overflow-hidden border-2 ${
+                className={`relative group transition-all duration-200 rounded-lg overflow-hidden border-2 ${
                   selectedValues[option.id] === value.id
                     ? 'border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'border-gray-600 hover:border-gray-500 hover:scale-102'
                 }`}
               >
                 <div className={`
-                  ${option.imageSettings?.size === 'small' ? 'h-20' : 
-                    option.imageSettings?.size === 'large' ? 'h-32' : 'h-24'}
+                  ${option.imageSettings?.size === 'small' ? 'h-16' : 
+                    option.imageSettings?.size === 'large' ? 'h-24' : 'h-20'}
                   ${option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
                     option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
                     option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
@@ -364,13 +363,13 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                       className="w-full h-full object-cover object-center"
                     />
                   ) : (
-                    <ImageIcon className="w-8 h-8 text-gray-500" />
+                    <ImageIcon className="w-6 h-6 text-gray-500" />
                   )}
                 </div>
                 
                 {!value.hideTitle && (
                   <div className="p-2 bg-gray-800/90">
-                    <p className="text-white text-sm font-medium truncate">
+                    <p className="text-white text-xs font-medium truncate">
                       {value.name}
                     </p>
                   </div>
@@ -379,7 +378,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 {selectedValues[option.id] === value.id && (
                   <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                     <div className="bg-blue-500 text-white p-1 rounded-full">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -389,19 +388,19 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 {/* Conditional Logic Indicator */}
                 {value.conditionalLogic?.enabled && (
                   <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
-                    <Zap className="w-3 h-3" />
+                    <Zap className="w-2 h-2" />
                   </div>
                 )}
               </button>
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border-2 relative ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${
                   selectedValues[option.id] === value.id
                     ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'
@@ -409,7 +408,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               >
                 {option.manipulationType === 'material' && value.color && (
                   <div 
-                    className="w-4 h-4 rounded-full border-2 border-white/20 shadow-inner"
+                    className="w-3 h-3 rounded-full border border-white/20 shadow-inner"
                     style={{ backgroundColor: value.color }}
                   />
                 )}
@@ -417,7 +416,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 
                 {/* Conditional Logic Indicator */}
                 {value.conditionalLogic?.enabled && (
-                  <div className="absolute -top-1 -right-1 bg-orange-600 text-white p-1 rounded-full">
+                  <div className="absolute -top-1 -right-1 bg-orange-600 text-white p-0.5 rounded-full">
                     <Zap className="w-2 h-2" />
                   </div>
                 )}
@@ -428,7 +427,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           <select
             value={selectedValues[option.id] || ''}
             onChange={(e) => handleValueChange(option.id, e.target.value)}
-            className="w-full bg-gray-700 border-2 border-gray-600 rounded-xl px-4 py-3 text-white font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+            className="w-full bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-3 text-white font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
           >
             {visibleValues.map((value: any) => (
               <option key={value.id} value={value.id}>
@@ -553,8 +552,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
       </div>
 
-      {/* Options Panel - 50% screen height */}
-      <div className="bg-gray-900 border-t border-gray-700 flex flex-col" style={{ height: '50vh' }}>
+      {/* Options Panel - 50% screen height with clean design */}
+      <div className="bg-gray-900 flex flex-col" style={{ height: '50vh' }}>
         <div className="flex-1 overflow-auto p-6">
           {visibleOptions.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
@@ -580,7 +579,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                   key={option.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-gray-750 p-6 rounded-xl border border-gray-600"
+                  className="space-y-4"
                 >
                   {renderOption(option)}
                 </motion.div>
