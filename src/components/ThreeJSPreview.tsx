@@ -305,6 +305,13 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }
   };
 
+  const getBorderStyles = (imageSettings?: any) => {
+    if (!imageSettings?.showBorder) return '';
+    
+    const borderWidth = imageSettings.borderWidth || 2;
+    return `border-${borderWidth} border-gray-600`;
+  };
+
   const renderOption = (option: any) => {
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
@@ -372,20 +379,20 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
                     option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
                     option.imageSettings?.aspectRatio === 'full' ? '' : 'aspect-square'}
-                  flex items-center justify-center
+                  flex items-center justify-center ${getBorderStyles(option.imageSettings)} rounded-lg
                 `}>
                   {value.image ? (
                     <img
                       src={value.image}
                       alt={value.name}
-                      className={`w-full h-full ${
+                      className={`w-full h-full rounded-lg ${
                         option.imageSettings?.aspectRatio === 'full' 
                           ? 'object-contain' 
                           : 'object-cover'
                       }`}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                    <div className="w-full h-full bg-gray-700 flex items-center justify-center rounded-lg">
                       <ImageIcon className="w-6 h-6 text-gray-500" />
                     </div>
                   )}
@@ -400,7 +407,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 )}
                 
                 {selectedValues[option.id] === value.id && (
-                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center rounded-lg">
                     <div className="bg-blue-500 text-white p-1 rounded-full">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

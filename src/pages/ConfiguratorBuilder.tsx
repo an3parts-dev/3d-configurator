@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   Image as ImageIcon,
   Columns,
-  Rows
+  Rows,
+  Square
 } from 'lucide-react';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
@@ -136,7 +137,9 @@ const ConfiguratorBuilder = () => {
       conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
       imageSettings: optionData.displayType === 'images' ? {
         size: 'medium',
-        aspectRatio: '1:1'
+        aspectRatio: '1:1',
+        showBorder: false,
+        borderWidth: 2
       } : undefined,
       values: []
     };
@@ -683,7 +686,9 @@ const ConfiguratorBuilder = () => {
                             displayType: newDisplayType,
                             imageSettings: newDisplayType === 'images' ? {
                               size: 'medium',
-                              aspectRatio: '1:1'
+                              aspectRatio: '1:1',
+                              showBorder: false,
+                              borderWidth: 2
                             } : undefined
                           } : null);
                         }}
@@ -728,7 +733,9 @@ const ConfiguratorBuilder = () => {
                             imageSettings: {
                               ...prev.imageSettings,
                               size: e.target.value as 'x-small' | 'small' | 'medium' | 'large' | 'x-large',
-                              aspectRatio: prev.imageSettings?.aspectRatio || '1:1'
+                              aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                              showBorder: prev.imageSettings?.showBorder || false,
+                              borderWidth: prev.imageSettings?.borderWidth || 2
                             }
                           } : null)}
                           className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -749,7 +756,9 @@ const ConfiguratorBuilder = () => {
                             imageSettings: {
                               ...prev.imageSettings,
                               size: prev.imageSettings?.size || 'medium',
-                              aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full'
+                              aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full',
+                              showBorder: prev.imageSettings?.showBorder || false,
+                              borderWidth: prev.imageSettings?.borderWidth || 2
                             }
                           } : null)}
                           className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -762,6 +771,80 @@ const ConfiguratorBuilder = () => {
                           <option value="full">Full Size</option>
                         </select>
                       </div>
+                    </div>
+
+                    {/* Border Settings */}
+                    <div className="mt-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h5 className="text-white font-medium flex items-center">
+                            <Square className="w-4 h-4 mr-2 text-gray-400" />
+                            Image Borders
+                          </h5>
+                          <p className="text-gray-400 text-sm">Add borders around option images</p>
+                        </div>
+                        <button
+                          onClick={() => setEditingOption(prev => prev ? {
+                            ...prev,
+                            imageSettings: {
+                              ...prev.imageSettings,
+                              size: prev.imageSettings?.size || 'medium',
+                              aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                              showBorder: !prev.imageSettings?.showBorder,
+                              borderWidth: prev.imageSettings?.borderWidth || 2
+                            }
+                          } : null)}
+                          className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
+                            editingOption.imageSettings?.showBorder
+                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30'
+                              : 'bg-gray-600/20 text-gray-400 border border-gray-600/30 hover:bg-gray-600/30'
+                          }`}
+                        >
+                          {editingOption.imageSettings?.showBorder ? (
+                            <>
+                              <span className="font-medium">Enabled</span>
+                              <ToggleRight className="w-6 h-6" />
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-medium">Disabled</span>
+                              <ToggleLeft className="w-6 h-6" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {editingOption.imageSettings?.showBorder && (
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Border Width (px)</label>
+                          <div className="flex items-center space-x-4">
+                            <input
+                              type="range"
+                              min="1"
+                              max="8"
+                              value={editingOption.imageSettings?.borderWidth || 2}
+                              onChange={(e) => setEditingOption(prev => prev ? {
+                                ...prev,
+                                imageSettings: {
+                                  ...prev.imageSettings,
+                                  size: prev.imageSettings?.size || 'medium',
+                                  aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                  showBorder: prev.imageSettings?.showBorder || false,
+                                  borderWidth: parseInt(e.target.value)
+                                }
+                              } : null)}
+                              className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span className="text-white font-medium w-8 text-center">
+                              {editingOption.imageSettings?.borderWidth || 2}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>1px</span>
+                            <span>8px</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
