@@ -17,6 +17,7 @@ import {
   Box3,
   TransformNode
 } from '@babylonjs/core';
+import '@babylonjs/core/Cameras/Inputs/arcRotateCameraPointersInput';
 import '@babylonjs/loaders/glTF';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
