@@ -31,7 +31,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
     item: () => ({ 
       id: option.id, 
@@ -63,13 +63,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Much more sensitive switching - switch places when crossing just 20% of the target
-      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.2) {
+      // Immediate switching - switch places when crossing just 10% of the target
+      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
       }
       
-      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.8) {
+      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
       }
@@ -78,6 +78,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       isOver: monitor.isOver(),
     }),
   });
+
+  // Create invisible drag preview for smooth dragging
+  React.useEffect(() => {
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
+  }, [dragPreview]);
 
   const dragDropRef = drag(drop(ref));
 
@@ -88,31 +95,26 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: isDragging ? 0.5 : 1, 
+          opacity: isDragging ? 0.6 : 1, 
           y: 0,
-          scale: isDragging ? 1.02 : 1,
-          rotate: isDragging ? 2 : 0,
-          zIndex: isDragging ? 50 : 1
+          scale: isDragging ? 1.05 : isOver ? 1.02 : 1,
         }}
         transition={{ 
           type: "spring", 
-          stiffness: 300, 
-          damping: 30,
-          opacity: { duration: 0.2 },
-          scale: { duration: 0.2 },
-          rotate: { duration: 0.2 }
+          stiffness: 400, 
+          damping: 25,
+          opacity: { duration: 0.15 },
+          scale: { duration: 0.15 }
         }}
-        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
+        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-150 relative ${
           isDragging 
-            ? 'border-blue-500 shadow-2xl shadow-blue-500/20 cursor-grabbing' 
+            ? 'border-blue-500 shadow-2xl shadow-blue-500/30 cursor-grabbing z-50' 
             : isOver
-            ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/10'
+            ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
             : 'border-gray-700 hover:border-gray-600 shadow-sm'
         }`}
         style={{
           cursor: isDragging ? 'grabbing' : 'grab',
-          transform: isDragging ? 'rotate(2deg) scale(1.02)' : undefined,
-          boxShadow: isDragging ? '0 25px 50px -12px rgba(59, 130, 246, 0.25)' : undefined
         }}
       >
         {/* Conditional Logic Indicator */}
