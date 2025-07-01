@@ -51,8 +51,8 @@ const ConfiguratorBuilder = () => {
   const [configurators, setConfigurators] = useState<ConfiguratorData[]>([
     {
       id: 'default',
-      name: 'Push-On Component Configurator',
-      description: 'Customize your push-on component with different fittings and materials',
+      name: 'Brake Line Configurator',
+      description: 'Customize your brake line with different fittings, materials, and precise length measurements',
       model: 'https://cdn.shopify.com/3d/models/o/b5d4caf023120e2d/PUSH-ON.glb',
       options: []
     }
@@ -177,7 +177,8 @@ const ConfiguratorBuilder = () => {
       `Option: "${option.name}"`,
       `${option.values.length} option values`,
       `${option.targetComponents.length} target components`,
-      ...(option.conditionalLogic?.enabled ? ['Conditional logic rules'] : [])
+      ...(option.conditionalLogic?.enabled ? ['Conditional logic rules'] : []),
+      ...(option.lengthSettings ? ['Length measurement settings'] : [])
     ];
 
     setConfirmDialog({
@@ -268,6 +269,7 @@ const ConfiguratorBuilder = () => {
       `Value: "${value.name}"`,
       ...(value.visibleComponents ? [`${value.visibleComponents.length} visible components`] : []),
       ...(value.hiddenComponents ? [`${value.hiddenComponents.length} hidden components`] : []),
+      ...(value.measurePoints ? [`${value.measurePoints.length} measure points`] : []),
       ...(value.conditionalLogic?.enabled ? ['Conditional logic rules'] : [])
     ];
 
@@ -369,8 +371,8 @@ const ConfiguratorBuilder = () => {
         clearStorage();
         const defaultConfigurator = {
           id: 'default',
-          name: 'Push-On Component Configurator',
-          description: 'Customize your push-on component with different fittings and materials',
+          name: 'Brake Line Configurator',
+          description: 'Customize your brake line with different fittings, materials, and precise length measurements',
           model: 'https://cdn.shopify.com/3d/models/o/b5d4caf023120e2d/PUSH-ON.glb',
           options: []
         };
@@ -542,7 +544,7 @@ const ConfiguratorBuilder = () => {
       <div className="w-1/2 bg-gray-800 flex flex-col">
         <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <h2 className="text-white font-medium">Live Preview</h2>
-          <p className="text-gray-400 text-sm">Real-time 3D model with advanced conditional logic</p>
+          <p className="text-gray-400 text-sm">Real-time 3D model with advanced conditional logic and length measurements</p>
         </div>
         <div className="flex-1">
           <ThreeJSPreview 
@@ -582,7 +584,7 @@ const ConfiguratorBuilder = () => {
                     type="text"
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    placeholder="e.g., Fitting A, Length, Color"
+                    placeholder="e.g., Fitting Type, Length, Material"
                   />
                 </div>
                 <div>
@@ -598,15 +600,13 @@ const ConfiguratorBuilder = () => {
                         displayTypeSelect.value = 'length_input';
                       } else {
                         displayTypeSelect.style.display = 'block';
-                        if (displayTypeSelect.value === 'length_input') {
-                          displayTypeSelect.value = 'buttons';
-                        }
+                        displayTypeSelect.value = 'buttons';
                       }
                     }}
                   >
                     <option value="visibility">Visibility (Show/Hide Components)</option>
                     <option value="material">Material (Change Colors/Materials)</option>
-                    <option value="length">Length (Brake Line Length Input)</option>
+                    <option value="length">Length (Precise Measurements)</option>
                   </select>
                 </div>
                 <div>
@@ -654,7 +654,10 @@ const ConfiguratorBuilder = () => {
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-700 flex items-center justify-between bg-gray-750 rounded-t-xl">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-600 rounded-lg">
+                <div className={`p-2 rounded-lg ${
+                  editingOption.manipulationType === 'length' ? 'bg-blue-600' :
+                  editingOption.manipulationType === 'material' ? 'bg-purple-600' : 'bg-green-600'
+                }`}>
                   {editingOption.manipulationType === 'length' ? (
                     <Ruler className="w-5 h-5 text-white" />
                   ) : (
@@ -689,38 +692,40 @@ const ConfiguratorBuilder = () => {
                       placeholder="Option name"
                     />
                   </div>
-                  {editingOption.manipulationType !== 'length' && (
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                      <select
-                        value={editingOption.displayType}
-                        onChange={(e) => {
-                          const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
-                          setEditingOption(prev => prev ? { 
-                            ...prev, 
-                            displayType: newDisplayType,
-                            imageSettings: newDisplayType === 'images' ? {
-                              size: 'medium',
-                              aspectRatio: '1:1'
-                            } : undefined
-                          } : null);
-                        }}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="buttons">Buttons</option>
-                        <option value="list">List</option>
-                        <option value="images">Images</option>
-                      </select>
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
+                    <select
+                      value={editingOption.displayType}
+                      onChange={(e) => {
+                        const newDisplayType = e.target.value as 'list' | 'buttons' | 'images' | 'length_input';
+                        setEditingOption(prev => prev ? { 
+                          ...prev, 
+                          displayType: newDisplayType,
+                          imageSettings: newDisplayType === 'images' ? {
+                            size: 'medium',
+                            aspectRatio: '1:1'
+                          } : undefined
+                        } : null);
+                      }}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      disabled={editingOption.manipulationType === 'length'}
+                    >
+                      <option value="buttons">Buttons</option>
+                      <option value="list">List</option>
+                      <option value="images">Images</option>
+                      {editingOption.manipulationType === 'length' && (
+                        <option value="length_input">Length Input</option>
+                      )}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Length Settings for Length Options */}
                 {editingOption.manipulationType === 'length' && editingOption.lengthSettings && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
                     <h4 className="text-white font-semibold text-lg flex items-center mb-4">
                       <Ruler className="w-5 h-5 mr-2 text-blue-400" />
-                      Length Settings
+                      Length Measurement Settings
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
                       <div>
@@ -761,6 +766,7 @@ const ConfiguratorBuilder = () => {
                         </select>
                       </div>
                     </div>
+                    
                     <div className="grid grid-cols-4 gap-4 mt-4">
                       <div>
                         <label className="block text-gray-400 text-sm mb-2 font-medium">Default Value</label>
@@ -774,7 +780,7 @@ const ConfiguratorBuilder = () => {
                               defaultValue: parseFloat(e.target.value) || 100
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                         />
                       </div>
                       <div>
@@ -789,7 +795,7 @@ const ConfiguratorBuilder = () => {
                               minValue: parseFloat(e.target.value) || 0
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                         />
                       </div>
                       <div>
@@ -804,7 +810,7 @@ const ConfiguratorBuilder = () => {
                               maxValue: parseFloat(e.target.value) || 1000
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                         />
                       </div>
                       <div>
@@ -819,7 +825,7 @@ const ConfiguratorBuilder = () => {
                               step: parseFloat(e.target.value) || 1
                             } : undefined
                           } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                           step="0.1"
                         />
                       </div>
@@ -934,7 +940,7 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Component Selector - Only for non-length options */}
+                {/* Component Selector - Not needed for length options */}
                 {editingOption.manipulationType !== 'length' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                     <ComponentSelector
@@ -944,23 +950,6 @@ const ConfiguratorBuilder = () => {
                       placeholder="Select components to manipulate..."
                       label="Target Components"
                       alwaysModal={true}
-                    />
-                  </div>
-                )}
-
-                {/* Measure Point Editor for Length Options */}
-                {editingOption.manipulationType === 'length' && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <MeasurePointEditor
-                      measurePoints={editingOption.lengthSettings?.measurePoints || []}
-                      onMeasurePointsChange={(points) => setEditingOption(prev => prev ? {
-                        ...prev,
-                        lengthSettings: prev.lengthSettings ? {
-                          ...prev.lengthSettings,
-                          measurePoints: points
-                        } : undefined
-                      } : null)}
-                      availableComponents={availableComponents.map(c => c.name)}
                     />
                   </div>
                 )}
@@ -1033,6 +1022,31 @@ const ConfiguratorBuilder = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Measure Points Editor for Fitting Options */}
+                {editingOption.manipulationType !== 'length' && editingOption.values.length > 0 && (
+                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                    <MeasurePointEditor
+                      measurePoints={editingOption.lengthSettings?.measurePoints || []}
+                      onMeasurePointsChange={(points) => {
+                        setEditingOption(prev => prev ? {
+                          ...prev,
+                          lengthSettings: {
+                            measurementType: 'cc',
+                            defaultValue: 100,
+                            minValue: 10,
+                            maxValue: 1000,
+                            step: 1,
+                            unit: 'mm',
+                            ...prev.lengthSettings,
+                            measurePoints: points
+                          }
+                        } : null);
+                      }}
+                      availableComponents={editingOption.targetComponents}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1096,7 +1110,7 @@ const ConfiguratorBuilder = () => {
                     type="text"
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    placeholder="e.g., Premium Product Configurator"
+                    placeholder="e.g., Premium Brake Line Configurator"
                   />
                 </div>
                 <div>
