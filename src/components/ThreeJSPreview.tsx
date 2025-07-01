@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, Environment, PerspectiveCamera, Html } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Image as ImageIcon, Ruler, Eye, EyeOff } from 'lucide-react';
+import { Zap, Image as ImageIcon, Ruler, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
 import * as THREE from 'three';
-import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
+import { ConfiguratorData, ModelComponent, MeasurePoint, LengthSettings } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 import LengthMeasurementOverlay from './LengthMeasurementOverlay';
 import LengthInputControl from './LengthInputControl';
@@ -15,7 +15,7 @@ interface ThreeJSPreviewProps {
   onComponentsLoaded?: (components: ModelComponent[]) => void;
 }
 
-// Enhanced GLB Model Component with precise component targeting
+// Enhanced GLB Model Component with transparency support
 const GLBModel = ({ 
   modelUrl, 
   selectedValues, 
@@ -95,6 +95,8 @@ const GLBModel = ({
   useEffect(() => {
     if (!isInitialized || components.length === 0) return;
 
+    console.log('🔄 Applying transparency:', isTransparent);
+
     components.forEach((component) => {
       if (component.mesh && component.mesh.material) {
         if (isTransparent) {
@@ -105,6 +107,7 @@ const GLBModel = ({
             material.opacity = 0.2;
             material.depthWrite = false;
             material.needsUpdate = true;
+            console.log(`🔍 Made ${component.name} transparent`);
           }
         } else {
           // Restore original material properties
@@ -114,6 +117,7 @@ const GLBModel = ({
             material.opacity = 1.0;
             material.depthWrite = true;
             material.needsUpdate = true;
+            console.log(`👁️ Restored ${component.name} opacity`);
           }
         }
       }
@@ -294,6 +298,8 @@ const CameraController = ({
   
   useEffect(() => {
     if (focusOnMeasurements && measurementBounds && controls) {
+      console.log('📷 Focusing camera on measurements');
+      
       // Calculate optimal camera position to view measurements
       const center = measurementBounds.getCenter(new THREE.Vector3());
       const size = measurementBounds.getSize(new THREE.Vector3());
@@ -402,14 +408,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
       const currentLength = parseFloat(selectedValues[option.id]) || option.lengthSettings.defaultValue;
       
-      // Get measure points from selected fitting values
-      const allMeasurePoints = option.values.reduce((points: any[], value: any) => {
-        if (value.measurePoints) {
-          return [...points, ...value.measurePoints];
-        }
-        return points;
-      }, []);
-
       return (
         <div key={option.id} className="space-y-4">
           <div className="flex items-center justify-between">
@@ -678,6 +676,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   // Handle length measurements focus
   const handleLengthMeasurementsClick = () => {
+    console.log('🔄 Toggling length measurements view');
     setIsModelTransparent(!isModelTransparent);
     setFocusOnMeasurements(!focusOnMeasurements);
   };
