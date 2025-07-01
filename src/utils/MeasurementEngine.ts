@@ -24,6 +24,9 @@ export class MeasurementEngine {
           };
           
           this.measurementPoints.set(child.name, point);
+          
+          // Hide measurement point objects from view
+          child.visible = false;
         }
       }
     });
@@ -36,9 +39,8 @@ export class MeasurementEngine {
    */
   private isMeasurementPoint(name: string): boolean {
     const measurementKeywords = [
-      'measurePoints',
-      'totalLength',
-      'centerToCenter',
+      'measurePoints.totalLength',
+      'measurePoints.centerToCenter', 
       'hoseLengthStart',
       'hoseLengthEnd',
       'measurePoint',
@@ -79,7 +81,7 @@ export class MeasurementEngine {
   /**
    * Set the active measurement type
    */
-  setMeasurementType(measurementTypeId: string): void {
+  setMeasurementType(measurementTypeId: string | null): void {
     this.activeMeasurementType = measurementTypeId;
     console.log('📏 Active measurement type:', measurementTypeId);
   }
@@ -90,6 +92,32 @@ export class MeasurementEngine {
   getCurrentMeasurementType(): MeasurementType | null {
     if (!this.activeMeasurementType) return null;
     return MEASUREMENT_TYPES.find(type => type.id === this.activeMeasurementType) || null;
+  }
+
+  /**
+   * Get available measurement types based on detected points
+   */
+  getAvailableMeasurementTypes(): string[] {
+    const availableTypes: string[] = [];
+    const pointNames = Array.from(this.measurementPoints.keys());
+    
+    // Check for total length points
+    if (pointNames.some(name => name.includes('totalLength'))) {
+      availableTypes.push('totalLength');
+    }
+    
+    // Check for center to center points
+    if (pointNames.some(name => name.includes('centerToCenter'))) {
+      availableTypes.push('centerToCenter');
+    }
+    
+    // Check for hose length points
+    if (pointNames.some(name => name.includes('hoseLengthStart')) && 
+        pointNames.some(name => name.includes('hoseLengthEnd'))) {
+      availableTypes.push('hoseLength');
+    }
+    
+    return availableTypes;
   }
 
   /**
@@ -141,8 +169,8 @@ export class MeasurementEngine {
     // Create dimension lines for each component
     componentGroups.forEach((points, componentName) => {
       if (points.length >= 2) {
-        // Sort points to find start and end
-        points.sort((a, b) => a.position[0] - b.position[0]); // Sort by X position
+        // Sort points to find start and end (by X position)
+        points.sort((a, b) => a.position[0] - b.position[0]);
         
         const startPoint = points[0];
         const endPoint = points[points.length - 1];
@@ -153,7 +181,7 @@ export class MeasurementEngine {
           startPoint: startPoint.position,
           endPoint: endPoint.position,
           distance,
-          label: `${distance.toFixed(2)} mm`,
+          label: `${distance.toFixed(1)} mm`,
           color: measurementType.color,
           measurementType: measurementType.id
         });
@@ -171,7 +199,8 @@ export class MeasurementEngine {
     
     // Find all center points
     const centerPoints = Array.from(this.measurementPoints.values())
-      .filter(point => point.name.includes('centerToCenter') || point.type === 'center');
+      .filter(point => point.name.includes('centerToCenter'))
+      .sort((a, b) => a.position[0] - b.position[0]); // Sort by X position
 
     // Create dimension lines between consecutive center points
     for (let i = 0; i < centerPoints.length - 1; i++) {
@@ -184,7 +213,7 @@ export class MeasurementEngine {
         startPoint: startPoint.position,
         endPoint: endPoint.position,
         distance,
-        label: `C/C ${distance.toFixed(2)} mm`,
+        label: `C/C ${distance.toFixed(1)} mm`,
         color: measurementType.color,
         measurementType: measurementType.id
       });
@@ -219,7 +248,7 @@ export class MeasurementEngine {
           startPoint: startPoint.position,
           endPoint: matchingEndPoint.position,
           distance,
-          label: `Hose ${distance.toFixed(2)} mm`,
+          label: `Hose ${distance.toFixed(1)} mm`,
           color: measurementType.color,
           measurementType: measurementType.id
         });
@@ -236,7 +265,7 @@ export class MeasurementEngine {
     const dx = point2[0] - point1[0];
     const dy = point2[1] - point1[1];
     const dz = point2[2] - point1[2];
-    return Math.sqrt(dx * dx + dy * dy + dz * dz) * 1000; // Convert to mm
+    return Math.sqrt(dx * dx + dy * dy + dz * dz) * 1000; // Convert to mm assuming model is in meters
   }
 
   /**
