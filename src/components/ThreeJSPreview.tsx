@@ -353,12 +353,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className={`${isRowDirection ? 'flex flex-wrap gap-3' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}`}>
+          <div className={`${isRowDirection ? 'flex gap-3 overflow-x-auto pb-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-lg overflow-hidden ${
+                className={`relative group transition-all duration-200 rounded-lg overflow-hidden ${isRowDirection ? 'flex-shrink-0' : ''} ${
                   selectedValues[option.id] === value.id
                     ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'hover:scale-102'
@@ -419,12 +419,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className={`${isRowDirection ? 'flex flex-wrap gap-2' : 'flex flex-wrap gap-2'}`}>
+          <div className={`${isRowDirection ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${isRowDirection ? 'flex-shrink-0 whitespace-nowrap' : ''} ${
                   selectedValues[option.id] === value.id
                     ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'
