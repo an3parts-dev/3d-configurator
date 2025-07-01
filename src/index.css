@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom drag and drop styles */
+.drag-handle {
+  @apply cursor-grab active:cursor-grabbing transition-colors duration-200;
+}
+
+.drag-handle:hover {
+  @apply bg-gray-700;
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .drag-handle {
+    @apply p-4;
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900;
+}

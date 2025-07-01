@@ -87,16 +87,15 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }),
   });
 
-  // Combine drag and drop refs, but use separate preview
-  const dragDropRef = drop(ref);
-  drag(dragDropRef);
-
-  // Create a custom drag preview that's invisible (we'll show the actual element)
+  // Create invisible drag preview
   React.useEffect(() => {
     const emptyImg = new Image();
     emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
     dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
   }, [dragPreview]);
+
+  // Combine drag and drop refs
+  const dragDropRef = drag(drop(ref));
 
   // Filter available components to only show EXACT matches with target components
   const filteredComponents = availableComponents.filter(component => {
@@ -138,14 +137,12 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       <div 
         ref={dragDropRef}
         className={`p-6 bg-gray-700 rounded-xl space-y-6 transition-all duration-200 border relative cursor-move ${
-          isOver
+          isDragging
+            ? 'opacity-0'
+            : isOver
             ? 'border-blue-400 shadow-lg shadow-blue-400/10 scale-102'
             : 'border-gray-600 hover:border-gray-500 shadow-sm'
         }`}
-        style={{
-          opacity: isDragging ? 0.3 : 1,
-          transform: isOver ? 'scale(1.02)' : undefined,
-        }}
       >
         {/* Conditional Logic Indicator */}
         {hasConditionalLogic && (

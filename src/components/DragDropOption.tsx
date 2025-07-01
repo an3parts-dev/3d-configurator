@@ -31,7 +31,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
     item: () => ({ 
       id: option.id, 
@@ -79,6 +79,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     }),
   });
 
+  // Create invisible drag preview
+  React.useEffect(() => {
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
+  }, [dragPreview]);
+
   const dragDropRef = drag(drop(ref));
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
@@ -88,31 +95,24 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: isDragging ? 0.5 : 1, 
-          y: 0,
-          scale: isDragging ? 1.02 : 1,
-          rotate: isDragging ? 2 : 0,
-          zIndex: isDragging ? 50 : 1
+          opacity: isDragging ? 0 : 1, 
+          y: 0
         }}
         transition={{ 
           type: "spring", 
           stiffness: 300, 
           damping: 30,
-          opacity: { duration: 0.2 },
-          scale: { duration: 0.2 },
-          rotate: { duration: 0.2 }
+          opacity: { duration: 0.1 }
         }}
         className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
           isDragging 
-            ? 'border-blue-500 shadow-2xl shadow-blue-500/20 cursor-grabbing' 
+            ? 'opacity-0' 
             : isOver
             ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/10'
             : 'border-gray-700 hover:border-gray-600 shadow-sm'
         }`}
         style={{
-          cursor: isDragging ? 'grabbing' : 'grab',
-          transform: isDragging ? 'rotate(2deg) scale(1.02)' : undefined,
-          boxShadow: isDragging ? '0 25px 50px -12px rgba(59, 130, 246, 0.25)' : undefined
+          cursor: isDragging ? 'grabbing' : 'grab'
         }}
       >
         {/* Conditional Logic Indicator */}
