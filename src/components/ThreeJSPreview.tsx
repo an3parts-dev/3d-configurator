@@ -294,29 +294,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  const getImageSizeClass = (size?: string) => {
-    switch (size) {
-      case 'x-small': return 'h-12 w-12';
-      case 'small': return 'h-16 w-16';
-      case 'medium': return 'h-20 w-20';
-      case 'large': return 'h-24 w-24';
-      case 'x-large': return 'h-32 w-32';
-      default: return 'h-20 w-20';
-    }
-  };
-
-  const getAspectRatioClass = (aspectRatio?: string) => {
-    switch (aspectRatio) {
-      case '1:1': return 'aspect-square';
-      case '4:3': return 'aspect-[4/3]';
-      case '16:9': return 'aspect-video';
-      case '3:2': return 'aspect-[3/2]';
-      case '2:3': return 'aspect-[2/3]';
-      case 'full': return '';
-      default: return 'aspect-square';
-    }
-  };
-
   const getBorderStyles = (imageSettings?: any) => {
     if (!imageSettings?.showBorder) return '';
     
@@ -372,7 +349,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'}`}>
+          <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'flex flex-wrap gap-4'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
@@ -385,19 +362,33 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               >
                 <div className="flex flex-col items-center space-y-2">
                   <div className={`
-                    ${getImageSizeClass(option.imageSettings?.size)}
-                    ${getAspectRatioClass(option.imageSettings?.aspectRatio)}
+                    flex items-center justify-center rounded-lg overflow-hidden
                     ${getBorderStyles(option.imageSettings)}
-                    flex items-center justify-center rounded-lg overflow-hidden bg-gray-700
+                    ${value.image ? '' : 'bg-gray-700 w-16 h-16'}
                   `}>
                     {value.image ? (
                       <img
                         src={value.image}
                         alt={value.name}
-                        className={`w-full h-full rounded-lg ${
+                        className={`rounded-lg ${
                           option.imageSettings?.aspectRatio === 'full' 
-                            ? 'object-contain' 
+                            ? 'object-contain max-w-32 max-h-32' 
                             : 'object-cover'
+                        } ${
+                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
+                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
+                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
+                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
+                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
+                          'w-20 h-20'
+                        } ${
+                          option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
+                          option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
+                          option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
+                          option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
+                          option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
+                          option.imageSettings?.aspectRatio === 'full' ? '' :
+                          'aspect-square'
                         }`}
                       />
                     ) : (
