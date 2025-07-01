@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
 import { GripVertical, Trash2, Zap, Eye, EyeOff, Image as ImageIcon } from 'lucide-react';
@@ -6,6 +6,8 @@ import ComponentSelector from './ComponentSelector';
 import ImageUploader from './ImageUploader';
 import ValueConditionalLogicModal from './ValueConditionalLogicModal';
 import { ConfiguratorOptionValue, ConfiguratorOption, ImageSettings } from '../types/ConfiguratorTypes';
+import { PerformanceMonitor } from '../utils/PerformanceMonitor';
+import { logger } from '../utils/Logger';
 
 interface ModelComponent {
   name: string;
@@ -14,7 +16,7 @@ interface ModelComponent {
   material?: any;
 }
 
-interface DragDropOptionValueProps {
+interface OptimizedDragDropOptionValueProps {
   value: ConfiguratorOptionValue;
   index: number;
   manipulationType: 'visibility' | 'material';
@@ -30,7 +32,7 @@ interface DragDropOptionValueProps {
   canDelete: boolean;
 }
 
-const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
+const OptimizedDragDropOptionValue: React.FC<OptimizedDragDropOptionValueProps> = React.memo(({
   value,
   index,
   manipulationType,
@@ -47,18 +49,35 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [showConditionalLogicModal, setShowConditionalLogicModal] = useState(false);
+  const performanceMonitor = PerformanceMonitor.getInstance();
 
+  // Optimized drag configuration
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'optionValue',
-    item: () => ({ id: value.id, index }),
+    item: () => {
+      const endTiming = performanceMonitor.startTiming('value-drag-start');
+      logger.debug('Value drag started', { valueId: value.id, index });
+      
+      return { 
+        id: value.id, 
+        index,
+        onDragEnd: endTiming
+      };
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    end: (item) => {
+      if (item.onDragEnd) {
+        item.onDragEnd();
+      }
+    }
   });
 
+  // Optimized drop configuration with immediate switching
   const [{ isOver }, drop] = useDrop({
     accept: 'optionValue',
-    hover: (item: { id: string; index: number }, monitor) => {
+    hover: useCallback((item: { id: string; index: number }, monitor) => {
       if (!ref.current) return;
       
       const dragIndex = item.index;
@@ -86,7 +105,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
       }
-    },
+    }, [index, onMove]),
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
@@ -102,40 +121,78 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   // Combine drag and drop refs
   const dragDropRef = drag(drop(ref));
 
-  // Filter available components to only show EXACT matches with target components
-  const filteredComponents = availableComponents.filter(component => {
-    const componentName = component.name.toLowerCase();
-    return targetComponents.some(target => {
-      const targetName = target.toLowerCase();
-      return componentName === targetName;
+  // Memoized filtered components to prevent unnecessary recalculations
+  const filteredComponents = React.useMemo(() => {
+    return availableComponents.filter(component => {
+      const componentName = component.name.toLowerCase();
+      return targetComponents.some(target => {
+        const targetName = target.toLowerCase();
+        return componentName === targetName;
+      });
     });
-  });
+  }, [availableComponents, targetComponents]);
 
-  const hasConditionalLogic = value.conditionalLogic?.enabled;
+  // Memoized conditional logic check
+  const hasConditionalLogic = React.useMemo(() => 
+    value.conditionalLogic?.enabled, 
+    [value.conditionalLogic?.enabled]
+  );
 
-  const getImageSizeClass = () => {
-    if (!imageSettings) return 'h-24';
+  // Optimized image size and aspect ratio classes
+  const imageClasses = React.useMemo(() => {
+    const sizeClass = !imageSettings ? 'h-24' : 
+      imageSettings.size === 'small' ? 'h-16' :
+      imageSettings.size === 'large' ? 'h-32' : 'h-24';
     
-    switch (imageSettings.size) {
-      case 'small': return 'h-16';
-      case 'medium': return 'h-24';
-      case 'large': return 'h-32';
-      default: return 'h-24';
-    }
-  };
-
-  const getAspectRatioClass = () => {
-    if (!imageSettings) return '';
+    const aspectClass = !imageSettings ? '' :
+      imageSettings.aspectRatio === '1:1' ? 'aspect-square' :
+      imageSettings.aspectRatio === '4:3' ? 'aspect-[4/3]' :
+      imageSettings.aspectRatio === '16:9' ? 'aspect-video' :
+      imageSettings.aspectRatio === '3:2' ? 'aspect-[3/2]' :
+      imageSettings.aspectRatio === '2:3' ? 'aspect-[2/3]' : '';
     
-    switch (imageSettings.aspectRatio) {
-      case '1:1': return 'aspect-square';
-      case '4:3': return 'aspect-[4/3]';
-      case '16:9': return 'aspect-video';
-      case '3:2': return 'aspect-[3/2]';
-      case '2:3': return 'aspect-[2/3]';
-      default: return '';
-    }
-  };
+    return { sizeClass, aspectClass };
+  }, [imageSettings]);
+
+  // Optimized event handlers with useCallback
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(value.id, { name: e.target.value });
+  }, [value.id, onUpdate]);
+
+  const handleColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(value.id, { color: e.target.value });
+  }, [value.id, onUpdate]);
+
+  const handleImageChange = useCallback((imageUrl: string | undefined) => {
+    onUpdate(value.id, { image: imageUrl });
+  }, [value.id, onUpdate]);
+
+  const handleHideTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(value.id, { hideTitle: e.target.checked });
+  }, [value.id, onUpdate]);
+
+  const handleVisibleComponentsChange = useCallback((components: string[]) => {
+    onUpdate(value.id, { visibleComponents: components });
+  }, [value.id, onUpdate]);
+
+  const handleHiddenComponentsChange = useCallback((components: string[]) => {
+    onUpdate(value.id, { hiddenComponents: components });
+  }, [value.id, onUpdate]);
+
+  const handleConditionalLogicSave = useCallback((conditionalLogic: any) => {
+    onUpdate(value.id, { conditionalLogic });
+    setShowConditionalLogicModal(false);
+  }, [value.id, onUpdate]);
+
+  const handleDelete = useCallback(() => {
+    logger.debug('Delete value clicked', { valueId: value.id });
+    onDelete(value.id);
+  }, [value.id, onDelete]);
+
+  const handleConditionalLogicClick = useCallback(() => {
+    logger.debug('Edit value conditional logic clicked', { valueId: value.id });
+    setShowConditionalLogicModal(true);
+  }, [value.id]);
 
   return (
     <>
@@ -145,7 +202,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
           animate={{ 
             opacity: isDragging ? 0.6 : 1, 
             y: 0,
-            scale: isDragging ? 1.03 : isOver ? 1.01 : 1,
+            scale: isDragging ? 1.02 : isOver ? 1.01 : 1,
           }}
           transition={{ 
             type: "spring", 
@@ -180,7 +237,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 <input
                   type="color"
                   value={value.color || '#000000'}
-                  onChange={(e) => onUpdate(value.id, { color: e.target.value })}
+                  onChange={handleColorChange}
                   className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
                 />
                 <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
@@ -190,14 +247,14 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             <input
               type="text"
               value={value.name}
-              onChange={(e) => onUpdate(value.id, { name: e.target.value })}
+              onChange={handleNameChange}
               className="flex-1 bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
               placeholder="Value name"
             />
             
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setShowConditionalLogicModal(true)}
+                onClick={handleConditionalLogicClick}
                 className={`p-2 rounded-lg transition-colors ${
                   hasConditionalLogic
                     ? 'text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20'
@@ -210,7 +267,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               
               {canDelete && (
                 <button
-                  onClick={() => onDelete(value.id)}
+                  onClick={handleDelete}
                   className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors flex-shrink-0"
                   title="Delete this value"
                 >
@@ -226,10 +283,10 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-gray-400 text-sm mb-3 font-medium">Option Image</label>
-                  <div className={`w-full ${getImageSizeClass()} ${getAspectRatioClass()}`}>
+                  <div className={`w-full ${imageClasses.sizeClass} ${imageClasses.aspectClass}`}>
                     <ImageUploader
                       currentImage={value.image}
-                      onImageChange={(imageUrl) => onUpdate(value.id, { image: imageUrl })}
+                      onImageChange={handleImageChange}
                       className="h-full w-full"
                     />
                   </div>
@@ -241,7 +298,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                       <input
                         type="checkbox"
                         checked={value.hideTitle || false}
-                        onChange={(e) => onUpdate(value.id, { hideTitle: e.target.checked })}
+                        onChange={handleHideTitleChange}
                         className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                       />
                       <span className="text-gray-300 text-sm font-medium">Hide Title</span>
@@ -256,11 +313,12 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
                       <p className="text-gray-400 text-sm mb-3 font-medium">Preview</p>
                       <div className="bg-gray-900 p-3 rounded-lg">
-                        <div className={`${getImageSizeClass()} ${getAspectRatioClass()} mx-auto max-w-32`}>
+                        <div className={`${imageClasses.sizeClass} ${imageClasses.aspectClass} mx-auto max-w-32`}>
                           <img
                             src={value.image}
                             alt={value.name}
                             className="w-full h-full object-cover rounded-lg"
+                            loading="lazy"
                           />
                         </div>
                         {!value.hideTitle && (
@@ -284,7 +342,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   <ComponentSelector
                     availableComponents={filteredComponents}
                     selectedComponents={value.visibleComponents || []}
-                    onSelectionChange={(components) => onUpdate(value.id, { visibleComponents: components })}
+                    onSelectionChange={handleVisibleComponentsChange}
                     placeholder="Select components to show..."
                     label="Components to Show"
                     alwaysModal={true}
@@ -298,7 +356,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   <ComponentSelector
                     availableComponents={filteredComponents}
                     selectedComponents={value.hiddenComponents || []}
-                    onSelectionChange={(components) => onUpdate(value.id, { hiddenComponents: components })}
+                    onSelectionChange={handleHiddenComponentsChange}
                     placeholder="Select components to hide..."
                     label="Components to Hide"
                     alwaysModal={true}
@@ -317,16 +375,15 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       <ValueConditionalLogicModal
         isOpen={showConditionalLogicModal}
         onClose={() => setShowConditionalLogicModal(false)}
-        onSave={(conditionalLogic) => {
-          onUpdate(value.id, { conditionalLogic });
-          setShowConditionalLogicModal(false);
-        }}
+        onSave={handleConditionalLogicSave}
         valueName={value.name}
         allOptions={allOptions}
         conditionalLogic={value.conditionalLogic}
       />
     </>
   );
-};
+});
 
-export default DragDropOptionValue;
+OptimizedDragDropOptionValue.displayName = 'OptimizedDragDropOptionValue';
+
+export default OptimizedDragDropOptionValue;

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
 import { 
@@ -11,8 +11,10 @@ import {
   Zap
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
+import { PerformanceMonitor } from '../utils/PerformanceMonitor';
+import { logger } from '../utils/Logger';
 
-interface DragDropOptionProps {
+interface OptimizedDragDropOptionProps {
   option: ConfiguratorOption;
   index: number;
   onMove: (dragIndex: number, hoverIndex: number) => void;
@@ -21,7 +23,7 @@ interface DragDropOptionProps {
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
 }
 
-const DragDropOption: React.FC<DragDropOptionProps> = ({
+const OptimizedDragDropOption: React.FC<OptimizedDragDropOptionProps> = React.memo(({
   option,
   index,
   onMove,
@@ -30,22 +32,37 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   onEditConditionalLogic
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const performanceMonitor = PerformanceMonitor.getInstance();
 
+  // Optimized drag configuration with performance monitoring
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
-    item: () => ({ 
-      id: option.id, 
-      index, 
-      type: 'option'
-    }),
+    item: () => {
+      const endTiming = performanceMonitor.startTiming('drag-start');
+      logger.debug('Drag started for option', { optionId: option.id, index });
+      
+      return { 
+        id: option.id, 
+        index, 
+        type: 'option',
+        onDragEnd: endTiming
+      };
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    end: (item) => {
+      // Call the timing end function when drag ends
+      if (item.onDragEnd) {
+        item.onDragEnd();
+      }
+    }
   });
 
+  // Optimized drop configuration with immediate switching
   const [{ isOver }, drop] = useDrop({
     accept: 'option',
-    hover: (item: { id: string; index: number }, monitor) => {
+    hover: useCallback((item: { id: string; index: number }, monitor) => {
       if (!ref.current) return;
       
       const dragIndex = item.index;
@@ -73,7 +90,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
       }
-    },
+    }, [index, onMove]),
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
@@ -86,9 +103,30 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
   }, [dragPreview]);
 
+  // Combine drag and drop refs
   const dragDropRef = drag(drop(ref));
 
-  const hasConditionalLogic = option.conditionalLogic?.enabled;
+  // Memoized conditional logic check
+  const hasConditionalLogic = React.useMemo(() => 
+    option.conditionalLogic?.enabled, 
+    [option.conditionalLogic?.enabled]
+  );
+
+  // Optimized event handlers with useCallback
+  const handleEdit = useCallback(() => {
+    logger.debug('Edit option clicked', { optionId: option.id });
+    onEdit(option);
+  }, [option, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    logger.debug('Delete option clicked', { optionId: option.id });
+    onDelete(option.id);
+  }, [option.id, onDelete]);
+
+  const handleEditConditionalLogic = useCallback(() => {
+    logger.debug('Edit conditional logic clicked', { optionId: option.id });
+    onEditConditionalLogic(option);
+  }, [option, onEditConditionalLogic]);
 
   return (
     <div ref={dragDropRef}>
@@ -97,7 +135,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
         animate={{ 
           opacity: isDragging ? 0.6 : 1, 
           y: 0,
-          scale: isDragging ? 1.05 : isOver ? 1.02 : 1,
+          scale: isDragging ? 1.02 : isOver ? 1.01 : 1,
         }}
         transition={{ 
           type: "spring", 
@@ -171,7 +209,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => onEditConditionalLogic(option)}
+                onClick={handleEditConditionalLogic}
                 className={`p-2 rounded-lg transition-colors ${
                   hasConditionalLogic
                     ? 'text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20'
@@ -182,14 +220,14 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
                 <Zap className="w-5 h-5" />
               </button>
               <button
-                onClick={() => onEdit(option)}
+                onClick={handleEdit}
                 className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
                 title="Edit Option"
               >
                 <Edit className="w-5 h-5" />
               </button>
               <button
-                onClick={() => onDelete(option.id)}
+                onClick={handleDelete}
                 className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
                 title="Delete Option"
               >
@@ -201,6 +239,8 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
       </motion.div>
     </div>
   );
-};
+});
 
-export default DragDropOption;
+OptimizedDragDropOption.displayName = 'OptimizedDragDropOption';
+
+export default OptimizedDragDropOption;
