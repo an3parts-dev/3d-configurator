@@ -48,33 +48,43 @@ const BabylonPreview: React.FC<BabylonPreviewProps> = ({
     const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
     const scene = new Scene(engine);
 
-    // Set up camera
+    // Set up camera with better default positioning
     const camera = new ArcRotateCamera(
       "camera",
       -Math.PI / 2,
       Math.PI / 2.5,
-      10,
+      8, // Closer initial distance
       Vector3.Zero(),
       scene
     );
     camera.attachControl(canvas, true);
     camera.setTarget(Vector3.Zero());
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 20;
+    camera.lowerRadiusLimit = 1; // Allow closer zoom
+    camera.upperRadiusLimit = 25; // Allow further zoom
     camera.lowerBetaLimit = 0.1;
     camera.upperBetaLimit = Math.PI / 2;
+    
+    // Smoother camera controls
+    camera.panningSensibility = 1000;
+    camera.wheelPrecision = 50;
+    camera.pinchPrecision = 50;
 
-    // Set up lighting
+    // Set up lighting for better model visibility
     const hemisphericLight = new HemisphericLight("hemisphericLight", new Vector3(0, 1, 0), scene);
-    hemisphericLight.intensity = 0.4;
+    hemisphericLight.intensity = 0.6; // Increased ambient light
 
     const directionalLight = new DirectionalLight("directionalLight", new Vector3(-1, -1, -1), scene);
-    directionalLight.intensity = 1.2;
+    directionalLight.intensity = 1.5; // Increased main light
     directionalLight.position = new Vector3(5, 5, 5);
 
     const directionalLight2 = new DirectionalLight("directionalLight2", new Vector3(1, -1, 1), scene);
-    directionalLight2.intensity = 0.8;
+    directionalLight2.intensity = 1.0; // Increased fill light
     directionalLight2.position = new Vector3(-5, 5, -5);
+
+    // Add a third light for better coverage
+    const directionalLight3 = new DirectionalLight("directionalLight3", new Vector3(0, -1, 0), scene);
+    directionalLight3.intensity = 0.5;
+    directionalLight3.position = new Vector3(0, -5, 0);
 
     // Store references
     engineRef.current = engine;
@@ -118,41 +128,44 @@ const BabylonPreview: React.FC<BabylonPreviewProps> = ({
       
       const modelComponents: ModelComponent[] = [];
       
-      // Calculate bounding box for scaling
-      let boundingInfo = result.meshes[0]?.getBoundingInfo();
-      if (result.meshes.length > 1) {
-        const min = Vector3.Zero();
-        const max = Vector3.Zero();
-        
-        result.meshes.forEach(mesh => {
-          if (mesh.getBoundingInfo) {
-            const meshBounds = mesh.getBoundingInfo();
-            Vector3.MinimizeInPlace(min, meshBounds.minimum);
-            Vector3.MaximizeInPlace(max, meshBounds.maximum);
-          }
-        });
-        
-        boundingInfo = { minimum: min, maximum: max };
-      }
+      // Calculate comprehensive bounding box for all meshes
+      let globalMin = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+      let globalMax = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+      
+      result.meshes.forEach(mesh => {
+        if (mesh.getBoundingInfo && mesh.name !== '__root__') {
+          const meshBounds = mesh.getBoundingInfo();
+          Vector3.MinimizeInPlace(globalMin, meshBounds.minimum);
+          Vector3.MaximizeInPlace(globalMax, meshBounds.maximum);
+        }
+      });
 
-      if (boundingInfo) {
-        const size = boundingInfo.maximum.subtract(boundingInfo.minimum);
-        const center = boundingInfo.minimum.add(boundingInfo.maximum).scale(0.5);
-        
-        // Center the model
-        result.meshes.forEach(mesh => {
+      // Calculate model dimensions and center
+      const size = globalMax.subtract(globalMin);
+      const center = globalMin.add(globalMax).scale(0.5);
+      
+      console.log('📏 Model dimensions:', size);
+      console.log('📍 Model center:', center);
+
+      // Center the model at origin
+      result.meshes.forEach(mesh => {
+        if (mesh.name !== '__root__') {
           mesh.position = mesh.position.subtract(center);
-        });
-        
-        // Scale the model
-        const maxDimension = Math.max(size.x, size.y, size.z);
-        const targetSize = 4;
-        const scale = targetSize / maxDimension;
-        
-        result.meshes.forEach(mesh => {
+        }
+      });
+      
+      // Scale the model to fit the viewport optimally
+      const maxDimension = Math.max(size.x, size.y, size.z);
+      const targetSize = 6; // Larger target size to fill more of the screen
+      const scale = targetSize / maxDimension;
+      
+      console.log('🔍 Scaling factor:', scale);
+      
+      result.meshes.forEach(mesh => {
+        if (mesh.name !== '__root__') {
           mesh.scaling = new Vector3(scale, scale, scale);
-        });
-      }
+        }
+      });
 
       // Process meshes and create components
       result.meshes.forEach((mesh) => {
@@ -200,12 +213,19 @@ const BabylonPreview: React.FC<BabylonPreviewProps> = ({
         console.log('🎯 Default selections set:', defaultSelections);
       }
 
-      // Position camera to view the model
-      if (cameraRef.current && boundingInfo) {
-        const size = boundingInfo.maximum.subtract(boundingInfo.minimum);
-        const maxDimension = Math.max(size.x, size.y, size.z);
-        cameraRef.current.radius = maxDimension * 2;
+      // Position camera optimally to view the scaled model
+      if (cameraRef.current) {
+        const scaledSize = size.scale(scale);
+        const optimalDistance = Math.max(scaledSize.x, scaledSize.y, scaledSize.z) * 1.5; // Closer for better fill
+        
+        cameraRef.current.radius = optimalDistance;
         cameraRef.current.setTarget(Vector3.Zero());
+        
+        // Adjust camera limits based on model size
+        cameraRef.current.lowerRadiusLimit = optimalDistance * 0.3;
+        cameraRef.current.upperRadiusLimit = optimalDistance * 3;
+        
+        console.log('📷 Camera positioned at distance:', optimalDistance);
       }
 
     }).catch((error) => {
