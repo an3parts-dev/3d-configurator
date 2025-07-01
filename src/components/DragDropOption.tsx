@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   GripVertical,
   Edit,
@@ -8,9 +8,17 @@ import {
   Layers,
   List,
   Grid3X3,
-  Zap
+  Zap,
+  Eye,
+  EyeOff,
+  MoreVertical
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
+import { cn } from '../lib/utils';
 
 interface DragDropOptionProps {
   option: ConfiguratorOption;
@@ -30,8 +38,9 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   onEditConditionalLogic
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
     item: () => ({ 
       id: option.id, 
@@ -43,7 +52,7 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     }),
   });
 
-  const [{ isOver }, drop] = useDrop({
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
     hover: (item: { id: string; index: number }, monitor) => {
       if (!ref.current) return;
@@ -72,128 +81,253 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
     }),
   });
 
-  const dragDropRef = drag(drop(ref));
+  // Create invisible drag preview
+  React.useEffect(() => {
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
+  }, [dragPreview]);
+
+  const dragDropRef = drop(ref);
+  const dragRef = drag(dragDropRef);
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
+  const showDropZone = isOver && canDrop;
+
+  const getDisplayTypeIcon = () => {
+    switch (option.displayType) {
+      case 'list': return <List className="w-4 h-4" />;
+      case 'buttons': return <Grid3X3 className="w-4 h-4" />;
+      case 'images': return <Eye className="w-4 h-4" />;
+      default: return <List className="w-4 h-4" />;
+    }
+  };
+
+  const getManipulationTypeColor = () => {
+    return option.manipulationType === 'visibility' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400';
+  };
 
   return (
-    <div ref={dragDropRef}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ 
-          opacity: isDragging ? 0.5 : 1, 
-          y: 0,
-          scale: isDragging ? 1.02 : 1,
-          rotate: isDragging ? 2 : 0,
-          zIndex: isDragging ? 50 : 1
-        }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 300, 
-          damping: 30,
-          opacity: { duration: 0.2 },
-          scale: { duration: 0.2 },
-          rotate: { duration: 0.2 }
-        }}
-        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
-          isDragging 
-            ? 'border-blue-500 shadow-2xl shadow-blue-500/20 cursor-grabbing' 
-            : isOver
-            ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/10'
-            : 'border-gray-700 hover:border-gray-600 shadow-sm'
-        }`}
-        style={{
-          cursor: isDragging ? 'grabbing' : 'grab',
-          transform: isDragging ? 'rotate(2deg) scale(1.02)' : undefined,
-          boxShadow: isDragging ? '0 25px 50px -12px rgba(59, 130, 246, 0.25)' : undefined
-        }}
-      >
-        {/* Conditional Logic Indicator */}
-        {hasConditionalLogic && (
-          <div className="absolute -top-2 -right-2 bg-purple-600 text-white p-1.5 rounded-full shadow-lg border-2 border-gray-800">
-            <Zap className="w-3 h-3" />
-          </div>
-        )}
+    <TooltipProvider>
+      <div ref={dragDropRef}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: isDragging ? 0.3 : 1, 
+            y: 0,
+            scale: showDropZone ? 1.02 : 1,
+            rotateX: isDragging ? 5 : 0,
+          }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 30,
+            opacity: { duration: 0.2 },
+            scale: { duration: 0.2 },
+          }}
+          className={cn(
+            "relative group",
+            isDragging && "dragging",
+            showDropZone && "drop-zone-hover"
+          )}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <Card className={cn(
+            "transition-all duration-200 border-2",
+            isDragging 
+              ? 'border-primary shadow-2xl shadow-primary/20' 
+              : showDropZone
+              ? 'border-primary/50 bg-primary/5 shadow-lg'
+              : 'border-border hover:border-primary/30 hover:shadow-md',
+            "relative overflow-hidden"
+          )}>
+            {/* Conditional Logic Indicator */}
+            <AnimatePresence>
+              {hasConditionalLogic && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="absolute -top-2 -right-2 z-10"
+                >
+                  <Badge variant="default" className="bg-purple-600 hover:bg-purple-700 shadow-lg">
+                    <Zap className="w-3 h-3" />
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors">
-              <GripVertical className="w-5 h-5 text-gray-500" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <Layers className="w-5 h-5 text-blue-400" />
-                <h4 className="text-white font-semibold text-lg">{option.name}</h4>
-                {hasConditionalLogic && (
-                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
-                    Conditional Logic
-                  </span>
-                )}
+            {/* Drop Zone Indicator */}
+            <AnimatePresence>
+              {showDropZone && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-primary/10 border-2 border-primary border-dashed rounded-lg flex items-center justify-center z-20"
+                >
+                  <Badge variant="default" className="shadow-lg">
+                    Drop here to reorder
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 flex-1 min-w-0">
+                  {/* Drag Handle */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div 
+                        ref={dragRef}
+                        className={cn(
+                          "drag-handle p-2 rounded-lg transition-all duration-200",
+                          "hover:bg-accent/50 active:bg-accent",
+                          "touch-manipulation"
+                        )}
+                      >
+                        <GripVertical className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Drag to reorder</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  
+                  {/* Option Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className={cn(
+                        "p-1.5 rounded-md",
+                        getManipulationTypeColor()
+                      )}>
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <h4 className="text-foreground font-semibold text-lg truncate">
+                        {option.name}
+                      </h4>
+                      {hasConditionalLogic && (
+                        <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                          Smart Logic
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        {getDisplayTypeIcon()}
+                        <span className="capitalize font-medium">{option.displayType}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-1">
+                        <Layers className="w-4 h-4" />
+                        <span className="capitalize font-medium">{option.manipulationType}</span>
+                      </div>
+                      
+                      {option.defaultBehavior && (
+                        <Badge 
+                          variant={option.defaultBehavior === 'hide' ? 'destructive' : 'default'}
+                          className="text-xs"
+                        >
+                          {option.defaultBehavior === 'hide' ? (
+                            <>
+                              <EyeOff className="w-3 h-3 mr-1" />
+                              Hide Default
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="w-3 h-3 mr-1" />
+                              Show Default
+                            </>
+                          )}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats and Actions */}
+                <div className="flex items-center space-x-4">
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-foreground">
+                      {option.values.length} values
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {option.targetComponents.length} targets
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className={cn(
+                    "flex items-center space-x-1 transition-all duration-200",
+                    isHovered ? "opacity-100" : "opacity-60"
+                  )}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEditConditionalLogic(option)}
+                          className={cn(
+                            "h-8 w-8 micro-interaction focus-ring",
+                            hasConditionalLogic
+                              ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10'
+                              : 'text-muted-foreground hover:text-purple-400 hover:bg-purple-500/10'
+                          )}
+                        >
+                          <Zap className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit Conditional Logic</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(option)}
+                          className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 micro-interaction focus-ring"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit Option</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(option.id)}
+                          className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10 micro-interaction focus-ring"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete Option</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center space-x-3 mt-1">
-                <p className="text-gray-400 text-sm flex items-center space-x-2">
-                  <Layers className="w-4 h-4" />
-                  <span className="capitalize font-medium">{option.manipulationType}</span>
-                </p>
-                <span className="text-gray-600">•</span>
-                <p className="text-gray-400 text-sm flex items-center space-x-2">
-                  {option.displayType === 'list' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
-                  <span className="capitalize font-medium">{option.displayType}</span>
-                </p>
-                {option.defaultBehavior && (
-                  <>
-                    <span className="text-gray-600">•</span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      option.defaultBehavior === 'hide' 
-                        ? 'bg-red-500/20 text-red-300' 
-                        : 'bg-green-500/20 text-green-300'
-                    }`}>
-                      {option.defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
-              <p className="text-gray-500 text-xs">{option.targetComponents.length} targets</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => onEditConditionalLogic(option)}
-                className={`p-2 rounded-lg transition-colors ${
-                  hasConditionalLogic
-                    ? 'text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20'
-                    : 'text-gray-400 hover:text-purple-400 hover:bg-purple-500/10'
-                }`}
-                title="Edit Conditional Logic"
-              >
-                <Zap className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => onEdit(option)}
-                className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
-                title="Edit Option"
-              >
-                <Edit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => onDelete(option.id)}
-                className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
-                title="Delete Option"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </TooltipProvider>
   );
 };
 
