@@ -142,6 +142,9 @@ const GLBModel = ({
       const selectedValueId = selectedValues[option.id];
       if (!selectedValueId) return;
 
+      // Skip length options as they don't affect 3D model directly
+      if (option.manipulationType === 'length') return;
+
       const selectedValue = option.values.find(v => v && v.id === selectedValueId);
       if (!selectedValue) return;
 
@@ -215,7 +218,6 @@ const GLBModel = ({
           }
         });
       }
-      // Length manipulation is handled in the UI, not in 3D scene
     });
 
     // Update component state for UI
@@ -503,7 +505,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
-  // Get current length measurements for overlay
+  // Get current length measurements for overlay with world space transformation
   const getCurrentLengthMeasurements = () => {
     const lengthOptions = visibleOptions.filter(opt => opt.manipulationType === 'length');
     return lengthOptions.map(option => {
@@ -517,8 +519,48 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         return points;
       }, []);
 
+      // Transform measure points to world space
+      const transformedMeasurePoints = allMeasurePoints.map(point => {
+        // Find the corresponding model component
+        const component = modelComponents.find(comp => 
+          comp.name.toLowerCase() === point.componentName.toLowerCase()
+        );
+
+        if (component && component.mesh) {
+          // Create a vector from the local position
+          const localPosition = new THREE.Vector3(
+            point.position.x,
+            point.position.y,
+            point.position.z
+          );
+
+          // Transform to world space using the mesh's world matrix
+          const worldPosition = localPosition.clone();
+          component.mesh.updateMatrixWorld(true);
+          worldPosition.applyMatrix4(component.mesh.matrixWorld);
+
+          console.log(`📍 Transformed measure point "${point.name}":`, {
+            local: point.position,
+            world: { x: worldPosition.x, y: worldPosition.y, z: worldPosition.z },
+            component: point.componentName
+          });
+
+          return {
+            ...point,
+            position: {
+              x: worldPosition.x,
+              y: worldPosition.y,
+              z: worldPosition.z
+            }
+          };
+        } else {
+          console.warn(`⚠️ Component "${point.componentName}" not found for measure point "${point.name}"`);
+          return point; // Return original if component not found
+        }
+      });
+
       return {
-        measurePoints: allMeasurePoints,
+        measurePoints: transformedMeasurePoints,
         lengthValue: currentLength,
         lengthSettings: option.lengthSettings!,
         isVisible: true
@@ -619,9 +661,27 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           </div>
         </div>
 
+        {/* Length Measurements Status */}
+        {lengthMeasurements.length > 0 && (
+          <div className="absolute top-4 right-4 bg-blue-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-blue-500/30">
+            <div className="flex items-center space-x-2 text-blue-300">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Ruler className="w-4 h-4" />
+              </motion.div>
+              <span className="text-sm font-medium">Length Measurements</span>
+            </div>
+            <p className="text-xs text-blue-200/80 mt-1">
+              {lengthMeasurements.length} measurement{lengthMeasurements.length !== 1 ? 's' : ''} active
+            </p>
+          </div>
+        )}
+
         {/* Conditional Logic Status */}
         {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-          <div className="absolute top-4 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
+          <div className="absolute bottom-4 left-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
             <div className="flex items-center space-x-2 text-purple-300">
               <motion.div
                 animate={{ rotate: 360 }}
