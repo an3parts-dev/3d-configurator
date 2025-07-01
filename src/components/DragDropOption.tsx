@@ -35,20 +35,17 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
-    item: () => ({ 
-      id: option.id, 
-      index, 
-      type: 'option'
-    }),
+    item: () => {
+      setShowDragPreview(true);
+      return { 
+        id: option.id, 
+        index, 
+        type: 'option'
+      };
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    begin: () => {
-      setShowDragPreview(true);
-    },
-    end: () => {
-      setShowDragPreview(false);
-    }
   });
 
   const [{ isOver }, drop] = useDrop({
@@ -98,6 +95,13 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       return () => document.removeEventListener('mousemove', handleMouseMove);
+    }
+  }, [isDragging]);
+
+  // Reset drag preview when dragging ends
+  React.useEffect(() => {
+    if (!isDragging) {
+      setShowDragPreview(false);
     }
   }, [isDragging]);
 
