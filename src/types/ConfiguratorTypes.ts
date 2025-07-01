@@ -33,7 +33,7 @@ export interface ConfiguratorOptionValue {
 
 export interface ImageSettings {
   size: 'small' | 'medium' | 'large';
-  aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3';
+  aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full';
 }
 
 export interface ConfiguratorOption {

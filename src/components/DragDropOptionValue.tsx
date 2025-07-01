@@ -114,13 +114,13 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   const hasConditionalLogic = value.conditionalLogic?.enabled;
 
   const getImageSizeClass = () => {
-    if (!imageSettings) return 'h-24 w-24';
+    if (!imageSettings) return 'h-24';
     
     switch (imageSettings.size) {
-      case 'small': return 'h-16 w-16';
-      case 'medium': return 'h-24 w-24';
-      case 'large': return 'h-32 w-32';
-      default: return 'h-24 w-24';
+      case 'small': return 'h-16';
+      case 'medium': return 'h-24';
+      case 'large': return 'h-32';
+      default: return 'h-24';
     }
   };
 
@@ -133,8 +133,20 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       case '16:9': return 'aspect-video';
       case '3:2': return 'aspect-[3/2]';
       case '2:3': return 'aspect-[2/3]';
+      case 'full': return ''; // No aspect ratio constraint for full size
       default: return 'aspect-square';
     }
+  };
+
+  const getImageContainerClass = () => {
+    const sizeClass = getImageSizeClass();
+    const aspectClass = getAspectRatioClass();
+    
+    if (imageSettings?.aspectRatio === 'full') {
+      return `${sizeClass} w-auto max-w-48`; // Full size with max width constraint
+    }
+    
+    return `${sizeClass} ${aspectClass}`;
   };
 
   const handleFileSelect = (file: File) => {
@@ -199,26 +211,53 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               <GripVertical className="w-5 h-5 text-gray-400" />
             </div>
 
+            {/* Value Name Input - 35% width */}
+            <div className="w-[35%]">
+              <input
+                type="text"
+                value={value.name}
+                onChange={(e) => onUpdate(value.id, { name: e.target.value })}
+                className="w-full bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                placeholder="Value name"
+              />
+            </div>
+
             {/* Hide Title Toggle for Images */}
             {displayType === 'images' && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <button
                   onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
                   className={`p-2 rounded-lg transition-colors ${
                     value.hideTitle 
                       ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
-                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-600'
+                      : 'text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20'
                   }`}
                   title={value.hideTitle ? 'Show title' : 'Hide title'}
                 >
                   {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+                <span className="text-gray-400 text-xs font-medium">
+                  {value.hideTitle ? 'Hidden' : 'Visible'}
+                </span>
+              </div>
+            )}
+
+            {/* Color picker for material manipulation */}
+            {manipulationType === 'material' && (
+              <div className="relative flex-shrink-0">
+                <input
+                  type="color"
+                  value={value.color || '#000000'}
+                  onChange={(e) => onUpdate(value.id, { color: e.target.value })}
+                  className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
+                />
+                <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
               </div>
             )}
 
             {/* Image Upload/Preview for Images Display Type */}
             {displayType === 'images' && (
-              <div className="flex-shrink-0">
+              <div className="flex-1 flex justify-end">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -232,14 +271,14 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 
                 <div
                   onClick={handleImageClick}
-                  className={`${getImageSizeClass()} ${getAspectRatioClass()} border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group`}
+                  className={`${getImageContainerClass()} border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
                 >
                   {value.image ? (
                     <>
                       <img
                         src={value.image}
                         alt={value.name}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full ${imageSettings?.aspectRatio === 'full' ? 'object-contain' : 'object-cover'}`}
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <div className="flex space-x-1">
@@ -267,28 +306,6 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 </div>
               </div>
             )}
-
-            {/* Color picker for material manipulation */}
-            {manipulationType === 'material' && (
-              <div className="relative flex-shrink-0">
-                <input
-                  type="color"
-                  value={value.color || '#000000'}
-                  onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                  className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
-                />
-                <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
-              </div>
-            )}
-            
-            {/* Value Name Input */}
-            <input
-              type="text"
-              value={value.name}
-              onChange={(e) => onUpdate(value.id, { name: e.target.value })}
-              className="flex-1 bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-              placeholder="Value name"
-            />
             
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 flex-shrink-0">

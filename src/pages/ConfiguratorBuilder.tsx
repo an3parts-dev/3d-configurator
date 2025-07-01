@@ -715,7 +715,7 @@ const ConfiguratorBuilder = () => {
                             imageSettings: {
                               ...prev.imageSettings,
                               size: prev.imageSettings?.size || 'medium',
-                              aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3'
+                              aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full'
                             }
                           } : null)}
                           className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -725,6 +725,7 @@ const ConfiguratorBuilder = () => {
                           <option value="16:9">Widescreen (16:9)</option>
                           <option value="3:2">Photo (3:2)</option>
                           <option value="2:3">Portrait (2:3)</option>
+                          <option value="full">Full Size</option>
                         </select>
                       </div>
                     </div>
