@@ -23,10 +23,7 @@ import {
   RefreshCw,
   Clock,
   AlertTriangle,
-  Image as ImageIcon,
-  Users,
-  FolderPlus,
-  ArrowUpRight
+  Image as ImageIcon
 } from 'lucide-react';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
@@ -34,11 +31,9 @@ import DragDropOption from '../components/DragDropOption';
 import DragDropOptionValue from '../components/DragDropOptionValue';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import ConditionalLogicModal from '../components/ConditionalLogicModal';
-import FloatingDragPreview from '../components/FloatingDragPreview';
 import { ConfiguratorOption, ConfiguratorData, ModelComponent, ConditionalLogic, ImageSettings } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 import { useConfiguratorPersistence } from '../hooks/useConfiguratorPersistence';
-import { OptionOrderingManager } from '../utils/OptionOrderingManager';
 
 const ConfiguratorBuilder = () => {
   const {
@@ -70,8 +65,6 @@ const ConfiguratorBuilder = () => {
   const [editingOption, setEditingOption] = useState<ConfiguratorOption | null>(null);
   const [availableComponents, setAvailableComponents] = useState<ModelComponent[]>([]);
   const [isImporting, setIsImporting] = useState(false);
-  const [draggedOverIndex, setDraggedOverIndex] = useState<number | null>(null);
-  const [dragDirection, setDragDirection] = useState<'up' | 'down' | null>(null);
   
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -152,27 +145,6 @@ const ConfiguratorBuilder = () => {
     setShowNewOptionModal(false);
   };
 
-  const addNewGroup = (name: string) => {
-    const newGroup: ConfiguratorOption = {
-      id: `group_${Date.now()}`,
-      name,
-      displayType: 'list',
-      manipulationType: 'visibility',
-      targetComponents: [],
-      isGroup: true,
-      showTitle: true, // Default to showing title
-      children: [],
-      conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
-      values: []
-    };
-
-    setConfigurators(prev => prev.map(config => 
-      config.id === activeConfiguratorId 
-        ? { ...config, options: [...config.options, newGroup] }
-        : config
-    ));
-  };
-
   const updateOption = (optionId: string, updates: Partial<ConfiguratorOption>) => {
     setConfigurators(prev => prev.map(config => 
       config.id === activeConfiguratorId 
@@ -194,14 +166,13 @@ const ConfiguratorBuilder = () => {
       `Option: "${option.name}"`,
       `${option.values.length} option values`,
       `${option.targetComponents.length} target components`,
-      ...(option.conditionalLogic?.enabled ? ['Conditional logic rules'] : []),
-      ...(option.isGroup ? [`Group with ${option.children?.length || 0} child options`] : [])
+      ...(option.conditionalLogic?.enabled ? ['Conditional logic rules'] : [])
     ];
 
     setConfirmDialog({
       isOpen: true,
-      title: option.isGroup ? 'Delete Option Group' : 'Delete Configuration Option',
-      message: `Are you sure you want to delete ${option.isGroup ? 'the group' : 'the option'} "${option.name}"? This will permanently remove all associated values and settings.`,
+      title: 'Delete Configuration Option',
+      message: `Are you sure you want to delete the option "${option.name}"? This will permanently remove all associated values and settings.`,
       details,
       type: 'danger',
       onConfirm: () => {
@@ -210,7 +181,6 @@ const ConfiguratorBuilder = () => {
             ? {
                 ...config,
                 options: config.options.filter(opt => opt.id !== optionId)
-                  .map(opt => opt.parentId === optionId ? { ...opt, parentId: undefined } : opt)
               }
             : config
         ));
@@ -225,42 +195,18 @@ const ConfiguratorBuilder = () => {
     setConfigurators(prev => prev.map(config => {
       if (config.id !== activeConfiguratorId) return config;
       
-      const reorderedOptions = OptionOrderingManager.reorderOptions(
-        config.options,
-        dragIndex,
-        hoverIndex
-      );
+      const options = [...config.options];
       
-      return { ...config, options: reorderedOptions };
-    }));
-  }, [activeConfiguratorId]);
-
-  const moveWithinGroup = useCallback((groupId: string, dragIndex: number, hoverIndex: number) => {
-    setConfigurators(prev => prev.map(config => {
-      if (config.id !== activeConfiguratorId) return config;
+      if (dragIndex >= options.length || hoverIndex >= options.length) return config;
       
-      const reorderedOptions = OptionOrderingManager.reorderOptionsWithinGroup(
-        config.options,
-        groupId,
-        dragIndex,
-        hoverIndex
-      );
+      const draggedOption = options[dragIndex];
+      options.splice(dragIndex, 1);
+      options.splice(hoverIndex, 0, draggedOption);
       
-      return { ...config, options: reorderedOptions };
-    }));
-  }, [activeConfiguratorId]);
-
-  const moveToGroup = useCallback((optionId: string, groupId: string | null) => {
-    setConfigurators(prev => prev.map(config => {
-      if (config.id !== activeConfiguratorId) return config;
-      
-      const updatedOptions = OptionOrderingManager.moveOptionToGroup(
-        config.options,
-        optionId,
-        groupId
-      );
-      
-      return { ...config, options: updatedOptions };
+      return { 
+        ...config, 
+        options
+      };
     }));
   }, [activeConfiguratorId]);
 
@@ -419,11 +365,6 @@ const ConfiguratorBuilder = () => {
     });
   };
 
-  // Get options in visual order for display
-  const getOptionsInDisplayOrder = () => {
-    return OptionOrderingManager.getOptionsInVisualOrder(activeConfigurator.options);
-  };
-
   if (persistenceLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-900">
@@ -438,9 +379,6 @@ const ConfiguratorBuilder = () => {
 
   return (
     <div className="h-screen flex">
-      {/* Floating Drag Preview */}
-      <FloatingDragPreview allOptions={activeConfigurator.options} />
-
       {/* Left Panel - Configuration */}
       <div className="w-1/2 bg-gray-900 flex flex-col border-r border-gray-700">
         {/* Header */}
@@ -542,73 +480,42 @@ const ConfiguratorBuilder = () => {
               </div>
             </div>
 
-            {/* Add New Option/Group */}
+            {/* Add New Option */}
             <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-medium flex items-center">
                   <Settings className="w-5 h-5 mr-2" />
                   Configuration Options
                 </h3>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {
-                      const groupName = prompt('Enter group name:');
-                      if (groupName) addNewGroup(groupName);
-                    }}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
-                    title="Add Option Group"
-                  >
-                    <FolderPlus className="w-4 h-4" />
-                    <span>Group</span>
-                  </button>
-                  <button
-                    onClick={() => setShowNewOptionModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Option</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowNewOptionModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Option</span>
+                </button>
               </div>
             </div>
 
-            {/* Options List - Display in visual order */}
+            {/* Options List */}
             <div className="space-y-4">
-              {getOptionsInDisplayOrder().map((item) => {
-                if (item.isInGroup) {
-                  // Skip child options here, they'll be rendered by their parent group
-                  return null;
-                }
-
-                const childOptions = getOptionsInDisplayOrder()
-                  .filter(child => child.isInGroup && child.groupId === item.option.id)
-                  .map(child => child.option);
-
-                return (
-                  <DragDropOption
-                    key={item.option.id}
-                    option={item.option}
-                    index={item.visualIndex}
-                    visualIndex={item.visualIndex}
-                    onMove={moveOption}
-                    onMoveWithinGroup={moveWithinGroup}
-                    onEdit={openOptionEditModal}
-                    onDelete={deleteOption}
-                    onEditConditionalLogic={openConditionalLogicModal}
-                    onMoveToGroup={moveToGroup}
-                    allOptions={activeConfigurator.options}
-                    childOptions={childOptions}
-                    isDraggedOver={draggedOverIndex === item.visualIndex}
-                    dragDirection={dragDirection}
-                  />
-                );
-              })}
+              {activeConfigurator.options.map((option, index) => (
+                <DragDropOption
+                  key={option.id}
+                  option={option}
+                  index={index}
+                  onMove={moveOption}
+                  onEdit={openOptionEditModal}
+                  onDelete={deleteOption}
+                  onEditConditionalLogic={openConditionalLogicModal}
+                />
+              ))}
 
               {activeConfigurator.options.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <Settings className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No configuration options yet</p>
-                  <p className="text-sm">Click "Add Option" or "Add Group" to create your first configuration</p>
+                  <p className="text-sm">Click "Add Option" to create your first configuration</p>
                 </div>
               )}
             </div>
@@ -643,13 +550,11 @@ const ConfiguratorBuilder = () => {
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const parentId = formData.get('parentId') as string;
               addNewOption({
                 name: formData.get('name') as string,
                 displayType: formData.get('displayType') as 'list' | 'buttons' | 'images',
                 manipulationType: formData.get('manipulationType') as 'visibility' | 'material',
-                targetComponents: [],
-                parentId: parentId || undefined
+                targetComponents: []
               });
             }}>
               <div className="space-y-4">
@@ -662,18 +567,6 @@ const ConfiguratorBuilder = () => {
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     placeholder="e.g., Fitting A"
                   />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Parent Group (Optional)</label>
-                  <select
-                    name="parentId"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                  >
-                    <option value="">No Parent (Root Level)</option>
-                    {activeConfigurator.options.filter(opt => opt.isGroup).map(group => (
-                      <option key={group.id} value={group.id}>{group.name}</option>
-                    ))}
-                  </select>
                 </div>
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">Manipulation Type</label>
@@ -731,13 +624,11 @@ const ConfiguratorBuilder = () => {
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-700 flex items-center justify-between bg-gray-750 rounded-t-xl">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${editingOption.isGroup ? 'bg-purple-600' : 'bg-blue-600'}`}>
-                  {editingOption.isGroup ? <Users className="w-5 h-5 text-white" /> : <Edit className="w-5 h-5 text-white" />}
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Edit className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-xl">
-                    {editingOption.isGroup ? 'Edit Group' : 'Edit Option'}
-                  </h3>
+                  <h3 className="text-white font-semibold text-xl">Edit Option</h3>
                   <p className="text-gray-400 text-sm">{editingOption.name}</p>
                 </div>
               </div>
@@ -755,96 +646,41 @@ const ConfiguratorBuilder = () => {
                 {/* Basic Settings */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-gray-400 text-sm mb-2 font-medium">
-                      {editingOption.isGroup ? 'Group Name' : 'Option Name'}
-                    </label>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Option Name</label>
                     <input
                       type="text"
                       value={editingOption.name}
                       onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder={editingOption.isGroup ? 'Group name' : 'Option name'}
+                      placeholder="Option name"
                     />
                   </div>
-                  {!editingOption.isGroup && (
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                      <select
-                        value={editingOption.displayType}
-                        onChange={(e) => {
-                          const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
-                          setEditingOption(prev => prev ? { 
-                            ...prev, 
-                            displayType: newDisplayType,
-                            imageSettings: newDisplayType === 'images' ? {
-                              size: 'medium',
-                              aspectRatio: '1:1'
-                            } : undefined
-                          } : null);
-                        }}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="buttons">Buttons</option>
-                        <option value="list">List</option>
-                        <option value="images">Images</option>
-                      </select>
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
+                    <select
+                      value={editingOption.displayType}
+                      onChange={(e) => {
+                        const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
+                        setEditingOption(prev => prev ? { 
+                          ...prev, 
+                          displayType: newDisplayType,
+                          imageSettings: newDisplayType === 'images' ? {
+                            size: 'medium',
+                            aspectRatio: '1:1'
+                          } : undefined
+                        } : null);
+                      }}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    >
+                      <option value="buttons">Buttons</option>
+                      <option value="list">List</option>
+                      <option value="images">Images</option>
+                    </select>
+                  </div>
                 </div>
 
-                {/* Group Display Settings */}
-                {editingOption.isGroup && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="text-white font-semibold text-lg flex items-center">
-                          <Settings className="w-5 h-5 mr-2 text-purple-400" />
-                          Group Display Settings
-                        </h4>
-                        <p className="text-gray-400 text-sm">Control how this group appears in the live preview</p>
-                      </div>
-                      <button
-                        onClick={() => setEditingOption(prev => prev ? { 
-                          ...prev, 
-                          showTitle: !prev.showTitle 
-                        } : null)}
-                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
-                          editingOption.showTitle !== false
-                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30'
-                            : 'bg-gray-600/20 text-gray-400 border border-gray-600/30 hover:bg-gray-600/30'
-                        }`}
-                      >
-                        {editingOption.showTitle !== false ? (
-                          <>
-                            <span className="font-medium">Show Title</span>
-                            <ToggleRight className="w-6 h-6" />
-                          </>
-                        ) : (
-                          <>
-                            <span className="font-medium">Hide Title</span>
-                            <ToggleLeft className="w-6 h-6" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-                      <p className="text-gray-300 text-sm">
-                        {editingOption.showTitle !== false ? (
-                          <>
-                            <strong>Show Title:</strong> The group name and option count will be displayed at the top of the grouped options container.
-                          </>
-                        ) : (
-                          <>
-                            <strong>Hide Title:</strong> Only the options will be shown in the container without any group header.
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Image Settings for Images Display Type */}
-                {!editingOption.isGroup && editingOption.displayType === 'images' && (
+                {editingOption.displayType === 'images' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                     <h4 className="text-white font-semibold text-lg flex items-center mb-4">
                       <ImageIcon className="w-5 h-5 mr-2 text-blue-400" />
@@ -896,7 +732,7 @@ const ConfiguratorBuilder = () => {
                 )}
 
                 {/* Default Behavior for Visibility Options */}
-                {!editingOption.isGroup && editingOption.manipulationType === 'visibility' && (
+                {editingOption.manipulationType === 'visibility' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -950,88 +786,84 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Component Selector for non-groups */}
-                {!editingOption.isGroup && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <ComponentSelector
-                      availableComponents={availableComponents}
-                      selectedComponents={editingOption.targetComponents}
-                      onSelectionChange={(components) => setEditingOption(prev => prev ? { ...prev, targetComponents: components } : null)}
-                      placeholder="Select components to manipulate..."
-                      label="Target Components"
-                      alwaysModal={true}
-                    />
-                  </div>
-                )}
+                {/* Component Selector */}
+                <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                  <ComponentSelector
+                    availableComponents={availableComponents}
+                    selectedComponents={editingOption.targetComponents}
+                    onSelectionChange={(components) => setEditingOption(prev => prev ? { ...prev, targetComponents: components } : null)}
+                    placeholder="Select components to manipulate..."
+                    label="Target Components"
+                    alwaysModal={true}
+                  />
+                </div>
 
-                {/* Option Values for non-groups */}
-                {!editingOption.isGroup && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-white font-semibold text-lg">Option Values</h4>
-                        <p className="text-gray-400 text-sm">Configure the different states for this option</p>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          if (!editingOption) return;
-                          const newValue = {
-                            id: `value_${Date.now()}`,
-                            name: 'New Option',
-                            ...(editingOption.manipulationType === 'material' && { color: '#000000' }),
-                            ...(editingOption.displayType === 'images' && { image: undefined, hideTitle: false }),
-                            ...(editingOption.manipulationType === 'visibility' && { 
-                              visibleComponents: [],
-                              hiddenComponents: []
-                            }),
-                            conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
-                          };
-                          setEditingOption(prev => prev ? { ...prev, values: [...prev.values, newValue] } : null);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 font-medium transition-colors shadow-sm"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Value</span>
-                      </button>
+                {/* Option Values */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-semibold text-lg">Option Values</h4>
+                      <p className="text-gray-400 text-sm">Configure the different states for this option</p>
                     </div>
-                    
-                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                      {editingOption.values.map((value, index) => (
-                        <DragDropOptionValue
-                          key={value.id}
-                          value={value}
-                          index={index}
-                          manipulationType={editingOption.manipulationType}
-                          displayType={editingOption.displayType}
-                          availableComponents={availableComponents}
-                          targetComponents={editingOption.targetComponents}
-                          defaultBehavior={editingOption.defaultBehavior}
-                          imageSettings={editingOption.imageSettings}
-                          allOptions={activeConfigurator.options}
-                          onMove={(dragIndex, hoverIndex) => {
-                            if (!editingOption) return;
-                            const values = [...editingOption.values];
-                            const draggedValue = values[dragIndex];
-                            values.splice(dragIndex, 1);
-                            values.splice(hoverIndex, 0, draggedValue);
-                            setEditingOption(prev => prev ? { ...prev, values } : null);
-                          }}
-                          onUpdate={(valueId, updates) => {
-                            const updatedValues = editingOption.values.map(v => 
-                              v.id === valueId ? { ...v, ...updates } : v
-                            );
-                            setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
-                          }}
-                          onDelete={(valueId) => {
-                            const updatedValues = editingOption.values.filter(v => v.id !== valueId);
-                            setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
-                          }}
-                          canDelete={editingOption.values.length > 1}
-                        />
-                      ))}
-                    </div>
+                    <button 
+                      onClick={() => {
+                        if (!editingOption) return;
+                        const newValue = {
+                          id: `value_${Date.now()}`,
+                          name: 'New Option',
+                          ...(editingOption.manipulationType === 'material' && { color: '#000000' }),
+                          ...(editingOption.displayType === 'images' && { image: undefined, hideTitle: false }),
+                          ...(editingOption.manipulationType === 'visibility' && { 
+                            visibleComponents: [],
+                            hiddenComponents: []
+                          }),
+                          conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
+                        };
+                        setEditingOption(prev => prev ? { ...prev, values: [...prev.values, newValue] } : null);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 font-medium transition-colors shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Value</span>
+                    </button>
                   </div>
-                )}
+                  
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    {editingOption.values.map((value, index) => (
+                      <DragDropOptionValue
+                        key={value.id}
+                        value={value}
+                        index={index}
+                        manipulationType={editingOption.manipulationType}
+                        displayType={editingOption.displayType}
+                        availableComponents={availableComponents}
+                        targetComponents={editingOption.targetComponents}
+                        defaultBehavior={editingOption.defaultBehavior}
+                        imageSettings={editingOption.imageSettings}
+                        allOptions={activeConfigurator.options}
+                        onMove={(dragIndex, hoverIndex) => {
+                          if (!editingOption) return;
+                          const values = [...editingOption.values];
+                          const draggedValue = values[dragIndex];
+                          values.splice(dragIndex, 1);
+                          values.splice(hoverIndex, 0, draggedValue);
+                          setEditingOption(prev => prev ? { ...prev, values } : null);
+                        }}
+                        onUpdate={(valueId, updates) => {
+                          const updatedValues = editingOption.values.map(v => 
+                            v.id === valueId ? { ...v, ...updates } : v
+                          );
+                          setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
+                        }}
+                        onDelete={(valueId) => {
+                          const updatedValues = editingOption.values.filter(v => v.id !== valueId);
+                          setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
+                        }}
+                        canDelete={editingOption.values.length > 1}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -46,10 +46,6 @@ export interface ConfiguratorOption {
   conditionalLogic?: ConditionalLogic;
   imageSettings?: ImageSettings;
   values: ConfiguratorOptionValue[];
-  parentId?: string; // For grouping
-  isGroup?: boolean;
-  children?: string[]; // Child option IDs
-  showTitle?: boolean; // For groups - whether to show the group title
 }
 
 export interface ConfiguratorData {

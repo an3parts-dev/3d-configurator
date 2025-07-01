@@ -3,7 +3,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Layers, Image as ImageIcon } from 'lucide-react';
+import { Zap, Image as ImageIcon } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -137,9 +137,6 @@ const GLBModel = ({
 
     // Apply each visible option's configuration with precise targeting
     visibleOptions.forEach((option) => {
-      // Skip groups
-      if (option.isGroup) return;
-
       const selectedValueId = selectedValues[option.id];
       if (!selectedValueId) return;
 
@@ -268,14 +265,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       onComponentsLoaded(components);
     }
     
-    // Initialize default selections for non-group options
+    // Initialize default selections for all options
     const defaultSelections: Record<string, string> = {};
     configuratorData.options.forEach(option => {
-      if (!option.isGroup) {
-        const validValues = option.values.filter(Boolean);
-        if (validValues.length > 0) {
-          defaultSelections[option.id] = validValues[0].id;
-        }
+      const validValues = option.values.filter(Boolean);
+      if (validValues.length > 0) {
+        defaultSelections[option.id] = validValues[0].id;
       }
     });
     
@@ -293,42 +288,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }));
   }, []);
 
-  // Get visible options based on conditional logic (excluding groups for display)
+  // Get visible options based on conditional logic
   const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
     configuratorData.options,
     selectedValues
-  ).filter(option => !option.isGroup);
-
-  // Get grouped structure for display
-  const groupedOptions = ConditionalLogicEngine.getGroupedOptions(
-    ConditionalLogicEngine.getVisibleOptions(configuratorData.options, selectedValues)
-  );
-
-  const renderOptionGroup = (group: any, childOptions: any[]) => (
-    <motion.div
-      key={group.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
-    >
-      {/* Group Title - Only show if showTitle is not false */}
-      {group.showTitle !== false && (
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-purple-600 rounded-lg">
-            <Layers className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-white font-semibold text-lg">{group.name}</h3>
-            <p className="text-gray-400 text-sm">{childOptions.length} options</p>
-          </div>
-        </div>
-      )}
-      
-      {/* Child Options - All in the same container */}
-      <div className="space-y-6">
-        {childOptions.map(option => renderOption(option))}
-      </div>
-    </motion.div>
   );
 
   const renderOption = (option: any) => {
@@ -571,7 +534,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <span className="text-sm font-medium">Smart Logic Active</span>
             </div>
             <p className="text-xs text-purple-200/80 mt-1">
-              {visibleOptions.length} of {configuratorData.options.filter(opt => !opt.isGroup).length} options visible
+              {visibleOptions.length} of {configuratorData.options.length} options visible
             </p>
           </div>
         )}
@@ -593,7 +556,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       {/* Options Panel - 50% screen height */}
       <div className="bg-gray-900 border-t border-gray-700 flex flex-col" style={{ height: '50vh' }}>
         <div className="flex-1 overflow-auto p-6">
-          {visibleOptions.length === 0 && groupedOptions.length === 0 ? (
+          {visibleOptions.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <motion.div
@@ -612,29 +575,16 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Render grouped options */}
-              {groupedOptions.map((option) => {
-                if (option.isGroup) {
-                  const childOptions = ConditionalLogicEngine.getChildOptions(option.id, configuratorData.options)
-                    .filter(child => ConditionalLogicEngine.shouldShowOption(child, selectedValues, configuratorData.options));
-                  
-                  if (childOptions.length === 0) return null;
-                  
-                  return renderOptionGroup(option, childOptions);
-                } else {
-                  // Render standalone options in their own container
-                  return (
-                    <motion.div
-                      key={option.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-gray-750 p-6 rounded-xl border border-gray-600"
-                    >
-                      {renderOption(option)}
-                    </motion.div>
-                  );
-                }
-              })}
+              {visibleOptions.map((option) => (
+                <motion.div
+                  key={option.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gray-750 p-6 rounded-xl border border-gray-600"
+                >
+                  {renderOption(option)}
+                </motion.div>
+              ))}
             </div>
           )}
         </div>
