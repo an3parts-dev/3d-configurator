@@ -296,24 +296,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   const getImageSizeClass = (size?: string) => {
     switch (size) {
-      case 'x-small': return 'h-12 w-12';
-      case 'small': return 'h-16 w-16';
-      case 'medium': return 'h-20 w-20';
-      case 'large': return 'h-24 w-24';
-      case 'x-large': return 'h-32 w-32';
-      default: return 'h-20 w-20';
-    }
-  };
-
-  const getAspectRatioClass = (aspectRatio?: string) => {
-    switch (aspectRatio) {
-      case '1:1': return 'aspect-square';
-      case '4:3': return 'aspect-[4/3]';
-      case '16:9': return 'aspect-video';
-      case '3:2': return 'aspect-[3/2]';
-      case '2:3': return 'aspect-[2/3]';
-      case 'full': return '';
-      default: return 'aspect-square';
+      case 'x-small': return 'h-12';
+      case 'small': return 'h-16';
+      case 'medium': return 'h-20';
+      case 'large': return 'h-24';
+      case 'x-large': return 'h-32';
+      default: return 'h-20';
     }
   };
 
@@ -372,7 +360,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'}`}>
+          <div className={`${isRowDirection ? 'flex gap-3 overflow-x-auto pb-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
@@ -385,8 +373,13 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               >
                 <div className={`
                   ${getImageSizeClass(option.imageSettings?.size)}
-                  ${getAspectRatioClass(option.imageSettings?.aspectRatio)}
-                  flex items-center justify-center ${getBorderStyles(option.imageSettings)} rounded-lg overflow-hidden
+                  ${option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
+                    option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
+                    option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
+                    option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
+                    option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
+                    option.imageSettings?.aspectRatio === 'full' ? '' : 'aspect-square'}
+                  flex items-center justify-center ${getBorderStyles(option.imageSettings)} rounded-lg
                 `}>
                   {value.image ? (
                     <img
@@ -433,7 +426,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className={`${isRowDirection ? 'flex gap-3 overflow-x-auto pb-2' : 'flex flex-wrap gap-3'}`}>
+          <div className={`${isRowDirection ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
@@ -450,7 +443,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     style={{ backgroundColor: value.color }}
                   />
                 )}
-                <span>{!value.hideTitle ? value.name : ''}</span>
+                <span>{value.name}</span>
                 
                 {/* Conditional Logic Indicator */}
                 {value.conditionalLogic?.enabled && (
@@ -469,7 +462,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           >
             {visibleValues.map((value: any) => (
               <option key={value.id} value={value.id}>
-                {!value.hideTitle ? value.name : `Option ${value.id.slice(-4)}`} {value.conditionalLogic?.enabled ? '⚡' : ''}
+                {value.name} {value.conditionalLogic?.enabled ? '⚡' : ''}
               </option>
             ))}
           </select>
