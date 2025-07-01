@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
@@ -7,28 +7,23 @@ import { Zap, Image as ImageIcon } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
-import { MeasurementEngine } from '../utils/MeasurementEngine';
-import DimensionLine from './DimensionLine';
-import MeasurementSelector from './MeasurementSelector';
 
 interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
   onComponentsLoaded?: (components: ModelComponent[]) => void;
 }
 
-// Enhanced GLB Model Component with measurement support
+// Enhanced GLB Model Component with precise component targeting
 const GLBModel = ({ 
   modelUrl, 
   selectedValues, 
   onComponentsLoaded,
-  configuratorData,
-  measurementEngine
+  configuratorData
 }: { 
   modelUrl: string;
   selectedValues: Record<string, string>;
   onComponentsLoaded: (components: ModelComponent[]) => void;
   configuratorData: ConfiguratorData;
-  measurementEngine: MeasurementEngine;
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [components, setComponents] = useState<ModelComponent[]>([]);
@@ -57,9 +52,6 @@ const GLBModel = ({
       const targetSize = 4;
       const scale = targetSize / maxDimension;
       gltf.scene.scale.setScalar(scale);
-      
-      // Extract measurement points first
-      measurementEngine.extractMeasurementPoints(gltf.scene);
       
       // Traverse scene to collect all mesh components
       gltf.scene.traverse((child) => {
@@ -93,7 +85,7 @@ const GLBModel = ({
       // Notify parent component
       onComponentsLoaded(modelComponents);
     }
-  }, [gltf, isInitialized, onComponentsLoaded, measurementEngine]);
+  }, [gltf, isInitialized, onComponentsLoaded]);
 
   // Precise component matching function
   const isComponentTargeted = (componentName: string, targetComponents: string[]): boolean => {
@@ -254,29 +246,6 @@ const GLBModel = ({
   );
 };
 
-// Dimension Lines Component
-const DimensionLines = ({ measurementEngine }: { measurementEngine: MeasurementEngine }) => {
-  const { camera } = useThree();
-  const [dimensionLines, setDimensionLines] = useState<any[]>([]);
-
-  useFrame(() => {
-    const lines = measurementEngine.calculateDimensionLines();
-    setDimensionLines(lines);
-  });
-
-  return (
-    <>
-      {dimensionLines.map((dimension) => (
-        <DimensionLine
-          key={dimension.id}
-          dimension={dimension}
-          camera={camera}
-        />
-      ))}
-    </>
-  );
-};
-
 const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({ 
   configuratorData, 
   onComponentsLoaded 
@@ -284,20 +253,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [measurementEngine] = useState(() => new MeasurementEngine());
-  const [activeMeasurementType, setActiveMeasurementType] = useState<string | null>(null);
-  const [availableMeasurements, setAvailableMeasurements] = useState<string[]>([]);
 
   const handleComponentsLoaded = useCallback((components: ModelComponent[]) => {
     console.log('📦 Components loaded in preview:', components.length);
     
     setModelComponents(components);
     setIsLoading(false);
-    
-    // Get available measurement types
-    const available = measurementEngine.getAvailableMeasurementTypes();
-    setAvailableMeasurements(available);
-    console.log('📏 Available measurements:', available);
     
     // Notify parent component
     if (onComponentsLoaded) {
@@ -317,7 +278,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       setSelectedValues(defaultSelections);
       console.log('🎯 Default selections set:', defaultSelections);
     }
-  }, [onComponentsLoaded, configuratorData.options, measurementEngine]);
+  }, [onComponentsLoaded, configuratorData.options]);
 
   const handleValueChange = useCallback((optionId: string, valueId: string) => {
     console.log(`🔄 Option changed: ${optionId} → ${valueId}`);
@@ -326,11 +287,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       [optionId]: valueId
     }));
   }, []);
-
-  const handleMeasurementTypeChange = useCallback((typeId: string | null) => {
-    setActiveMeasurementType(typeId);
-    measurementEngine.setMeasurementType(typeId);
-  }, [measurementEngine]);
 
   // Get visible options based on conditional logic
   const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
@@ -537,11 +493,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             selectedValues={selectedValues}
             onComponentsLoaded={handleComponentsLoaded}
             configuratorData={configuratorData}
-            measurementEngine={measurementEngine}
           />
-
-          {/* Dimension Lines */}
-          <DimensionLines measurementEngine={measurementEngine} />
         </Canvas>
         
         {/* Loading overlay */}
@@ -603,17 +555,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       {/* Options Panel - 50% screen height with clean design */}
       <div className="bg-gray-900 flex flex-col" style={{ height: '50vh' }}>
         <div className="flex-1 overflow-auto p-6">
-          {/* Measurement Selector */}
-          {availableMeasurements.length > 0 && (
-            <div className="mb-6">
-              <MeasurementSelector
-                activeMeasurementType={activeMeasurementType}
-                onMeasurementTypeChange={handleMeasurementTypeChange}
-                availableMeasurements={availableMeasurements}
-              />
-            </div>
-          )}
-
           {visibleOptions.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
