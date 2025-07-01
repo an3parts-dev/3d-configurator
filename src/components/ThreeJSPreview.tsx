@@ -389,6 +389,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                           option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
                           option.imageSettings?.aspectRatio === 'full' ? '' :
                           'aspect-square'
+                        } ${
+                          option.imageSettings?.showBorder 
+                            ? `border-${option.imageSettings.borderWidth || 2} border-gray-600` 
+                            : ''
                         }`}
                       />
                     ) : (

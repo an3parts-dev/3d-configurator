@@ -26,7 +26,9 @@ import {
   Image as ImageIcon,
   Columns,
   Rows,
-  Square
+  Square,
+  Type,
+  Layout
 } from 'lucide-react';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
@@ -650,204 +652,235 @@ const ConfiguratorBuilder = () => {
             {/* Modal Content */}
             <div className="flex-1 overflow-auto p-6">
               <div className="space-y-8">
-                {/* Basic Settings */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Option Title</label>
-                      <input
-                        type="text"
-                        value={editingOption.name}
-                        onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="Option title"
-                      />
+                {/* Consolidated Option Settings */}
+                <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                  <h4 className="text-white font-semibold text-lg flex items-center mb-6">
+                    <Settings className="w-5 h-5 mr-2 text-blue-400" />
+                    Option Settings
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Left Column - Basic Info */}
+                    <div className="space-y-6">
+                      {/* Title and Description */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium flex items-center">
+                            <Type className="w-4 h-4 mr-2" />
+                            Option Title
+                          </label>
+                          <input
+                            type="text"
+                            value={editingOption.name}
+                            onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Option title"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Description</label>
+                          <textarea
+                            value={editingOption.description || ''}
+                            onChange={(e) => setEditingOption(prev => prev ? { ...prev, description: e.target.value } : null)}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                            placeholder="Brief description of this option"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Display Settings */}
+                      <div className="space-y-4">
+                        <h5 className="text-white font-medium flex items-center">
+                          <Layout className="w-4 h-4 mr-2" />
+                          Display Settings
+                        </h5>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
+                            <select
+                              value={editingOption.displayType}
+                              onChange={(e) => {
+                                const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
+                                setEditingOption(prev => prev ? { 
+                                  ...prev, 
+                                  displayType: newDisplayType,
+                                  imageSettings: newDisplayType === 'images' ? {
+                                    size: 'medium',
+                                    aspectRatio: '1:1',
+                                    showBorder: false,
+                                    borderWidth: 2
+                                  } : undefined
+                                } : null);
+                              }}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                              <option value="buttons">Buttons</option>
+                              <option value="list">List</option>
+                              <option value="images">Images</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-2 font-medium">Display Direction</label>
+                            <select
+                              value={editingOption.displayDirection || 'column'}
+                              onChange={(e) => setEditingOption(prev => prev ? { 
+                                ...prev, 
+                                displayDirection: e.target.value as 'column' | 'row'
+                              } : null)}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                              <option value="column">Column</option>
+                              <option value="row">Row</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Description</label>
-                      <textarea
-                        value={editingOption.description || ''}
-                        onChange={(e) => setEditingOption(prev => prev ? { ...prev, description: e.target.value } : null)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
-                        placeholder="Brief description of this option"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                      <select
-                        value={editingOption.displayType}
-                        onChange={(e) => {
-                          const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
-                          setEditingOption(prev => prev ? { 
-                            ...prev, 
-                            displayType: newDisplayType,
-                            imageSettings: newDisplayType === 'images' ? {
-                              size: 'medium',
-                              aspectRatio: '1:1',
-                              showBorder: false,
-                              borderWidth: 2
-                            } : undefined
-                          } : null);
-                        }}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="buttons">Buttons</option>
-                        <option value="list">List</option>
-                        <option value="images">Images</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Direction</label>
-                      <select
-                        value={editingOption.displayDirection || 'column'}
-                        onChange={(e) => setEditingOption(prev => prev ? { 
-                          ...prev, 
-                          displayDirection: e.target.value as 'column' | 'row'
-                        } : null)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="column">Column</option>
-                        <option value="row">Row</option>
-                      </select>
-                    </div>
+
+                    {/* Right Column - Image Settings (if applicable) */}
+                    {editingOption.displayType === 'images' && (
+                      <div className="space-y-6">
+                        <div>
+                          <h5 className="text-white font-medium flex items-center mb-4">
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Image Settings
+                          </h5>
+                          
+                          <div className="space-y-4">
+                            {/* Size and Aspect Ratio */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-medium">Image Size</label>
+                                <select
+                                  value={editingOption.imageSettings?.size || 'medium'}
+                                  onChange={(e) => setEditingOption(prev => prev ? {
+                                    ...prev,
+                                    imageSettings: {
+                                      ...prev.imageSettings,
+                                      size: e.target.value as 'x-small' | 'small' | 'medium' | 'large' | 'x-large',
+                                      aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                      showBorder: prev.imageSettings?.showBorder || false,
+                                      borderWidth: prev.imageSettings?.borderWidth || 2
+                                    }
+                                  } : null)}
+                                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                >
+                                  <option value="x-small">X Small</option>
+                                  <option value="small">Small</option>
+                                  <option value="medium">Medium</option>
+                                  <option value="large">Large</option>
+                                  <option value="x-large">X Large</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
+                                <select
+                                  value={editingOption.imageSettings?.aspectRatio || '1:1'}
+                                  onChange={(e) => setEditingOption(prev => prev ? {
+                                    ...prev,
+                                    imageSettings: {
+                                      ...prev.imageSettings,
+                                      size: prev.imageSettings?.size || 'medium',
+                                      aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full',
+                                      showBorder: prev.imageSettings?.showBorder || false,
+                                      borderWidth: prev.imageSettings?.borderWidth || 2
+                                    }
+                                  } : null)}
+                                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                >
+                                  <option value="1:1">Square (1:1)</option>
+                                  <option value="4:3">Standard (4:3)</option>
+                                  <option value="16:9">Widescreen (16:9)</option>
+                                  <option value="3:2">Photo (3:2)</option>
+                                  <option value="2:3">Portrait (2:3)</option>
+                                  <option value="full">Full Size</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Border Settings */}
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h6 className="text-white font-medium flex items-center">
+                                    <Square className="w-4 h-4 mr-2 text-gray-400" />
+                                    Image Borders
+                                  </h6>
+                                  <p className="text-gray-400 text-sm">Add borders around option images</p>
+                                </div>
+                                <button
+                                  onClick={() => setEditingOption(prev => prev ? {
+                                    ...prev,
+                                    imageSettings: {
+                                      ...prev.imageSettings,
+                                      size: prev.imageSettings?.size || 'medium',
+                                      aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                      showBorder: !prev.imageSettings?.showBorder,
+                                      borderWidth: prev.imageSettings?.borderWidth || 2
+                                    }
+                                  } : null)}
+                                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                                    editingOption.imageSettings?.showBorder
+                                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30'
+                                      : 'bg-gray-600/20 text-gray-400 border border-gray-600/30 hover:bg-gray-600/30'
+                                  }`}
+                                >
+                                  {editingOption.imageSettings?.showBorder ? (
+                                    <>
+                                      <span className="font-medium text-sm">Enabled</span>
+                                      <ToggleRight className="w-5 h-5" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="font-medium text-sm">Disabled</span>
+                                      <ToggleLeft className="w-5 h-5" />
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+
+                              {editingOption.imageSettings?.showBorder && (
+                                <div>
+                                  <label className="block text-gray-400 text-sm mb-3 font-medium">Border Width</label>
+                                  <div className="flex items-center space-x-4">
+                                    <input
+                                      type="range"
+                                      min="1"
+                                      max="10"
+                                      value={editingOption.imageSettings?.borderWidth || 2}
+                                      onChange={(e) => setEditingOption(prev => prev ? {
+                                        ...prev,
+                                        imageSettings: {
+                                          ...prev.imageSettings,
+                                          size: prev.imageSettings?.size || 'medium',
+                                          aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                          showBorder: prev.imageSettings?.showBorder || false,
+                                          borderWidth: parseInt(e.target.value)
+                                        }
+                                      } : null)}
+                                      className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                                      style={{
+                                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((editingOption.imageSettings?.borderWidth || 2) - 1) / 9 * 100}%, #374151 ${((editingOption.imageSettings?.borderWidth || 2) - 1) / 9 * 100}%, #374151 100%)`
+                                      }}
+                                    />
+                                    <span className="text-white font-medium w-12 text-center bg-gray-700 px-2 py-1 rounded">
+                                      {editingOption.imageSettings?.borderWidth || 2}px
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>1px</span>
+                                    <span>10px</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Image Settings for Images Display Type */}
-                {editingOption.displayType === 'images' && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <h4 className="text-white font-semibold text-lg flex items-center mb-4">
-                      <ImageIcon className="w-5 h-5 mr-2 text-blue-400" />
-                      Image Settings
-                    </h4>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Image Size</label>
-                        <select
-                          value={editingOption.imageSettings?.size || 'medium'}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            imageSettings: {
-                              ...prev.imageSettings,
-                              size: e.target.value as 'x-small' | 'small' | 'medium' | 'large' | 'x-large',
-                              aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
-                              showBorder: prev.imageSettings?.showBorder || false,
-                              borderWidth: prev.imageSettings?.borderWidth || 2
-                            }
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                          <option value="x-small">X Small</option>
-                          <option value="small">Small</option>
-                          <option value="medium">Medium</option>
-                          <option value="large">Large</option>
-                          <option value="x-large">X Large</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
-                        <select
-                          value={editingOption.imageSettings?.aspectRatio || '1:1'}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            imageSettings: {
-                              ...prev.imageSettings,
-                              size: prev.imageSettings?.size || 'medium',
-                              aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full',
-                              showBorder: prev.imageSettings?.showBorder || false,
-                              borderWidth: prev.imageSettings?.borderWidth || 2
-                            }
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                          <option value="1:1">Square (1:1)</option>
-                          <option value="4:3">Standard (4:3)</option>
-                          <option value="16:9">Widescreen (16:9)</option>
-                          <option value="3:2">Photo (3:2)</option>
-                          <option value="2:3">Portrait (2:3)</option>
-                          <option value="full">Full Size</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Border Settings */}
-                    <div className="mt-6 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="text-white font-medium flex items-center">
-                            <Square className="w-4 h-4 mr-2 text-gray-400" />
-                            Image Borders
-                          </h5>
-                          <p className="text-gray-400 text-sm">Add borders around option images</p>
-                        </div>
-                        <button
-                          onClick={() => setEditingOption(prev => prev ? {
-                            ...prev,
-                            imageSettings: {
-                              ...prev.imageSettings,
-                              size: prev.imageSettings?.size || 'medium',
-                              aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
-                              showBorder: !prev.imageSettings?.showBorder,
-                              borderWidth: prev.imageSettings?.borderWidth || 2
-                            }
-                          } : null)}
-                          className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
-                            editingOption.imageSettings?.showBorder
-                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30'
-                              : 'bg-gray-600/20 text-gray-400 border border-gray-600/30 hover:bg-gray-600/30'
-                          }`}
-                        >
-                          {editingOption.imageSettings?.showBorder ? (
-                            <>
-                              <span className="font-medium">Enabled</span>
-                              <ToggleRight className="w-6 h-6" />
-                            </>
-                          ) : (
-                            <>
-                              <span className="font-medium">Disabled</span>
-                              <ToggleLeft className="w-6 h-6" />
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {editingOption.imageSettings?.showBorder && (
-                        <div>
-                          <label className="block text-gray-400 text-sm mb-2 font-medium">Border Width (px)</label>
-                          <div className="flex items-center space-x-4">
-                            <input
-                              type="range"
-                              min="1"
-                              max="8"
-                              value={editingOption.imageSettings?.borderWidth || 2}
-                              onChange={(e) => setEditingOption(prev => prev ? {
-                                ...prev,
-                                imageSettings: {
-                                  ...prev.imageSettings,
-                                  size: prev.imageSettings?.size || 'medium',
-                                  aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
-                                  showBorder: prev.imageSettings?.showBorder || false,
-                                  borderWidth: parseInt(e.target.value)
-                                }
-                              } : null)}
-                              className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                            />
-                            <span className="text-white font-medium w-8 text-center">
-                              {editingOption.imageSettings?.borderWidth || 2}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>1px</span>
-                            <span>8px</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {/* Default Behavior for Visibility Options */}
                 {editingOption.manipulationType === 'visibility' && (
