@@ -1,9 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
-import { GripVertical, Trash2, Zap, Eye, EyeOff, Image as ImageIcon } from 'lucide-react';
+import { GripVertical, Trash2, Zap, Eye, EyeOff, Image as ImageIcon, Upload, X } from 'lucide-react';
 import ComponentSelector from './ComponentSelector';
-import ImageUploader from './ImageUploader';
 import ValueConditionalLogicModal from './ValueConditionalLogicModal';
 import { ConfiguratorOptionValue, ConfiguratorOption, ImageSettings } from '../types/ConfiguratorTypes';
 
@@ -46,14 +45,22 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   canDelete
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showConditionalLogicModal, setShowConditionalLogicModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const [{ isDragging }, drag, dragPreview] = useDrag({
+  const [{ isDraggingState }, drag] = useDrag({
     type: 'optionValue',
     item: () => ({ id: value.id, index }),
     collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
+      isDraggingState: monitor.isDragging(),
     }),
+    begin: () => {
+      setIsDragging(true);
+    },
+    end: () => {
+      setIsDragging(false);
+    }
   });
 
   const [{ isOver }, drop] = useDrop({
@@ -76,7 +83,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Immediate switching - switch places when crossing just 10% of the target
+      // Immediate switching - switch places when touching
       if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
@@ -92,15 +99,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }),
   });
 
-  // Create invisible drag preview for smooth dragging
-  React.useEffect(() => {
-    const emptyImg = new Image();
-    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
-  }, [dragPreview]);
-
   // Combine drag and drop refs
-  const dragDropRef = drag(drop(ref));
+  const dragDropRef = drop(ref);
 
   // Filter available components to only show EXACT matches with target components
   const filteredComponents = availableComponents.filter(component => {
@@ -114,18 +114,18 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   const hasConditionalLogic = value.conditionalLogic?.enabled;
 
   const getImageSizeClass = () => {
-    if (!imageSettings) return 'h-24';
+    if (!imageSettings) return 'h-24 w-24';
     
     switch (imageSettings.size) {
-      case 'small': return 'h-16';
-      case 'medium': return 'h-24';
-      case 'large': return 'h-32';
-      default: return 'h-24';
+      case 'small': return 'h-16 w-16';
+      case 'medium': return 'h-24 w-24';
+      case 'large': return 'h-32 w-32';
+      default: return 'h-24 w-24';
     }
   };
 
   const getAspectRatioClass = () => {
-    if (!imageSettings) return '';
+    if (!imageSettings) return 'aspect-square';
     
     switch (imageSettings.aspectRatio) {
       case '1:1': return 'aspect-square';
@@ -133,8 +133,28 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       case '16:9': return 'aspect-video';
       case '3:2': return 'aspect-[3/2]';
       case '2:3': return 'aspect-[2/3]';
-      default: return '';
+      default: return 'aspect-square';
     }
+  };
+
+  const handleFileSelect = (file: File) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        onUpdate(value.id, { image: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdate(value.id, { image: undefined });
   };
 
   return (
@@ -143,9 +163,9 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ 
-            opacity: isDragging ? 0.6 : 1, 
+            opacity: isDraggingState ? 0.6 : 1, 
             y: 0,
-            scale: isDragging ? 1.03 : isOver ? 1.01 : 1,
+            scale: isDraggingState ? 1.02 : isOver ? 1.01 : 1,
           }}
           transition={{ 
             type: "spring", 
@@ -154,8 +174,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             opacity: { duration: 0.15 },
             scale: { duration: 0.15 }
           }}
-          className={`p-6 bg-gray-700 rounded-xl space-y-6 transition-all duration-150 border relative cursor-move ${
-            isDragging
+          className={`p-6 bg-gray-700 rounded-xl space-y-6 transition-all duration-150 border relative ${
+            isDraggingState
               ? 'border-blue-500 shadow-2xl shadow-blue-500/30 z-50'
               : isOver
               ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
@@ -169,14 +189,88 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             </div>
           )}
 
-          {/* Header with drag handle and value name */}
+          {/* Header with controls */}
           <div className="flex items-center space-x-4">
-            <div className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-600 transition-colors">
+            {/* Drag Handle */}
+            <div 
+              ref={drag}
+              className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-600 transition-colors"
+            >
               <GripVertical className="w-5 h-5 text-gray-400" />
             </div>
-            
+
+            {/* Hide Title Toggle for Images */}
+            {displayType === 'images' && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
+                  className={`p-2 rounded-lg transition-colors ${
+                    value.hideTitle 
+                      ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
+                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-600'
+                  }`}
+                  title={value.hideTitle ? 'Show title' : 'Hide title'}
+                >
+                  {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            )}
+
+            {/* Image Upload/Preview for Images Display Type */}
+            {displayType === 'images' && (
+              <div className="flex-shrink-0">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileSelect(file);
+                  }}
+                  className="hidden"
+                />
+                
+                <div
+                  onClick={handleImageClick}
+                  className={`${getImageSizeClass()} ${getAspectRatioClass()} border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group`}
+                >
+                  {value.image ? (
+                    <>
+                      <img
+                        src={value.image}
+                        alt={value.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={handleImageClick}
+                            className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded transition-colors"
+                          >
+                            <Upload className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={handleRemoveImage}
+                            className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                      <ImageIcon className="w-6 h-6 mb-1" />
+                      <span className="text-xs">Upload</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Color picker for material manipulation */}
             {manipulationType === 'material' && (
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <input
                   type="color"
                   value={value.color || '#000000'}
@@ -187,6 +281,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               </div>
             )}
             
+            {/* Value Name Input */}
             <input
               type="text"
               value={value.name}
@@ -195,7 +290,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               placeholder="Value name"
             />
             
-            <div className="flex items-center space-x-2">
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <button
                 onClick={() => setShowConditionalLogicModal(true)}
                 className={`p-2 rounded-lg transition-colors ${
@@ -211,7 +307,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               {canDelete && (
                 <button
                   onClick={() => onDelete(value.id)}
-                  className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors flex-shrink-0"
+                  className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
                   title="Delete this value"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -219,62 +315,6 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               )}
             </div>
           </div>
-
-          {/* Image Upload for Images Display Type */}
-          {displayType === 'images' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-3 font-medium">Option Image</label>
-                  <div className={`w-full ${getImageSizeClass()} ${getAspectRatioClass()}`}>
-                    <ImageUploader
-                      currentImage={value.image}
-                      onImageChange={(imageUrl) => onUpdate(value.id, { image: imageUrl })}
-                      className="h-full w-full"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={value.hideTitle || false}
-                        onChange={(e) => onUpdate(value.id, { hideTitle: e.target.checked })}
-                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                      />
-                      <span className="text-gray-300 text-sm font-medium">Hide Title</span>
-                    </label>
-                    <p className="text-gray-500 text-xs mt-1 ml-7">
-                      Hide the option name below the image
-                    </p>
-                  </div>
-
-                  {/* Image Preview */}
-                  {value.image && (
-                    <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
-                      <p className="text-gray-400 text-sm mb-3 font-medium">Preview</p>
-                      <div className="bg-gray-900 p-3 rounded-lg">
-                        <div className={`${getImageSizeClass()} ${getAspectRatioClass()} mx-auto max-w-32`}>
-                          <img
-                            src={value.image}
-                            alt={value.name}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        </div>
-                        {!value.hideTitle && (
-                          <p className="text-white text-sm text-center mt-2 font-medium">
-                            {value.name}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Component Selection for Visibility */}
           {manipulationType === 'visibility' && (
