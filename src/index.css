@@ -23,13 +23,3 @@
   border: 2px solid #1e40af;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
-/* Hide scrollbar for horizontal scrolling */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
