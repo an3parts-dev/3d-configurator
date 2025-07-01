@@ -4,7 +4,6 @@ import { Zap, Image as ImageIcon } from 'lucide-react';
 import { 
   Engine, 
   Scene, 
-  ArcRotateCamera, 
   HemisphericLight, 
   DirectionalLight, 
   Vector3, 
@@ -17,6 +16,7 @@ import {
   Box3,
   TransformNode
 } from '@babylonjs/core';
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import '@babylonjs/core/Cameras/Inputs/arcRotateCameraPointersInput';
 import '@babylonjs/loaders/glTF';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
