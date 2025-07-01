@@ -294,6 +294,17 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
+  const getImageSizeClass = (size?: string) => {
+    switch (size) {
+      case 'x-small': return 'h-12';
+      case 'small': return 'h-16';
+      case 'medium': return 'h-20';
+      case 'large': return 'h-24';
+      case 'x-large': return 'h-32';
+      default: return 'h-20';
+    }
+  };
+
   const renderOption = (option: any) => {
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
@@ -303,17 +314,24 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
     if (visibleValues.length === 0) return null;
 
+    const isRowDirection = option.displayDirection === 'row';
+
     return (
       <div key={option.id} className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-white font-semibold text-xl">
-            {option.name}
-            {option.conditionalLogic?.enabled && (
-              <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
-                <Zap className="w-3 h-3 text-purple-400" />
-              </span>
+          <div>
+            <h4 className="text-white font-semibold text-xl">
+              {option.name}
+              {option.conditionalLogic?.enabled && (
+                <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
+                  <Zap className="w-3 h-3 text-purple-400" />
+                </span>
+              )}
+            </h4>
+            {option.description && (
+              <p className="text-gray-400 text-sm mt-1">{option.description}</p>
             )}
-          </h4>
+          </div>
           <div className="flex items-center space-x-2 text-xs text-gray-400">
             <span className="px-2 py-1 bg-gray-700 rounded-full capitalize font-medium">
               {option.manipulationType}
@@ -335,7 +353,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className={`${isRowDirection ? 'flex flex-wrap gap-3' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
@@ -347,8 +365,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 }`}
               >
                 <div className={`
-                  ${option.imageSettings?.size === 'small' ? 'h-16' : 
-                    option.imageSettings?.size === 'large' ? 'h-24' : 'h-20'}
+                  ${getImageSizeClass(option.imageSettings?.size)}
                   ${option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
                     option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
                     option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
@@ -402,7 +419,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className="flex flex-wrap gap-2">
+          <div className={`${isRowDirection ? 'flex flex-wrap gap-2' : 'flex flex-wrap gap-2'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}

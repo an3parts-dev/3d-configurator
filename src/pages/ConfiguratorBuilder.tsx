@@ -23,7 +23,9 @@ import {
   RefreshCw,
   Clock,
   AlertTriangle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Columns,
+  Rows
 } from 'lucide-react';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
@@ -128,6 +130,8 @@ const ConfiguratorBuilder = () => {
     const newOption: ConfiguratorOption = {
       ...optionData,
       id: `option_${Date.now()}`,
+      description: '',
+      displayDirection: 'column',
       defaultBehavior: optionData.manipulationType === 'visibility' ? 'hide' : undefined,
       conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
       imageSettings: optionData.displayType === 'images' ? {
@@ -559,7 +563,7 @@ const ConfiguratorBuilder = () => {
             }}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-2">Option Name</label>
+                  <label className="block text-gray-400 text-sm mb-2">Option Title</label>
                   <input
                     name="name"
                     type="text"
@@ -645,37 +649,65 @@ const ConfiguratorBuilder = () => {
               <div className="space-y-8">
                 {/* Basic Settings */}
                 <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2 font-medium">Option Name</label>
-                    <input
-                      type="text"
-                      value={editingOption.name}
-                      onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Option name"
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2 font-medium">Option Title</label>
+                      <input
+                        type="text"
+                        value={editingOption.name}
+                        onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder="Option title"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2 font-medium">Description</label>
+                      <textarea
+                        value={editingOption.description || ''}
+                        onChange={(e) => setEditingOption(prev => prev ? { ...prev, description: e.target.value } : null)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                        placeholder="Brief description of this option"
+                        rows={3}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                    <select
-                      value={editingOption.displayType}
-                      onChange={(e) => {
-                        const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
-                        setEditingOption(prev => prev ? { 
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
+                      <select
+                        value={editingOption.displayType}
+                        onChange={(e) => {
+                          const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
+                          setEditingOption(prev => prev ? { 
+                            ...prev, 
+                            displayType: newDisplayType,
+                            imageSettings: newDisplayType === 'images' ? {
+                              size: 'medium',
+                              aspectRatio: '1:1'
+                            } : undefined
+                          } : null);
+                        }}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        <option value="buttons">Buttons</option>
+                        <option value="list">List</option>
+                        <option value="images">Images</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Direction</label>
+                      <select
+                        value={editingOption.displayDirection || 'column'}
+                        onChange={(e) => setEditingOption(prev => prev ? { 
                           ...prev, 
-                          displayType: newDisplayType,
-                          imageSettings: newDisplayType === 'images' ? {
-                            size: 'medium',
-                            aspectRatio: '1:1'
-                          } : undefined
-                        } : null);
-                      }}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    >
-                      <option value="buttons">Buttons</option>
-                      <option value="list">List</option>
-                      <option value="images">Images</option>
-                    </select>
+                          displayDirection: e.target.value as 'column' | 'row'
+                        } : null)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        <option value="column">Column</option>
+                        <option value="row">Row</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -695,15 +727,17 @@ const ConfiguratorBuilder = () => {
                             ...prev,
                             imageSettings: {
                               ...prev.imageSettings,
-                              size: e.target.value as 'small' | 'medium' | 'large',
+                              size: e.target.value as 'x-small' | 'small' | 'medium' | 'large' | 'x-large',
                               aspectRatio: prev.imageSettings?.aspectRatio || '1:1'
                             }
                           } : null)}
                           className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         >
+                          <option value="x-small">X Small</option>
                           <option value="small">Small</option>
                           <option value="medium">Medium</option>
                           <option value="large">Large</option>
+                          <option value="x-large">X Large</option>
                         </select>
                       </div>
                       <div>

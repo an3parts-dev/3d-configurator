@@ -32,14 +32,16 @@ export interface ConfiguratorOptionValue {
 }
 
 export interface ImageSettings {
-  size: 'small' | 'medium' | 'large';
+  size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
   aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full';
 }
 
 export interface ConfiguratorOption {
   id: string;
   name: string;
+  description?: string;
   displayType: 'list' | 'buttons' | 'images';
+  displayDirection?: 'column' | 'row';
   manipulationType: 'visibility' | 'material';
   targetComponents: string[];
   defaultBehavior?: 'show' | 'hide';
