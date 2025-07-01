@@ -340,10 +340,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-lg overflow-hidden ${
+                className={`relative group transition-all duration-200 rounded-lg overflow-hidden border-2 ${
                   selectedValues[option.id] === value.id
-                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'hover:scale-102'
+                    ? 'border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                    : 'border-gray-600 hover:border-gray-500 hover:scale-102'
                 }`}
               >
                 <div className={`
@@ -354,23 +354,21 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
                     option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
                     option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' : ''}
-                  flex items-center justify-center
+                  bg-gray-700 flex items-center justify-center
                 `}>
                   {value.image ? (
                     <img
                       src={value.image}
                       alt={value.name}
-                      className="w-full h-full object-cover object-center rounded-lg"
+                      className="w-full h-full object-cover object-center"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-700 rounded-lg flex items-center justify-center">
-                      <ImageIcon className="w-6 h-6 text-gray-500" />
-                    </div>
+                    <ImageIcon className="w-6 h-6 text-gray-500" />
                   )}
                 </div>
                 
                 {!value.hideTitle && (
-                  <div className="p-2 bg-gray-800/90 rounded-b-lg">
+                  <div className="p-2 bg-gray-800/90">
                     <p className="text-white text-xs font-medium truncate">
                       {value.name}
                     </p>
@@ -378,7 +376,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 )}
                 
                 {selectedValues[option.id] === value.id && (
-                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center rounded-lg">
+                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                     <div className="bg-blue-500 text-white p-1 rounded-full">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
