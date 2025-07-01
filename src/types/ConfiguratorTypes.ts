@@ -1,4 +1,4 @@
-// Enhanced types for the configurator system with length measurement features
+// Enhanced types for the configurator system with new features
 export interface ConditionalRule {
   id: string;
   optionId: string;
@@ -20,29 +20,6 @@ export interface OptionValueConditionalLogic {
   rules: ConditionalRule[];
 }
 
-export interface MeasurePoint {
-  id: string;
-  name: string;
-  description: string;
-  componentName: string;
-  position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  type: 'sealing_point' | 'hex_surface' | 'fitting_end' | 'hose_end';
-}
-
-export interface LengthSettings {
-  measurementType: 'cc' | 'total' | 'hose';
-  defaultValue: number;
-  minValue: number;
-  maxValue: number;
-  step: number;
-  unit: 'mm' | 'cm' | 'in' | 'ft';
-  measurePoints: MeasurePoint[];
-}
-
 export interface ConfiguratorOptionValue {
   id: string;
   name: string;
@@ -51,8 +28,6 @@ export interface ConfiguratorOptionValue {
   hideTitle?: boolean;
   visibleComponents?: string[];
   hiddenComponents?: string[];
-  lengthValue?: number;
-  measurePoints?: MeasurePoint[];
   conditionalLogic?: OptionValueConditionalLogic;
 }
 
@@ -64,13 +39,12 @@ export interface ImageSettings {
 export interface ConfiguratorOption {
   id: string;
   name: string;
-  displayType: 'list' | 'buttons' | 'images' | 'length_input';
-  manipulationType: 'visibility' | 'material' | 'length';
+  displayType: 'list' | 'buttons' | 'images';
+  manipulationType: 'visibility' | 'material';
   targetComponents: string[];
   defaultBehavior?: 'show' | 'hide';
   conditionalLogic?: ConditionalLogic;
   imageSettings?: ImageSettings;
-  lengthSettings?: LengthSettings;
   values: ConfiguratorOptionValue[];
 }
 

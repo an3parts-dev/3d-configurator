@@ -1,33 +1,29 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { OrbitControls, Environment, PerspectiveCamera, Html } from '@react-three/drei';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Image as ImageIcon, Ruler, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Zap, Image as ImageIcon } from 'lucide-react';
 import * as THREE from 'three';
-import { ConfiguratorData, ModelComponent, MeasurePoint, LengthSettings } from '../types/ConfiguratorTypes';
+import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
-import LengthMeasurementOverlay from './LengthMeasurementOverlay';
-import LengthInputControl from './LengthInputControl';
 
 interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
   onComponentsLoaded?: (components: ModelComponent[]) => void;
 }
 
-// Enhanced GLB Model Component with transparency support
+// Enhanced GLB Model Component with precise component targeting
 const GLBModel = ({ 
   modelUrl, 
   selectedValues, 
   onComponentsLoaded,
-  configuratorData,
-  isTransparent = false
+  configuratorData
 }: { 
   modelUrl: string;
   selectedValues: Record<string, string>;
   onComponentsLoaded: (components: ModelComponent[]) => void;
   configuratorData: ConfiguratorData;
-  isTransparent?: boolean;
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [components, setComponents] = useState<ModelComponent[]>([]);
@@ -91,39 +87,6 @@ const GLBModel = ({
     }
   }, [gltf, isInitialized, onComponentsLoaded]);
 
-  // Apply transparency effect
-  useEffect(() => {
-    if (!isInitialized || components.length === 0) return;
-
-    console.log('🔄 Applying transparency:', isTransparent);
-
-    components.forEach((component) => {
-      if (component.mesh && component.mesh.material) {
-        if (isTransparent) {
-          // Make material transparent
-          const material = component.mesh.material;
-          if (material instanceof THREE.Material) {
-            material.transparent = true;
-            material.opacity = 0.2;
-            material.depthWrite = false;
-            material.needsUpdate = true;
-            console.log(`🔍 Made ${component.name} transparent`);
-          }
-        } else {
-          // Restore original material properties
-          const material = component.mesh.material;
-          if (material instanceof THREE.Material) {
-            material.transparent = false;
-            material.opacity = 1.0;
-            material.depthWrite = true;
-            material.needsUpdate = true;
-            console.log(`👁️ Restored ${component.name} opacity`);
-          }
-        }
-      }
-    });
-  }, [isTransparent, components, isInitialized]);
-
   // Precise component matching function
   const isComponentTargeted = (componentName: string, targetComponents: string[]): boolean => {
     const componentLower = componentName.toLowerCase();
@@ -176,9 +139,6 @@ const GLBModel = ({
     visibleOptions.forEach((option) => {
       const selectedValueId = selectedValues[option.id];
       if (!selectedValueId) return;
-
-      // Skip length options as they don't affect 3D model directly
-      if (option.manipulationType === 'length') return;
 
       const selectedValue = option.values.find(v => v && v.id === selectedValueId);
       if (!selectedValue) return;
@@ -286,61 +246,6 @@ const GLBModel = ({
   );
 };
 
-// Camera controller for focusing on measurements
-const CameraController = ({ 
-  focusOnMeasurements, 
-  measurementBounds 
-}: { 
-  focusOnMeasurements: boolean;
-  measurementBounds: THREE.Box3 | null;
-}) => {
-  const { camera, controls } = useThree();
-  
-  useEffect(() => {
-    if (focusOnMeasurements && measurementBounds && controls) {
-      console.log('📷 Focusing camera on measurements');
-      
-      // Calculate optimal camera position to view measurements
-      const center = measurementBounds.getCenter(new THREE.Vector3());
-      const size = measurementBounds.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      
-      // Position camera to view measurements optimally
-      const distance = maxDim * 2;
-      const cameraPosition = new THREE.Vector3(
-        center.x + distance * 0.7,
-        center.y + distance * 0.5,
-        center.z + distance * 0.7
-      );
-      
-      // Animate camera to new position
-      const startPosition = camera.position.clone();
-      const startTarget = controls.target.clone();
-      
-      let progress = 0;
-      const animate = () => {
-        progress += 0.02;
-        if (progress >= 1) {
-          camera.position.copy(cameraPosition);
-          controls.target.copy(center);
-          controls.update();
-          return;
-        }
-        
-        camera.position.lerpVectors(startPosition, cameraPosition, progress);
-        controls.target.lerpVectors(startTarget, center, progress);
-        controls.update();
-        
-        requestAnimationFrame(animate);
-      };
-      
-      animate();
-    }
-  }, [focusOnMeasurements, measurementBounds, camera, controls]);
-  
-  return null;
-};
-
 const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({ 
   configuratorData, 
   onComponentsLoaded 
@@ -348,8 +253,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModelTransparent, setIsModelTransparent] = useState(false);
-  const [focusOnMeasurements, setFocusOnMeasurements] = useState(false);
 
   const handleComponentsLoaded = useCallback((components: ModelComponent[]) => {
     console.log('📦 Components loaded in preview:', components.length);
@@ -368,9 +271,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       const validValues = option.values.filter(Boolean);
       if (validValues.length > 0) {
         defaultSelections[option.id] = validValues[0].id;
-      } else if (option.manipulationType === 'length' && option.lengthSettings) {
-        // For length options, use the default value as a string
-        defaultSelections[option.id] = option.lengthSettings.defaultValue.toString();
       }
     });
     
@@ -388,14 +288,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }));
   }, []);
 
-  const handleLengthChange = useCallback((optionId: string, length: number) => {
-    console.log(`📏 Length changed: ${optionId} → ${length}`);
-    setSelectedValues(prev => ({
-      ...prev,
-      [optionId]: length.toString()
-    }));
-  }, []);
-
   // Get visible options based on conditional logic
   const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
     configuratorData.options,
@@ -403,47 +295,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 
   const renderOption = (option: any) => {
-    if (option.manipulationType === 'length') {
-      if (!option.lengthSettings) return null;
-
-      const currentLength = parseFloat(selectedValues[option.id]) || option.lengthSettings.defaultValue;
-      
-      return (
-        <div key={option.id} className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-white font-semibold text-xl flex items-center">
-              <Ruler className="w-5 h-5 mr-2 text-blue-400" />
-              {option.name}
-              {option.conditionalLogic?.enabled && (
-                <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
-                  <Zap className="w-3 h-3 text-purple-400" />
-                </span>
-              )}
-            </h4>
-            <div className="flex items-center space-x-2 text-xs text-gray-400">
-              <span className="px-2 py-1 bg-blue-700 rounded-full capitalize font-medium flex items-center space-x-1">
-                <Ruler className="w-3 h-3" />
-                <span>Length</span>
-              </span>
-              <span className="px-2 py-1 bg-gray-700 rounded-full font-medium">
-                {option.lengthSettings.measurementType.toUpperCase()}
-              </span>
-            </div>
-          </div>
-          
-          <LengthInputControl
-            lengthSettings={option.lengthSettings}
-            currentValue={currentLength}
-            onValueChange={(value) => handleLengthChange(option.id, value)}
-            onSettingsChange={(settings) => {
-              // This would update the option's length settings
-              console.log('Length settings changed:', settings);
-            }}
-          />
-        </div>
-      );
-    }
-
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
       selectedValues,
@@ -589,98 +440,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
-  // Get current length measurements for overlay with world space transformation
-  const getCurrentLengthMeasurements = () => {
-    const lengthOptions = visibleOptions.filter(opt => opt.manipulationType === 'length');
-    return lengthOptions.map(option => {
-      const currentLength = parseFloat(selectedValues[option.id]) || option.lengthSettings?.defaultValue || 0;
-      
-      // Get measure points from all values (they should be consistent for the same fitting type)
-      const allMeasurePoints = option.values.reduce((points: any[], value: any) => {
-        if (value.measurePoints) {
-          return [...points, ...value.measurePoints];
-        }
-        return points;
-      }, []);
-
-      // Transform measure points to world space
-      const transformedMeasurePoints = allMeasurePoints.map(point => {
-        // Find the corresponding model component
-        const component = modelComponents.find(comp => 
-          comp.name.toLowerCase() === point.componentName.toLowerCase()
-        );
-
-        if (component && component.mesh) {
-          // Create a vector from the local position
-          const localPosition = new THREE.Vector3(
-            point.position.x,
-            point.position.y,
-            point.position.z
-          );
-
-          // Transform to world space using the mesh's world matrix
-          const worldPosition = localPosition.clone();
-          component.mesh.updateMatrixWorld(true);
-          worldPosition.applyMatrix4(component.mesh.matrixWorld);
-
-          console.log(`📍 Transformed measure point "${point.name}":`, {
-            local: point.position,
-            world: { x: worldPosition.x, y: worldPosition.y, z: worldPosition.z },
-            component: point.componentName
-          });
-
-          return {
-            ...point,
-            position: {
-              x: worldPosition.x,
-              y: worldPosition.y,
-              z: worldPosition.z
-            }
-          };
-        } else {
-          console.warn(`⚠️ Component "${point.componentName}" not found for measure point "${point.name}"`);
-          return point; // Return original if component not found
-        }
-      });
-
-      return {
-        measurePoints: transformedMeasurePoints,
-        lengthValue: currentLength,
-        lengthSettings: option.lengthSettings!,
-        isVisible: true
-      };
-    });
-  };
-
-  const lengthMeasurements = getCurrentLengthMeasurements();
-
-  // Calculate bounds for measurement focus
-  const getMeasurementBounds = () => {
-    if (lengthMeasurements.length === 0) return null;
-    
-    const bounds = new THREE.Box3();
-    lengthMeasurements.forEach(measurement => {
-      measurement.measurePoints.forEach(point => {
-        bounds.expandByPoint(new THREE.Vector3(
-          point.position.x,
-          point.position.y,
-          point.position.z
-        ));
-      });
-    });
-    
-    return bounds;
-  };
-
-  const measurementBounds = getMeasurementBounds();
-
-  // Handle length measurements focus
-  const handleLengthMeasurementsClick = () => {
-    console.log('🔄 Toggling length measurements view');
-    setIsModelTransparent(!isModelTransparent);
-    setFocusOnMeasurements(!focusOnMeasurements);
-  };
-
   return (
     <div className="h-full flex flex-col">
       {/* 3D Canvas - 50% screen height */}
@@ -704,12 +463,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             target={[0, 0, 0]}
             enableDamping={true}
             dampingFactor={0.05}
-          />
-          
-          {/* Camera controller for measurement focus */}
-          <CameraController 
-            focusOnMeasurements={focusOnMeasurements}
-            measurementBounds={measurementBounds}
           />
           
           {/* Professional lighting setup */}
@@ -740,19 +493,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             selectedValues={selectedValues}
             onComponentsLoaded={handleComponentsLoaded}
             configuratorData={configuratorData}
-            isTransparent={isModelTransparent}
           />
-
-          {/* Length Measurement Overlays */}
-          {lengthMeasurements.map((measurement, index) => (
-            <LengthMeasurementOverlay
-              key={index}
-              measurePoints={measurement.measurePoints}
-              lengthValue={measurement.lengthValue}
-              lengthSettings={measurement.lengthSettings}
-              isVisible={measurement.isVisible}
-            />
-          ))}
         </Canvas>
         
         {/* Loading overlay */}
@@ -776,50 +517,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
               Visible: {modelComponents.filter(c => c.visible).length}
             </span>
-            {isModelTransparent && (
-              <>
-                <span>•</span>
-                <span className="flex items-center text-blue-300">
-                  <EyeOff className="w-3 h-3 mr-1" />
-                  Transparent
-                </span>
-              </>
-            )}
           </div>
         </div>
 
-        {/* Length Measurements Status - Clickable */}
-        {lengthMeasurements.length > 0 && (
-          <button
-            onClick={handleLengthMeasurementsClick}
-            className="absolute top-4 right-4 bg-blue-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-blue-500/30 hover:bg-blue-600/30 transition-all duration-200 group"
-          >
-            <div className="flex items-center space-x-2 text-blue-300">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Ruler className="w-4 h-4" />
-              </motion.div>
-              <span className="text-sm font-medium">Length Measurements</span>
-              {isModelTransparent ? (
-                <EyeOff className="w-4 h-4 text-blue-400" />
-              ) : (
-                <Eye className="w-4 h-4 text-blue-400" />
-              )}
-            </div>
-            <p className="text-xs text-blue-200/80 mt-1">
-              {lengthMeasurements.length} measurement{lengthMeasurements.length !== 1 ? 's' : ''} active
-            </p>
-            <p className="text-xs text-blue-300/60 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              Click to {isModelTransparent ? 'show' : 'hide'} model & focus
-            </p>
-          </button>
-        )}
-
         {/* Conditional Logic Status */}
         {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-          <div className="absolute bottom-4 left-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
+          <div className="absolute top-4 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
             <div className="flex items-center space-x-2 text-purple-300">
               <motion.div
                 animate={{ rotate: 360 }}

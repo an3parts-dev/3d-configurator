@@ -23,8 +23,7 @@ import {
   RefreshCw,
   Clock,
   AlertTriangle,
-  Image as ImageIcon,
-  Ruler
+  Image as ImageIcon
 } from 'lucide-react';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
@@ -32,8 +31,7 @@ import DragDropOption from '../components/DragDropOption';
 import DragDropOptionValue from '../components/DragDropOptionValue';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import ConditionalLogicModal from '../components/ConditionalLogicModal';
-import MeasurePointEditor from '../components/MeasurePointEditor';
-import { ConfiguratorOption, ConfiguratorData, ModelComponent, ConditionalLogic, ImageSettings, LengthSettings } from '../types/ConfiguratorTypes';
+import { ConfiguratorOption, ConfiguratorData, ModelComponent, ConditionalLogic, ImageSettings } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 import { useConfiguratorPersistence } from '../hooks/useConfiguratorPersistence';
 
@@ -136,15 +134,6 @@ const ConfiguratorBuilder = () => {
         size: 'medium',
         aspectRatio: '1:1'
       } : undefined,
-      lengthSettings: optionData.manipulationType === 'length' ? {
-        measurementType: 'cc',
-        defaultValue: 100,
-        minValue: 10,
-        maxValue: 1000,
-        step: 1,
-        unit: 'mm',
-        measurePoints: []
-      } : undefined,
       values: []
     };
 
@@ -233,10 +222,6 @@ const ConfiguratorBuilder = () => {
       ...(option.manipulationType === 'visibility' && { 
         visibleComponents: [],
         hiddenComponents: []
-      }),
-      ...(option.manipulationType === 'length' && { 
-        lengthValue: option.lengthSettings?.defaultValue || 100,
-        measurePoints: []
       }),
       conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
     };
@@ -565,13 +550,10 @@ const ConfiguratorBuilder = () => {
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const manipulationType = formData.get('manipulationType') as 'visibility' | 'material' | 'length';
-              const displayType = manipulationType === 'length' ? 'length_input' : formData.get('displayType') as 'list' | 'buttons' | 'images';
-              
               addNewOption({
                 name: formData.get('name') as string,
-                displayType,
-                manipulationType,
+                displayType: formData.get('displayType') as 'list' | 'buttons' | 'images',
+                manipulationType: formData.get('manipulationType') as 'visibility' | 'material',
                 targetComponents: []
               });
             }}>
@@ -583,7 +565,7 @@ const ConfiguratorBuilder = () => {
                     type="text"
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    placeholder="e.g., Fitting A, Length"
+                    placeholder="e.g., Fitting A"
                   />
                 </div>
                 <div>
@@ -592,20 +574,9 @@ const ConfiguratorBuilder = () => {
                     name="manipulationType"
                     required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    onChange={(e) => {
-                      const displayTypeSelect = document.querySelector('select[name="displayType"]') as HTMLSelectElement;
-                      if (e.target.value === 'length') {
-                        displayTypeSelect.style.display = 'none';
-                        displayTypeSelect.previousElementSibling!.textContent = 'Display Type (Auto: Length Input)';
-                      } else {
-                        displayTypeSelect.style.display = 'block';
-                        displayTypeSelect.previousElementSibling!.textContent = 'Display Type';
-                      }
-                    }}
                   >
                     <option value="visibility">Visibility (Show/Hide Components)</option>
                     <option value="material">Material (Change Colors/Materials)</option>
-                    <option value="length">Length (Measurement Input)</option>
                   </select>
                 </div>
                 <div>
@@ -686,146 +657,27 @@ const ConfiguratorBuilder = () => {
                   </div>
                   <div>
                     <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                    {editingOption.manipulationType === 'length' ? (
-                      <div className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-400 flex items-center">
-                        <Ruler className="w-4 h-4 mr-2" />
-                        Length Input (Auto)
-                      </div>
-                    ) : (
-                      <select
-                        value={editingOption.displayType}
-                        onChange={(e) => {
-                          const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
-                          setEditingOption(prev => prev ? { 
-                            ...prev, 
-                            displayType: newDisplayType,
-                            imageSettings: newDisplayType === 'images' ? {
-                              size: 'medium',
-                              aspectRatio: '1:1'
-                            } : undefined
-                          } : null);
-                        }}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="buttons">Buttons</option>
-                        <option value="list">List</option>
-                        <option value="images">Images</option>
-                      </select>
-                    )}
+                    <select
+                      value={editingOption.displayType}
+                      onChange={(e) => {
+                        const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
+                        setEditingOption(prev => prev ? { 
+                          ...prev, 
+                          displayType: newDisplayType,
+                          imageSettings: newDisplayType === 'images' ? {
+                            size: 'medium',
+                            aspectRatio: '1:1'
+                          } : undefined
+                        } : null);
+                      }}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    >
+                      <option value="buttons">Buttons</option>
+                      <option value="list">List</option>
+                      <option value="images">Images</option>
+                    </select>
                   </div>
                 </div>
-
-                {/* Length Settings for Length Options */}
-                {editingOption.manipulationType === 'length' && editingOption.lengthSettings && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <h4 className="text-white font-semibold text-lg flex items-center mb-4">
-                      <Ruler className="w-5 h-5 mr-2 text-blue-400" />
-                      Length Settings
-                    </h4>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Measurement Type</label>
-                        <select
-                          value={editingOption.lengthSettings.measurementType}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            lengthSettings: prev.lengthSettings ? {
-                              ...prev.lengthSettings,
-                              measurementType: e.target.value as 'cc' | 'total' | 'hose'
-                            } : undefined
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                          <option value="cc">C/C Length</option>
-                          <option value="total">Total Length</option>
-                          <option value="hose">Hose Length</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Unit</label>
-                        <select
-                          value={editingOption.lengthSettings.unit}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            lengthSettings: prev.lengthSettings ? {
-                              ...prev.lengthSettings,
-                              unit: e.target.value as 'mm' | 'cm' | 'in' | 'ft'
-                            } : undefined
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                          <option value="mm">Millimeters (mm)</option>
-                          <option value="cm">Centimeters (cm)</option>
-                          <option value="in">Inches (in)</option>
-                          <option value="ft">Feet (ft)</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-4 mt-4">
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Default Value</label>
-                        <input
-                          type="number"
-                          value={editingOption.lengthSettings.defaultValue}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            lengthSettings: prev.lengthSettings ? {
-                              ...prev.lengthSettings,
-                              defaultValue: parseFloat(e.target.value) || 0
-                            } : undefined
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Min Value</label>
-                        <input
-                          type="number"
-                          value={editingOption.lengthSettings.minValue}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            lengthSettings: prev.lengthSettings ? {
-                              ...prev.lengthSettings,
-                              minValue: parseFloat(e.target.value) || 0
-                            } : undefined
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Max Value</label>
-                        <input
-                          type="number"
-                          value={editingOption.lengthSettings.maxValue}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            lengthSettings: prev.lengthSettings ? {
-                              ...prev.lengthSettings,
-                              maxValue: parseFloat(e.target.value) || 1000
-                            } : undefined
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Step</label>
-                        <input
-                          type="number"
-                          value={editingOption.lengthSettings.step}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            lengthSettings: prev.lengthSettings ? {
-                              ...prev.lengthSettings,
-                              step: parseFloat(e.target.value) || 1
-                            } : undefined
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          step="0.1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Image Settings for Images Display Type */}
                 {editingOption.displayType === 'images' && (
@@ -934,105 +786,84 @@ const ConfiguratorBuilder = () => {
                   </div>
                 )}
 
-                {/* Component Selector - Only for non-length options */}
-                {editingOption.manipulationType !== 'length' && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <ComponentSelector
-                      availableComponents={availableComponents}
-                      selectedComponents={editingOption.targetComponents}
-                      onSelectionChange={(components) => setEditingOption(prev => prev ? { ...prev, targetComponents: components } : null)}
-                      placeholder="Select components to manipulate..."
-                      label="Target Components"
-                      alwaysModal={true}
-                    />
-                  </div>
-                )}
+                {/* Component Selector */}
+                <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                  <ComponentSelector
+                    availableComponents={availableComponents}
+                    selectedComponents={editingOption.targetComponents}
+                    onSelectionChange={(components) => setEditingOption(prev => prev ? { ...prev, targetComponents: components } : null)}
+                    placeholder="Select components to manipulate..."
+                    label="Target Components"
+                    alwaysModal={true}
+                  />
+                </div>
 
-                {/* Measure Points Editor for Length Options */}
-                {editingOption.manipulationType === 'length' && editingOption.lengthSettings && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <MeasurePointEditor
-                      measurePoints={editingOption.lengthSettings.measurePoints}
-                      onMeasurePointsChange={(points) => setEditingOption(prev => prev ? {
-                        ...prev,
-                        lengthSettings: prev.lengthSettings ? {
-                          ...prev.lengthSettings,
-                          measurePoints: points
-                        } : undefined
-                      } : null)}
-                      availableComponents={availableComponents.map(c => c.name)}
-                    />
+                {/* Option Values */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-semibold text-lg">Option Values</h4>
+                      <p className="text-gray-400 text-sm">Configure the different states for this option</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (!editingOption) return;
+                        const newValue = {
+                          id: `value_${Date.now()}`,
+                          name: 'New Option',
+                          ...(editingOption.manipulationType === 'material' && { color: '#000000' }),
+                          ...(editingOption.displayType === 'images' && { image: undefined, hideTitle: false }),
+                          ...(editingOption.manipulationType === 'visibility' && { 
+                            visibleComponents: [],
+                            hiddenComponents: []
+                          }),
+                          conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
+                        };
+                        setEditingOption(prev => prev ? { ...prev, values: [...prev.values, newValue] } : null);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 font-medium transition-colors shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Value</span>
+                    </button>
                   </div>
-                )}
-
-                {/* Option Values - Only for non-length options */}
-                {editingOption.manipulationType !== 'length' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-white font-semibold text-lg">Option Values</h4>
-                        <p className="text-gray-400 text-sm">Configure the different states for this option</p>
-                      </div>
-                      <button 
-                        onClick={() => {
+                  
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    {editingOption.values.map((value, index) => (
+                      <DragDropOptionValue
+                        key={value.id}
+                        value={value}
+                        index={index}
+                        manipulationType={editingOption.manipulationType}
+                        displayType={editingOption.displayType}
+                        availableComponents={availableComponents}
+                        targetComponents={editingOption.targetComponents}
+                        defaultBehavior={editingOption.defaultBehavior}
+                        imageSettings={editingOption.imageSettings}
+                        allOptions={activeConfigurator.options}
+                        onMove={(dragIndex, hoverIndex) => {
                           if (!editingOption) return;
-                          const newValue = {
-                            id: `value_${Date.now()}`,
-                            name: 'New Option',
-                            ...(editingOption.manipulationType === 'material' && { color: '#000000' }),
-                            ...(editingOption.displayType === 'images' && { image: undefined, hideTitle: false }),
-                            ...(editingOption.manipulationType === 'visibility' && { 
-                              visibleComponents: [],
-                              hiddenComponents: []
-                            }),
-                            conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
-                          };
-                          setEditingOption(prev => prev ? { ...prev, values: [...prev.values, newValue] } : null);
+                          const values = [...editingOption.values];
+                          const draggedValue = values[dragIndex];
+                          values.splice(dragIndex, 1);
+                          values.splice(hoverIndex, 0, draggedValue);
+                          setEditingOption(prev => prev ? { ...prev, values } : null);
                         }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 font-medium transition-colors shadow-sm"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Value</span>
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                      {editingOption.values.map((value, index) => (
-                        <DragDropOptionValue
-                          key={value.id}
-                          value={value}
-                          index={index}
-                          manipulationType={editingOption.manipulationType}
-                          displayType={editingOption.displayType}
-                          availableComponents={availableComponents}
-                          targetComponents={editingOption.targetComponents}
-                          defaultBehavior={editingOption.defaultBehavior}
-                          imageSettings={editingOption.imageSettings}
-                          allOptions={activeConfigurator.options}
-                          onMove={(dragIndex, hoverIndex) => {
-                            if (!editingOption) return;
-                            const values = [...editingOption.values];
-                            const draggedValue = values[dragIndex];
-                            values.splice(dragIndex, 1);
-                            values.splice(hoverIndex, 0, draggedValue);
-                            setEditingOption(prev => prev ? { ...prev, values } : null);
-                          }}
-                          onUpdate={(valueId, updates) => {
-                            const updatedValues = editingOption.values.map(v => 
-                              v.id === valueId ? { ...v, ...updates } : v
-                            );
-                            setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
-                          }}
-                          onDelete={(valueId) => {
-                            const updatedValues = editingOption.values.filter(v => v.id !== valueId);
-                            setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
-                          }}
-                          canDelete={editingOption.values.length > 1}
-                        />
-                      ))}
-                    </div>
+                        onUpdate={(valueId, updates) => {
+                          const updatedValues = editingOption.values.map(v => 
+                            v.id === valueId ? { ...v, ...updates } : v
+                          );
+                          setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
+                        }}
+                        onDelete={(valueId) => {
+                          const updatedValues = editingOption.values.filter(v => v.id !== valueId);
+                          setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
+                        }}
+                        canDelete={editingOption.values.length > 1}
+                      />
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
