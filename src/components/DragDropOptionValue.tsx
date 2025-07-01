@@ -158,6 +158,15 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     return `${sizeClass} ${aspectClass}`;
   };
 
+  const getBorderStyles = () => {
+    if (!imageSettings?.showBorder) return {};
+    
+    return {
+      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      border: '2px solid #4b5563'
+    };
+  };
+
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -280,7 +289,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 
                 <div
                   onClick={handleImageClick}
-                  className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
+                  className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
+                  style={value.image ? getBorderStyles() : { borderRadius: '8px' }}
                 >
                   {value.image ? (
                     <>
@@ -288,6 +298,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                         src={value.image}
                         alt={value.name}
                         className={`w-full h-full ${imageSettings?.aspectRatio === 'full' ? 'object-contain' : 'object-cover'}`}
+                        style={getBorderStyles()}
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <div className="flex space-x-1">

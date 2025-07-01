@@ -295,10 +295,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 
   const getBorderStyles = (imageSettings?: any) => {
-    if (!imageSettings?.showBorder) return '';
+    if (!imageSettings?.showBorder) return {};
     
-    const borderWidth = imageSettings.borderWidth || 2;
-    return `border-${borderWidth} border-gray-600`;
+    return {
+      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      border: '2px solid #4b5563'
+    };
   };
 
   const renderOption = (option: any) => {
@@ -361,16 +363,18 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 }`}
               >
                 <div className="flex flex-col items-center space-y-2">
-                  <div className={`
-                    flex items-center justify-center rounded-lg overflow-hidden
-                    ${getBorderStyles(option.imageSettings)}
-                    ${value.image ? '' : 'bg-gray-700 w-16 h-16'}
-                  `}>
+                  <div 
+                    className={`
+                      flex items-center justify-center overflow-hidden
+                      ${value.image ? '' : 'bg-gray-700 w-16 h-16 rounded-lg'}
+                    `}
+                    style={value.image ? getBorderStyles(option.imageSettings) : {}}
+                  >
                     {value.image ? (
                       <img
                         src={value.image}
                         alt={value.name}
-                        className={`rounded-lg ${
+                        className={`${
                           option.imageSettings?.aspectRatio === 'full' 
                             ? 'object-contain max-w-32 max-h-32' 
                             : 'object-cover'
@@ -389,11 +393,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                           option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
                           option.imageSettings?.aspectRatio === 'full' ? '' :
                           'aspect-square'
-                        } ${
-                          option.imageSettings?.showBorder 
-                            ? `border-${option.imageSettings.borderWidth || 2} border-gray-600` 
-                            : ''
                         }`}
+                        style={getBorderStyles(option.imageSettings)}
                       />
                     ) : (
                       <ImageIcon className="w-6 h-6 text-gray-500" />
