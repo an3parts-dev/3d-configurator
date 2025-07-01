@@ -117,9 +117,11 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     if (!imageSettings) return 'h-24';
     
     switch (imageSettings.size) {
+      case 'x-small': return 'h-12';
       case 'small': return 'h-16';
       case 'medium': return 'h-24';
       case 'large': return 'h-32';
+      case 'x-large': return 'h-40';
       default: return 'h-24';
     }
   };

@@ -296,12 +296,24 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   const getImageSizeClass = (size?: string) => {
     switch (size) {
-      case 'x-small': return 'h-12';
-      case 'small': return 'h-16';
-      case 'medium': return 'h-20';
-      case 'large': return 'h-24';
-      case 'x-large': return 'h-32';
-      default: return 'h-20';
+      case 'x-small': return 'h-12 w-12';
+      case 'small': return 'h-16 w-16';
+      case 'medium': return 'h-20 w-20';
+      case 'large': return 'h-24 w-24';
+      case 'x-large': return 'h-32 w-32';
+      default: return 'h-20 w-20';
+    }
+  };
+
+  const getAspectRatioClass = (aspectRatio?: string) => {
+    switch (aspectRatio) {
+      case '1:1': return 'aspect-square';
+      case '4:3': return 'aspect-[4/3]';
+      case '16:9': return 'aspect-video';
+      case '3:2': return 'aspect-[3/2]';
+      case '2:3': return 'aspect-[2/3]';
+      case 'full': return '';
+      default: return 'aspect-square';
     }
   };
 
@@ -360,59 +372,51 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className={`${isRowDirection ? 'flex gap-3 overflow-x-auto pb-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}`}>
+          <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-lg overflow-hidden ${isRowDirection ? 'flex-shrink-0' : ''} ${
+                className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
                   selectedValues[option.id] === value.id
                     ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'hover:scale-102'
                 }`}
               >
-                <div className={`
-                  ${getImageSizeClass(option.imageSettings?.size)}
-                  ${option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
-                    option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
-                    option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
-                    option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
-                    option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
-                    option.imageSettings?.aspectRatio === 'full' ? '' : 'aspect-square'}
-                  flex items-center justify-center ${getBorderStyles(option.imageSettings)} rounded-lg
-                `}>
-                  {value.image ? (
-                    <img
-                      src={value.image}
-                      alt={value.name}
-                      className={`w-full h-full rounded-lg ${
-                        option.imageSettings?.aspectRatio === 'full' 
-                          ? 'object-contain' 
-                          : 'object-cover'
-                      }`}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-700 flex items-center justify-center rounded-lg">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className={`
+                    ${getImageSizeClass(option.imageSettings?.size)}
+                    ${getAspectRatioClass(option.imageSettings?.aspectRatio)}
+                    ${getBorderStyles(option.imageSettings)}
+                    flex items-center justify-center rounded-lg overflow-hidden bg-gray-700
+                  `}>
+                    {value.image ? (
+                      <img
+                        src={value.image}
+                        alt={value.name}
+                        className={`w-full h-full rounded-lg ${
+                          option.imageSettings?.aspectRatio === 'full' 
+                            ? 'object-contain' 
+                            : 'object-cover'
+                        }`}
+                      />
+                    ) : (
                       <ImageIcon className="w-6 h-6 text-gray-500" />
-                    </div>
+                    )}
+                  </div>
+                  
+                  {!value.hideTitle && (
+                    <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+                      {value.name}
+                    </p>
                   )}
                 </div>
                 
-                {!value.hideTitle && (
-                  <div className="p-2">
-                    <p className="text-white text-xs font-medium truncate">
-                      {value.name}
-                    </p>
-                  </div>
-                )}
-                
                 {selectedValues[option.id] === value.id && (
-                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center rounded-lg">
-                    <div className="bg-blue-500 text-white p-1 rounded-full">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
                   </div>
                 )}
 
