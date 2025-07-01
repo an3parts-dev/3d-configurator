@@ -57,7 +57,7 @@ const BabylonPreview: React.FC<BabylonPreviewProps> = ({
       Vector3.Zero(),
       scene
     );
-    camera.attachControls(canvas, true);
+    camera.attachControl(canvas, true);
     camera.setTarget(Vector3.Zero());
     camera.lowerRadiusLimit = 2;
     camera.upperRadiusLimit = 20;
