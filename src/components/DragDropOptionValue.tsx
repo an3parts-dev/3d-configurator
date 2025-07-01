@@ -51,13 +51,13 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
   const [{ isDraggingState }, drag] = useDrag({
     type: 'optionValue',
-    item: () => ({ id: value.id, index }),
+    item: () => {
+      setIsDragging(true);
+      return { id: value.id, index };
+    },
     collect: (monitor) => ({
       isDraggingState: monitor.isDragging(),
     }),
-    begin: () => {
-      setIsDragging(true);
-    },
     end: () => {
       setIsDragging(false);
     }
