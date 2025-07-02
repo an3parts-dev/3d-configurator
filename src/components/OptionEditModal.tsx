@@ -152,25 +152,41 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   const getPreviewImageStyles = () => {
     const settings = formData.imageSettings!;
     
-    let width = '48px';
-    let height = '48px';
+    let baseSize = 80; // Base size for preview
     
     switch (settings.size) {
-      case 'x-small': width = height = '48px'; break;
-      case 'small': width = height = '64px'; break;
-      case 'medium': width = height = '80px'; break;
-      case 'large': width = height = '96px'; break;
-      case 'x-large': width = height = '128px'; break;
+      case 'x-small': baseSize = 48; break;
+      case 'small': baseSize = 64; break;
+      case 'medium': baseSize = 80; break;
+      case 'large': baseSize = 96; break;
+      case 'x-large': baseSize = 128; break;
     }
 
-    let aspectRatioClass = '';
+    let width = baseSize;
+    let height = baseSize;
+
+    // Adjust dimensions based on aspect ratio
     if (settings.aspectRatio !== 'full') {
       switch (settings.aspectRatio) {
-        case '1:1': aspectRatioClass = 'aspect-square'; break;
-        case '4:3': aspectRatioClass = 'aspect-[4/3]'; break;
-        case '16:9': aspectRatioClass = 'aspect-video'; break;
-        case '3:2': aspectRatioClass = 'aspect-[3/2]'; break;
-        case '2:3': aspectRatioClass = 'aspect-[2/3]'; break;
+        case '1:1':
+          // Square - keep both dimensions the same
+          break;
+        case '4:3':
+          width = baseSize;
+          height = Math.round(baseSize * 3 / 4);
+          break;
+        case '16:9':
+          width = baseSize;
+          height = Math.round(baseSize * 9 / 16);
+          break;
+        case '3:2':
+          width = baseSize;
+          height = Math.round(baseSize * 2 / 3);
+          break;
+        case '2:3':
+          width = Math.round(baseSize * 2 / 3);
+          height = baseSize;
+          break;
       }
     }
 
@@ -182,10 +198,11 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     }
 
     return {
-      width: settings.aspectRatio === 'full' ? 'auto' : width,
-      height,
+      width: `${width}px`,
+      height: `${height}px`,
       borderRadius,
-      aspectRatioClass
+      maxWidth: '120px',
+      maxHeight: '120px'
     };
   };
 
@@ -502,10 +519,10 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   </div>
                 )}
 
-                {/* Image Settings */}
+                {/* Image Settings - No Frame */}
                 {formData.displayType === 'images' && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <h4 className="text-white font-semibold mb-6">Image Settings</h4>
+                  <div className="space-y-6">
+                    <h4 className="text-white font-semibold text-lg">Image Settings</h4>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                       {/* Left Column - Size and Aspect Ratio */}
@@ -549,13 +566,13 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                         <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Preview</label>
                         <div className="bg-gray-800 p-4 rounded-lg border border-gray-600 flex items-center justify-center">
                           <div
-                            className={`bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-gray-500 flex items-center justify-center ${previewStyles.aspectRatioClass}`}
+                            className="bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-gray-500 flex items-center justify-center"
                             style={{
                               width: previewStyles.width,
                               height: previewStyles.height,
                               borderRadius: previewStyles.borderRadius,
-                              maxWidth: '120px',
-                              maxHeight: '120px'
+                              maxWidth: previewStyles.maxWidth,
+                              maxHeight: previewStyles.maxHeight
                             }}
                           >
                             <ImageIcon className="w-6 h-6 text-white opacity-80" />
@@ -568,7 +585,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     </div>
 
                     {/* Corner Style - Full Width */}
-                    <div className="mt-6">
+                    <div>
                       <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
                       <div className="grid grid-cols-3 gap-3">
                         <button
