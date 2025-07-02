@@ -34,7 +34,7 @@ export interface ConfiguratorOptionValue {
 export interface ImageSettings {
   size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
   aspectRatio: 'square' | 'round' | '3:2' | '2:3' | 'auto';
-  cornerStyle: 'squared' | 'softer' | 'rounded';
+  cornerStyle: 'squared' | 'soft' | 'softer';
 }
 
 export interface ConfiguratorOptionGroup {

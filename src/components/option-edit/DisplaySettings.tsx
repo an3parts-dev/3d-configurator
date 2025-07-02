@@ -64,11 +64,11 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       case 'squared': 
         borderRadius = '0px'; 
         break;
+      case 'soft': 
+        borderRadius = '4px'; 
+        break;
       case 'softer': 
         borderRadius = '8px'; 
-        break;
-      case 'rounded': 
-        borderRadius = '50%'; 
         break;
     }
 
@@ -219,7 +219,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                     
                     // Auto-set corner style to rounded if round aspect ratio is selected
                     if (newAspectRatio === 'round') {
-                      updateImageSettings({ aspectRatio: newAspectRatio, cornerStyle: 'rounded' });
+                      updateImageSettings({ aspectRatio: newAspectRatio, cornerStyle: 'softer' });
                     }
                   }}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
@@ -277,6 +277,20 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                 </button>
                 <button
                   type="button"
+                  onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    formData.imageSettings?.cornerStyle === 'soft'
+                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
+                    <div className="font-semibold text-sm">Soft</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
                   onClick={() => updateImageSettings({ cornerStyle: 'softer' })}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     formData.imageSettings?.cornerStyle === 'softer'
@@ -287,20 +301,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                   <div className="text-center">
                     <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '8px' }}></div>
                     <div className="font-semibold text-sm">Softer</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'rounded' })}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'rounded'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="w-8 h-8 bg-gray-500 rounded-full mx-auto mb-2"></div>
-                    <div className="font-semibold text-sm">Rounded</div>
                   </div>
                 </button>
               </div>

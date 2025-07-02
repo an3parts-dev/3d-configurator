@@ -165,11 +165,11 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       case 'squared':
         borderRadius = '0px';
         break;
+      case 'soft':
+        borderRadius = '4px';
+        break;
       case 'softer':
         borderRadius = '8px';
-        break;
-      case 'rounded':
-        borderRadius = '50%';
         break;
     }
 

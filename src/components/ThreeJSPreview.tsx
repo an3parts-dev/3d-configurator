@@ -326,11 +326,11 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       case 'squared':
         borderRadius = '0px';
         break;
+      case 'soft':
+        borderRadius = '4px';
+        break;
       case 'softer':
         borderRadius = '8px';
-        break;
-      case 'rounded':
-        borderRadius = '50%';
         break;
     }
 
@@ -340,8 +340,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }
     
     return {
-      borderRadius,
-      border: '2px solid #4b5563'
+      borderRadius
     };
   };
 
@@ -405,13 +404,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 }`}
               >
                 <div className="flex flex-col items-center space-y-2">
-                  <div 
-                    className={`
-                      flex items-center justify-center overflow-hidden
-                      ${value.image ? '' : 'bg-gray-700 w-16 h-16 rounded-lg'}
-                    `}
-                    style={value.image ? getBorderStyles(option.imageSettings) : {}}
-                  >
+                  <div className="flex items-center justify-center overflow-hidden">
                     {value.image ? (
                       <img
                         src={value.image}
@@ -438,7 +431,19 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                         style={getBorderStyles(option.imageSettings)}
                       />
                     ) : (
-                      <ImageIcon className="w-6 h-6 text-gray-500" />
+                      <div 
+                        className={`bg-gray-700 flex items-center justify-center ${
+                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
+                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
+                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
+                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
+                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
+                          'w-20 h-20'
+                        }`}
+                        style={getBorderStyles(option.imageSettings)}
+                      >
+                        <ImageIcon className="w-6 h-6 text-gray-500" />
+                      </div>
                     )}
                   </div>
                   
