@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import ConfiguratorOptionsPanel from '../components/ConfiguratorOptionsPanel';
-import Configurator3DView from '../components/Configurator3DView';
+import ConfiguratorLayout, { LayoutMode, ViewMode } from '../components/layout/ConfiguratorLayout';
 import OptionEditModal from '../components/OptionEditModal';
 import { ConditionalLogicModal } from '../components/conditional-logic';
 import { GroupEditModal } from '../components/groups';
@@ -35,7 +34,11 @@ const ConfiguratorBuilder: React.FC = () => {
   const [editingGroup, setEditingGroup] = useState<ConfiguratorOptionGroup | null>(null);
   const [conditionalLogicOption, setConditionalLogicOption] = useState<ConfiguratorOption | null>(null);
   const [deletingOptionId, setDeletingOptionId] = useState<string | null>(null);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  
+  // Layout state
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('split');
+  const [viewMode, setViewMode] = useState<ViewMode>('builder');
+  const [showOptionsPanel, setShowOptionsPanel] = useState(true);
 
   // Persistence hook
   const {
@@ -289,8 +292,25 @@ const ConfiguratorBuilder: React.FC = () => {
     setShowGroupModal(true);
   }, []);
 
-  const handleTogglePreviewMode = useCallback(() => {
-    setIsPreviewMode(prev => !prev);
+  const handleToggleOptionsPanel = useCallback(() => {
+    setShowOptionsPanel(prev => !prev);
+  }, []);
+
+  const handleChangeLayoutMode = useCallback((mode: LayoutMode) => {
+    setLayoutMode(mode);
+    // Auto-show options panel when switching to modes that support it
+    if (mode !== 'fullscreen-only') {
+      setShowOptionsPanel(true);
+    }
+  }, []);
+
+  const handleChangeViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    // Reset to split layout when switching to builder mode
+    if (mode === 'builder') {
+      setLayoutMode('split');
+      setShowOptionsPanel(true);
+    }
   }, []);
 
   if (isLoading) {
@@ -306,85 +326,80 @@ const ConfiguratorBuilder: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-900 flex">
-        {/* Left Panel - Configuration */}
-        <ConfiguratorOptionsPanel
-          configuratorData={configuratorData}
-          modelComponents={modelComponents}
-          lastSaved={lastSaved}
-          isPreviewMode={isPreviewMode}
-          onTogglePreviewMode={handleTogglePreviewMode}
-          onCreateOption={handleCreateOption}
-          onCreateGroup={handleCreateGroup}
-          onExport={handleExport}
-          onImport={handleImport}
-          onMoveOption={moveOption}
-          onEditOption={handleEditOption}
-          onDeleteOption={handleDeleteOption}
-          onEditConditionalLogic={handleConditionalLogic}
-          onToggleGroup={toggleGroupExpansion}
-        />
+      <ConfiguratorLayout
+        layoutMode={layoutMode}
+        viewMode={viewMode}
+        showOptionsPanel={showOptionsPanel}
+        configuratorData={configuratorData}
+        modelComponents={modelComponents}
+        lastSaved={lastSaved}
+        onComponentsLoaded={setModelComponents}
+        onCreateOption={handleCreateOption}
+        onCreateGroup={handleCreateGroup}
+        onExport={handleExport}
+        onImport={handleImport}
+        onMoveOption={moveOption}
+        onEditOption={handleEditOption}
+        onDeleteOption={handleDeleteOption}
+        onEditConditionalLogic={handleConditionalLogic}
+        onToggleGroup={toggleGroupExpansion}
+        onToggleOptionsPanel={handleToggleOptionsPanel}
+        onChangeLayoutMode={handleChangeLayoutMode}
+        onChangeViewMode={handleChangeViewMode}
+      />
 
-        {/* Right Panel - 3D Preview */}
-        <Configurator3DView
-          configuratorData={configuratorData}
-          isPreviewMode={isPreviewMode}
-          onComponentsLoaded={setModelComponents}
-        />
+      {/* Modals */}
+      <OptionEditModal
+        isOpen={showOptionModal}
+        onClose={() => {
+          setShowOptionModal(false);
+          setEditingOption(null);
+        }}
+        onSave={handleSaveOption}
+        option={editingOption}
+        modelComponents={modelComponents}
+        allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
+        onAddValue={addOptionValue}
+        onUpdateValue={updateOptionValue}
+        onDeleteValue={deleteOptionValue}
+        onMoveValue={moveOptionValue}
+        availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
+      />
 
-        {/* Modals */}
-        <OptionEditModal
-          isOpen={showOptionModal}
+      <GroupEditModal
+        isOpen={showGroupModal}
+        onClose={() => {
+          setShowGroupModal(false);
+          setEditingGroup(null);
+        }}
+        onSave={handleSaveGroup}
+        groupData={editingGroup}
+        isEditing={!!editingGroup}
+      />
+
+      {showConditionalLogicModal && conditionalLogicOption && (
+        <ConditionalLogicModal
+          isOpen={showConditionalLogicModal}
           onClose={() => {
-            setShowOptionModal(false);
-            setEditingOption(null);
+            setShowConditionalLogicModal(false);
+            setConditionalLogicOption(null);
           }}
-          onSave={handleSaveOption}
-          option={editingOption}
-          modelComponents={modelComponents}
+          onSave={handleSaveConditionalLogic}
+          currentOption={conditionalLogicOption}
           allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
-          onAddValue={addOptionValue}
-          onUpdateValue={updateOptionValue}
-          onDeleteValue={deleteOptionValue}
-          onMoveValue={moveOptionValue}
-          availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
+          conditionalLogic={conditionalLogicOption.conditionalLogic}
         />
+      )}
 
-        <GroupEditModal
-          isOpen={showGroupModal}
-          onClose={() => {
-            setShowGroupModal(false);
-            setEditingGroup(null);
-          }}
-          onSave={handleSaveGroup}
-          groupData={editingGroup}
-          isEditing={!!editingGroup}
-        />
-
-        {showConditionalLogicModal && conditionalLogicOption && (
-          <ConditionalLogicModal
-            isOpen={showConditionalLogicModal}
-            onClose={() => {
-              setShowConditionalLogicModal(false);
-              setConditionalLogicOption(null);
-            }}
-            onSave={handleSaveConditionalLogic}
-            currentOption={conditionalLogicOption}
-            allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
-            conditionalLogic={conditionalLogicOption.conditionalLogic}
-          />
-        )}
-
-        <ConfirmationDialog
-          isOpen={showDeleteConfirmation}
-          onClose={() => setShowDeleteConfirmation(false)}
-          onConfirm={confirmDelete}
-          title="Delete Option"
-          message="Are you sure you want to delete this option? This action cannot be undone."
-          confirmText="Delete"
-          type="danger"
-        />
-      </div>
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmation}
+        onClose={() => setShowDeleteConfirmation(false)}
+        onConfirm={confirmDelete}
+        title="Delete Option"
+        message="Are you sure you want to delete this option? This action cannot be undone."
+        confirmText="Delete"
+        type="danger"
+      />
     </DndProvider>
   );
 };
