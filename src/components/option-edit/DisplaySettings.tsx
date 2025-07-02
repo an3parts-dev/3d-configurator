@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff, LayoutGrid } from 'lucide-react';
 import { ConfiguratorOption, ImageSettings } from '../../types/ConfiguratorTypes';
 
 interface DisplaySettingsProps {
@@ -26,7 +26,9 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       { id: '1', name: 'Option A', color: '#3B82F6' },
       { id: '2', name: 'Option B', color: '#EF4444' },
       { id: '3', name: 'Option C', color: '#10B981' },
-      { id: '4', name: 'Option D', color: '#F59E0B' }
+      { id: '4', name: 'Option D', color: '#F59E0B' },
+      { id: '5', name: 'Option E', color: '#8B5CF6' },
+      { id: '6', name: 'Option F', color: '#F97316' }
     ];
 
     // Use real images from option values if available
@@ -45,196 +47,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
   };
 
   const sampleValues = getSampleValues();
-
-  // Generate precise preview styles based on current settings
-  const getPreviewStyles = () => {
-    const settings = formData.imageSettings!;
-    
-    let baseSizePx = 80;
-    
-    switch (settings.size) {
-      case 'x-small': baseSizePx = 48; break;
-      case 'small': baseSizePx = 64; break;
-      case 'medium': baseSizePx = 80; break;
-      case 'large': baseSizePx = 96; break;
-      case 'x-large': baseSizePx = 128; break;
-    }
-
-    let containerStyle: React.CSSProperties = {};
-    let imageObjectFitClass = 'object-cover';
-
-    // Handle aspect ratios with precise container sizing
-    switch (settings.aspectRatio) {
-      case 'square':
-        containerStyle = {
-          width: `${baseSizePx}px`,
-          height: `${baseSizePx}px`
-        };
-        imageObjectFitClass = 'object-cover';
-        break;
-      case 'round':
-        containerStyle = {
-          width: `${baseSizePx}px`,
-          height: `${baseSizePx}px`
-        };
-        imageObjectFitClass = 'object-cover';
-        break;
-      case '3:2':
-        containerStyle = {
-          width: `${baseSizePx}px`,
-          height: `${Math.round(baseSizePx * 2 / 3)}px`
-        };
-        imageObjectFitClass = 'object-cover';
-        break;
-      case '2:3':
-        containerStyle = {
-          width: `${Math.round(baseSizePx * 2 / 3)}px`,
-          height: `${baseSizePx}px`
-        };
-        imageObjectFitClass = 'object-cover';
-        break;
-      case 'auto':
-        containerStyle = {
-          width: 'auto',
-          height: 'auto',
-          maxWidth: `${baseSizePx}px`,
-          maxHeight: `${baseSizePx}px`
-        };
-        imageObjectFitClass = 'object-contain';
-        break;
-    }
-
-    // Handle corner styles
-    let borderRadius = '0px';
-    switch (settings.cornerStyle) {
-      case 'squared': 
-        borderRadius = '0px'; 
-        break;
-      case 'soft': 
-        borderRadius = '4px'; 
-        break;
-      case 'softer': 
-        borderRadius = '8px'; 
-        break;
-    }
-
-    // Force round shape for round aspect ratio
-    if (settings.aspectRatio === 'round') {
-      borderRadius = '50%';
-    }
-
-    containerStyle.borderRadius = borderRadius;
-
-    return {
-      containerStyle,
-      imageObjectFitClass,
-      borderRadius
-    };
-  };
-
-  const { containerStyle, imageObjectFitClass, borderRadius } = getPreviewStyles();
-  const isRoundAspectRatio = formData.imageSettings?.aspectRatio === 'round';
-  const isAutoAspectRatio = formData.imageSettings?.aspectRatio === 'auto';
-  const hideTitle = formData.imageSettings?.hideTitle || false;
-  const titlePosition = formData.imageSettings?.titlePosition || 'below';
-
-  // Helper function to render title based on position
-  const renderTitle = (value: any, position: string) => {
-    if (hideTitle) return null;
-    
-    const titleElement = (
-      <p className="text-white text-xs font-medium text-center max-w-20 truncate">
-        {value.name}
-      </p>
-    );
-
-    return titleElement;
-  };
-
-  // Helper function to render image with title positioning
-  const renderImageWithTitle = (value: any, index: number, isSelected: boolean = false) => {
-    const imageElement = (
-      <div className="p-2">
-        {value.image ? (
-          <div
-            className="overflow-hidden flex items-center justify-center"
-            style={containerStyle}
-          >
-            <img
-              src={value.image}
-              alt={value.name}
-              className={`w-full h-full ${imageObjectFitClass}`}
-              style={{ borderRadius }}
-            />
-          </div>
-        ) : (
-          <div 
-            className="flex items-center justify-center"
-            style={{
-              ...containerStyle,
-              background: `linear-gradient(135deg, ${value.color}88, ${value.color})`
-            }}
-          >
-            <ImageIcon className="w-6 h-6 text-white opacity-80" />
-          </div>
-        )}
-      </div>
-    );
-
-    const titleElement = renderTitle(value, titlePosition);
-
-    // Arrange image and title based on position
-    switch (titlePosition) {
-      case 'above':
-        return (
-          <div className="flex flex-col items-center space-y-1">
-            {titleElement}
-            {imageElement}
-          </div>
-        );
-      case 'below':
-        return (
-          <div className="flex flex-col items-center space-y-1">
-            {imageElement}
-            {titleElement}
-          </div>
-        );
-      case 'left':
-        return (
-          <div className="flex items-center space-x-2">
-            {titleElement}
-            {imageElement}
-          </div>
-        );
-      case 'right':
-        return (
-          <div className="flex items-center space-x-2">
-            {imageElement}
-            {titleElement}
-          </div>
-        );
-      case 'center':
-        return (
-          <div className="relative">
-            {imageElement}
-            {titleElement && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
-                  {value.name}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      default:
-        return (
-          <div className="flex flex-col items-center space-y-1">
-            {imageElement}
-            {titleElement}
-          </div>
-        );
-    }
-  };
 
   // Preview Components
   const renderListPreview = () => (
@@ -282,7 +94,86 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               : 'hover:scale-102'
           } ${direction === 'row' ? 'flex-shrink-0' : ''}`}
         >
-          {renderImageWithTitle(value, index, index === 0)}
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex items-center justify-center">
+              {value.image ? (
+                <img
+                  src={value.image}
+                  alt={value.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div 
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ background: `linear-gradient(135deg, ${value.color}88, ${value.color})` }}
+                >
+                  <ImageIcon className="w-6 h-6 text-white opacity-80" />
+                </div>
+              )}
+            </div>
+            <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+              {value.name}
+            </p>
+          </div>
+          
+          {index === 0 && (
+            <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderGridPreview = () => (
+    <div className="grid grid-cols-3 gap-3 max-w-sm">
+      {sampleValues.slice(0, 6).map((value, index) => (
+        <button
+          key={value.id}
+          className={`relative group transition-all duration-200 cursor-pointer ${
+            index === 0
+              ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+              : 'hover:scale-102'
+          }`}
+        >
+          {formData.displayType === 'grid' && formData.manipulationType === 'material' ? (
+            // Grid with color buttons
+            <div className="flex flex-col items-center space-y-2">
+              <div 
+                className="w-12 h-12 rounded-lg border-2 border-gray-600"
+                style={{ backgroundColor: value.color }}
+              />
+              <p className="text-white text-xs font-medium text-center truncate w-full">
+                {value.name}
+              </p>
+            </div>
+          ) : (
+            // Grid with images
+            <div className="flex flex-col items-center space-y-2">
+              <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center">
+                {value.image ? (
+                  <img
+                    src={value.image}
+                    alt={value.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ background: `linear-gradient(135deg, ${value.color}88, ${value.color})` }}
+                  >
+                    <ImageIcon className="w-4 h-4 text-white opacity-80" />
+                  </div>
+                )}
+              </div>
+              <p className="text-white text-xs font-medium text-center truncate w-full">
+                {value.name}
+              </p>
+            </div>
+          )}
           
           {index === 0 && (
             <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
@@ -298,7 +189,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   return (
     <div className="p-6 space-y-8">
-      {/* Live Preview Section - Simplified */}
+      {/* Live Preview Section */}
       <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
         <h4 className="text-white font-semibold text-lg mb-4 flex items-center">
           <Eye className="w-5 h-5 mr-2 text-blue-400" />
@@ -309,6 +200,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
           {formData.displayType === 'list' && renderListPreview()}
           {formData.displayType === 'buttons' && renderButtonsPreview(formData.displayDirection || 'row')}
           {formData.displayType === 'images' && renderImagesPreview(formData.displayDirection || 'row')}
+          {formData.displayType === 'grid' && renderGridPreview()}
         </div>
       </div>
 
@@ -317,7 +209,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         <label className="block text-gray-400 text-sm mb-4 font-medium">
           Display Type
         </label>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, displayType: 'list' }))}
@@ -365,14 +257,30 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               <div className="text-sm opacity-80 mt-1">Visual selection</div>
             </div>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setFormData(prev => ({ ...prev, displayType: 'grid' }))}
+            className={`p-6 rounded-xl border-2 transition-all ${
+              formData.displayType === 'grid'
+                ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+            }`}
+          >
+            <div className="text-center">
+              <LayoutGrid className="w-8 h-8 mx-auto mb-3" />
+              <div className="font-semibold text-lg">Grid</div>
+              <div className="text-sm opacity-80 mt-1">Grid layout</div>
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Display Direction */}
+      {/* Layout - Only show for buttons, images, and grid */}
       {(formData.displayType === 'buttons' || formData.displayType === 'images') && (
         <div>
           <label className="block text-gray-400 text-sm mb-4 font-medium">
-            Layout Direction
+            Layout
           </label>
           <div className="grid grid-cols-2 gap-6">
             <button
@@ -400,7 +308,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               }`}
             >
               <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Vertical Row</div>
+                <div className="font-semibold text-lg mb-2">Column</div>
                 <div className="text-sm opacity-80">Vertical arrangement</div>
               </div>
             </button>
@@ -413,237 +321,75 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         <div className="space-y-6">
           <h4 className="text-white font-semibold text-lg">Image Settings</h4>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Size and Aspect Ratio */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Image Size */}
-              <div>
-                <label className="block text-gray-400 text-sm mb-2 font-medium">Size</label>
-                <select
-                  value={formData.imageSettings?.size || 'medium'}
-                  onChange={(e) => updateImageSettings({ size: e.target.value as any })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="x-small">Extra Small (48px)</option>
-                  <option value="small">Small (64px)</option>
-                  <option value="medium">Medium (80px)</option>
-                  <option value="large">Large (96px)</option>
-                  <option value="x-large">Extra Large (128px)</option>
-                </select>
-              </div>
-
-              {/* Aspect Ratio */}
-              <div>
-                <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
-                <select
-                  value={formData.imageSettings?.aspectRatio || 'square'}
-                  onChange={(e) => {
-                    const newAspectRatio = e.target.value as any;
-                    updateImageSettings({ aspectRatio: newAspectRatio });
-                    
-                    // Auto-set corner style to rounded if round aspect ratio is selected
-                    if (newAspectRatio === 'round') {
-                      updateImageSettings({ aspectRatio: newAspectRatio, cornerStyle: 'softer' });
-                    }
-                  }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="square">Square</option>
-                  <option value="round">Round</option>
-                  <option value="3:2">3:2</option>
-                  <option value="2:3">2:3</option>
-                  <option value="auto">Auto (adapts to image)</option>
-                </select>
-                {isAutoAspectRatio && (
-                  <p className="text-gray-500 text-xs mt-1">
-                    Images will maintain their natural proportions within the size constraints
-                  </p>
-                )}
-              </div>
-
-              {/* Title Settings */}
-              <div className="space-y-4">
-                {/* Global Hide Title Toggle */}
-                <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg border border-gray-600">
-                  <div>
-                    <label className="text-gray-400 text-sm font-medium">Show Titles</label>
-                    <p className="text-gray-500 text-xs mt-1">Display option value names with images</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => updateImageSettings({ hideTitle: !hideTitle })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      !hideTitle ? 'bg-blue-600' : 'bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        !hideTitle ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Title Position */}
-                {!hideTitle && (
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-3 font-medium">Title Position</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => updateImageSettings({ titlePosition: 'above' })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          titlePosition === 'above'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-center">
-                          <div className="text-xs font-medium mb-1">Text</div>
-                          <div className="w-8 h-6 bg-gray-500 mx-auto rounded"></div>
-                          <div className="font-semibold text-sm mt-2">Above</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateImageSettings({ titlePosition: 'below' })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          titlePosition === 'below'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-center">
-                          <div className="w-8 h-6 bg-gray-500 mx-auto rounded"></div>
-                          <div className="text-xs font-medium mt-1 mb-1">Text</div>
-                          <div className="font-semibold text-sm">Below</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateImageSettings({ titlePosition: 'center' })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          titlePosition === 'center'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-center">
-                          <div className="relative w-8 h-6 bg-gray-500 mx-auto rounded">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="text-xs font-bold text-white">T</div>
-                            </div>
-                          </div>
-                          <div className="font-semibold text-sm mt-2">Center</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateImageSettings({ titlePosition: 'left' })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          titlePosition === 'left'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-center">
-                          <div className="flex items-center justify-center space-x-1">
-                            <div className="text-xs font-medium">T</div>
-                            <div className="w-6 h-4 bg-gray-500 rounded"></div>
-                          </div>
-                          <div className="font-semibold text-sm mt-2">Left</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateImageSettings({ titlePosition: 'right' })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          titlePosition === 'right'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-center">
-                          <div className="flex items-center justify-center space-x-1">
-                            <div className="w-6 h-4 bg-gray-500 rounded"></div>
-                            <div className="text-xs font-medium">T</div>
-                          </div>
-                          <div className="font-semibold text-sm mt-2">Right</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column - Preview */}
-            <div className="flex flex-col items-center justify-center">
-              <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Single Image Preview</label>
-              <div className="flex items-center justify-center">
-                {renderImageWithTitle(sampleValues[0], 0, false)}
-              </div>
-              <p className="text-gray-500 text-xs mt-2 text-center">
-                {formData.imageSettings?.size} • {formData.imageSettings?.aspectRatio} • {formData.imageSettings?.cornerStyle}
-              </p>
-              {sampleValues[0].image && (
-                <p className="text-green-400 text-xs mt-1 text-center">
-                  Using uploaded image
-                </p>
-              )}
-            </div>
+          {/* Image Size */}
+          <div>
+            <label className="block text-gray-400 text-sm mb-2 font-medium">Size</label>
+            <select
+              value={formData.imageSettings?.size || 'medium'}
+              onChange={(e) => updateImageSettings({ size: e.target.value as any })}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="x-small">Extra Small (48px)</option>
+              <option value="small">Small (64px)</option>
+              <option value="medium">Medium (80px)</option>
+              <option value="large">Large (96px)</option>
+              <option value="x-large">Extra Large (128px)</option>
+            </select>
           </div>
 
-          {/* Corner Style - Hidden when Round aspect ratio is selected */}
-          {!isRoundAspectRatio && (
-            <div>
-              <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'squared'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+          {/* Aspect Ratio */}
+          <div>
+            <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
+            <select
+              value={formData.imageSettings?.aspectRatio || '1:1'}
+              onChange={(e) => updateImageSettings({ aspectRatio: e.target.value as any })}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="1:1">Square (1:1)</option>
+              <option value="4:3">Standard (4:3)</option>
+              <option value="16:9">Widescreen (16:9)</option>
+              <option value="3:2">Photo (3:2)</option>
+              <option value="2:3">Portrait (2:3)</option>
+              <option value="full">Full Size</option>
+            </select>
+          </div>
+
+          {/* Border Settings */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between">
+              <label className="text-gray-400 text-sm font-medium">Show Border</label>
+              <button
+                type="button"
+                onClick={() => updateImageSettings({ showBorder: !formData.imageSettings?.showBorder })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  formData.imageSettings?.showBorder ? 'bg-blue-600' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.imageSettings?.showBorder ? 'translate-x-6' : 'translate-x-1'
                   }`}
-                >
-                  <div className="text-center">
-                    <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '0px' }}></div>
-                    <div className="font-semibold text-sm">Squared</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'soft'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
-                    <div className="font-semibold text-sm">Soft</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'softer' })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'softer'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '8px' }}></div>
-                    <div className="font-semibold text-sm">Softer</div>
-                  </div>
-                </button>
-              </div>
+                />
+              </button>
             </div>
-          )}
+
+            {formData.imageSettings?.showBorder && (
+              <div>
+                <label className="block text-gray-400 text-sm mb-1 font-medium">Border Radius</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="20"
+                  value={formData.imageSettings?.borderRadius || 8}
+                  onChange={(e) => updateImageSettings({ borderRadius: parseInt(e.target.value) })}
+                  className="w-full slider"
+                />
+                <div className="text-center text-gray-500 text-xs mt-1">
+                  {formData.imageSettings?.borderRadius || 8}px
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
