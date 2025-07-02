@@ -175,8 +175,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }
     
     return {
-      borderRadius,
-      border: '2px solid #4b5563'
+      borderRadius
     };
   };
 
@@ -337,8 +336,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                       </>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
-                        <ImageIcon className="w-6 h-6 mb-1" />
-                        <span className="text-xs">Upload</span>
+                        <ImageIcon className="w-6 h-6" />
                       </div>
                     )}
                   </div>
