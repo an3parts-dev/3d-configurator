@@ -130,12 +130,11 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     if (!imageSettings) return 'aspect-square';
     
     switch (imageSettings.aspectRatio) {
-      case '1:1': return 'aspect-square';
-      case '4:3': return 'aspect-[4/3]';
-      case '16:9': return 'aspect-video';
+      case 'square': return 'aspect-square';
+      case 'round': return 'aspect-square'; // Round uses square dimensions but with border-radius
       case '3:2': return 'aspect-[3/2]';
       case '2:3': return 'aspect-[2/3]';
-      case 'full': return ''; // No aspect ratio constraint for full size
+      case 'auto': return ''; // No aspect ratio constraint for auto
       default: return 'aspect-square';
     }
   };
@@ -151,8 +150,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     // Use current aspect ratio when image is uploaded
     const aspectClass = getAspectRatioClass();
     
-    if (imageSettings?.aspectRatio === 'full') {
-      return `${sizeClass} w-auto max-w-48`; // Full size with max width constraint
+    if (imageSettings?.aspectRatio === 'auto') {
+      return `${sizeClass} w-auto max-w-48`; // Auto size with max width constraint
     }
     
     return `${sizeClass} ${aspectClass}`;
@@ -166,12 +165,17 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
       case 'squared':
         borderRadius = '0px';
         break;
-      case 'soft':
-        borderRadius = '4px';
+      case 'softer':
+        borderRadius = '8px';
         break;
       case 'rounded':
         borderRadius = '50%';
         break;
+    }
+
+    // Force round shape for round aspect ratio
+    if (imageSettings.aspectRatio === 'round') {
+      borderRadius = '50%';
     }
     
     return {
@@ -267,7 +271,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                         <img
                           src={value.image}
                           alt={value.name}
-                          className={`w-full h-full ${imageSettings?.aspectRatio === 'full' ? 'object-contain' : 'object-cover'}`}
+                          className={`w-full h-full ${imageSettings?.aspectRatio === 'auto' ? 'object-contain' : 'object-cover'}`}
                           style={getBorderStyles()}
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

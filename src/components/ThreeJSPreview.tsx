@@ -326,12 +326,17 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       case 'squared':
         borderRadius = '0px';
         break;
-      case 'soft':
-        borderRadius = '4px';
+      case 'softer':
+        borderRadius = '8px';
         break;
       case 'rounded':
         borderRadius = '50%';
         break;
+    }
+
+    // Force round shape for round aspect ratio
+    if (imageSettings.aspectRatio === 'round') {
+      borderRadius = '50%';
     }
     
     return {
@@ -412,7 +417,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                         src={value.image}
                         alt={value.name}
                         className={`${
-                          option.imageSettings?.aspectRatio === 'full' 
+                          option.imageSettings?.aspectRatio === 'auto' 
                             ? 'object-contain max-w-32 max-h-32' 
                             : 'object-cover'
                         } ${
@@ -423,12 +428,11 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                           option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
                           'w-20 h-20'
                         } ${
-                          option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
-                          option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
-                          option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
+                          option.imageSettings?.aspectRatio === 'square' ? 'aspect-square' :
+                          option.imageSettings?.aspectRatio === 'round' ? 'aspect-square' :
                           option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
                           option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
-                          option.imageSettings?.aspectRatio === 'full' ? '' :
+                          option.imageSettings?.aspectRatio === 'auto' ? '' :
                           'aspect-square'
                         }`}
                         style={getBorderStyles(option.imageSettings)}

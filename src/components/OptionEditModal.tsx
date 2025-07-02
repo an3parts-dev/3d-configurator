@@ -60,8 +60,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     defaultBehavior: 'hide',
     imageSettings: {
       size: 'medium',
-      aspectRatio: '1:1',
-      cornerStyle: 'soft'
+      aspectRatio: 'square',
+      cornerStyle: 'softer'
     }
   });
 
@@ -91,8 +91,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           conditionalLogic: option.conditionalLogic,
           imageSettings: option.imageSettings || {
             size: 'medium',
-            aspectRatio: '1:1',
-            cornerStyle: 'soft'
+            aspectRatio: 'square',
+            cornerStyle: 'softer'
           },
           groupId: option.groupId
         });
@@ -108,8 +108,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           defaultBehavior: 'hide',
           imageSettings: {
             size: 'medium',
-            aspectRatio: '1:1',
-            cornerStyle: 'soft'
+            aspectRatio: 'square',
+            cornerStyle: 'softer'
           }
         });
         setLocalValues([]);
