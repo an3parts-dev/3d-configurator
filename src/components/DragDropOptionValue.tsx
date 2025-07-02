@@ -175,18 +175,12 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   };
 
   const getBorderStyles = () => {
-    if (!imageSettings?.borderStyle) return { borderRadius: '8px' };
+    if (!imageSettings?.showBorder) return {};
     
-    switch (imageSettings.borderStyle) {
-      case 'squared':
-        return { borderRadius: '0px' };
-      case 'rounded':
-        return { borderRadius: '8px' };
-      case 'round':
-        return { borderRadius: '50%' };
-      default:
-        return { borderRadius: '8px' };
-    }
+    return {
+      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      border: '2px solid #4b5563'
+    };
   };
 
   const handleFileSelect = (file: File) => {
@@ -318,7 +312,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   <div
                     onClick={handleImageClick}
                     className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
-                    style={getBorderStyles()}
+                    style={value.image ? getBorderStyles() : { borderRadius: '8px' }}
                     title={value.image ? "Image" : "Upload Image"}
                   >
                     {value.image ? (
