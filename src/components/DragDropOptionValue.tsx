@@ -113,6 +113,22 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
   const hasConditionalLogic = value.conditionalLogic?.enabled;
 
+  // Calculate component counts for the new text
+  const getComponentCounts = () => {
+    const totalTargeted = filteredComponents.length;
+    let selectedCount = 0;
+
+    if (defaultBehavior === 'hide') {
+      selectedCount = value.visibleComponents?.length || 0;
+    } else {
+      selectedCount = value.hiddenComponents?.length || 0;
+    }
+
+    return { selectedCount, totalTargeted };
+  };
+
+  const { selectedCount, totalTargeted } = getComponentCounts();
+
   const getImageSizeClass = () => {
     if (!imageSettings) return 'h-24';
     
@@ -220,114 +236,120 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
           )}
 
           {/* Header with controls */}
-          <div className="flex items-center space-x-4">
-            {/* Drag Handle */}
-            <div 
-              ref={drag}
-              className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              <GripVertical className="w-5 h-5 text-gray-400" />
+          <div className="flex items-center justify-between">
+            {/* Left side - Drag Handle and Value Name */}
+            <div className="flex items-center space-x-4 flex-1 min-w-0">
+              {/* Drag Handle */}
+              <div 
+                ref={drag}
+                className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                <GripVertical className="w-5 h-5 text-gray-400" />
+              </div>
+
+              {/* Value Name Input */}
+              <div className="flex-1 max-w-xs">
+                <input
+                  type="text"
+                  value={value.name}
+                  onChange={(e) => onUpdate(value.id, { name: e.target.value })}
+                  className="w-full bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                  placeholder="Value name"
+                />
+              </div>
             </div>
 
-            {/* Value Name Input - 35% width */}
-            <div className="w-[35%]">
-              <input
-                type="text"
-                value={value.name}
-                onChange={(e) => onUpdate(value.id, { name: e.target.value })}
-                className="w-full bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                placeholder="Value name"
-              />
-            </div>
-
-            {/* Hide Title Toggle for Images */}
-            {displayType === 'images' && (
-              <div className="flex items-center space-x-2 flex-shrink-0">
-                <button
-                  onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
-                  className={`p-2 rounded-lg transition-colors ${
-                    value.hideTitle 
-                      ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
-                      : 'text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20'
-                  }`}
-                  title={value.hideTitle ? 'Show title' : 'Hide title'}
-                >
-                  {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <span className="text-gray-400 text-xs font-medium">
-                  {value.hideTitle ? 'Hidden' : 'Visible'}
-                </span>
-              </div>
-            )}
-
-            {/* Color picker for material manipulation */}
-            {manipulationType === 'material' && (
-              <div className="relative flex-shrink-0">
-                <input
-                  type="color"
-                  value={value.color || '#000000'}
-                  onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                  className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
-                />
-                <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
-              </div>
-            )}
-
-            {/* Image Upload/Preview for Images Display Type */}
-            {displayType === 'images' && (
-              <div className="flex-1 flex justify-end">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFileSelect(file);
-                  }}
-                  className="hidden"
-                />
-                
-                <div
-                  onClick={handleImageClick}
-                  className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
-                  style={value.image ? getBorderStyles() : { borderRadius: '8px' }}
-                >
-                  {value.image ? (
-                    <>
-                      <img
-                        src={value.image}
-                        alt={value.name}
-                        className={`w-full h-full ${imageSettings?.aspectRatio === 'full' ? 'object-contain' : 'object-cover'}`}
-                        style={getBorderStyles()}
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={handleImageClick}
-                            className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded transition-colors"
-                          >
-                            <Upload className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={handleRemoveImage}
-                            className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded transition-colors"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
-                      <ImageIcon className="w-6 h-6 mb-1" />
-                      <span className="text-xs">Upload</span>
-                    </div>
-                  )}
+            {/* Center - Controls based on type */}
+            <div className="flex items-center space-x-4">
+              {/* Hide Title Toggle for Images */}
+              {displayType === 'images' && (
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <button
+                    onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
+                    className={`p-2 rounded-lg transition-colors ${
+                      value.hideTitle 
+                        ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
+                        : 'text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20'
+                    }`}
+                    title={value.hideTitle ? 'Show title' : 'Hide title'}
+                  >
+                    {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                  <span className="text-gray-400 text-xs font-medium">
+                    {value.hideTitle ? 'Hidden' : 'Visible'}
+                  </span>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Color picker for material manipulation */}
+              {manipulationType === 'material' && (
+                <div className="relative flex-shrink-0">
+                  <input
+                    type="color"
+                    value={value.color || '#000000'}
+                    onChange={(e) => onUpdate(value.id, { color: e.target.value })}
+                    className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
+                  />
+                  <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
+                </div>
+              )}
+
+              {/* Image Upload/Preview for Images Display Type */}
+              {displayType === 'images' && (
+                <div className="flex-shrink-0">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                    }}
+                    className="hidden"
+                  />
+                  
+                  <div
+                    onClick={handleImageClick}
+                    className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
+                    style={value.image ? getBorderStyles() : { borderRadius: '8px' }}
+                  >
+                    {value.image ? (
+                      <>
+                        <img
+                          src={value.image}
+                          alt={value.name}
+                          className={`w-full h-full ${imageSettings?.aspectRatio === 'full' ? 'object-contain' : 'object-cover'}`}
+                          style={getBorderStyles()}
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={handleImageClick}
+                              className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded transition-colors"
+                            >
+                              <Upload className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={handleRemoveImage}
+                              className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                        <ImageIcon className="w-6 h-6 mb-1" />
+                        <span className="text-xs">Upload</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             
-            {/* Action Buttons */}
+            {/* Right side - Action Buttons */}
             <div className="flex items-center space-x-2 flex-shrink-0">
               <button
                 onClick={() => setShowConditionalLogicModal(true)}
@@ -367,7 +389,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     alwaysModal={true}
                   />
                   <p className="text-gray-500 text-xs">
-                    Showing {filteredComponents.length} target components (filtered from {availableComponents.length} total)
+                    Showing {selectedCount} of {totalTargeted} target components ({filteredComponents.length} of {availableComponents.length} total)
                   </p>
                 </div>
               ) : (
@@ -381,7 +403,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     alwaysModal={true}
                   />
                   <p className="text-gray-500 text-xs">
-                    Showing {filteredComponents.length} target components (filtered from {availableComponents.length} total)
+                    Hiding {selectedCount} of {totalTargeted} target components ({filteredComponents.length} of {availableComponents.length} total)
                   </p>
                 </div>
               )}
