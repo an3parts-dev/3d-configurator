@@ -319,10 +319,23 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 
   const getBorderStyles = (imageSettings?: any) => {
-    if (!imageSettings?.showBorder) return {};
+    if (!imageSettings?.cornerStyle) return {};
+    
+    let borderRadius = '0px';
+    switch (imageSettings.cornerStyle) {
+      case 'squared':
+        borderRadius = '0px';
+        break;
+      case 'soft':
+        borderRadius = '4px';
+        break;
+      case 'rounded':
+        borderRadius = '50%';
+        break;
+    }
     
     return {
-      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      borderRadius,
       border: '2px solid #4b5563'
     };
   };

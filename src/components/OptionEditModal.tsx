@@ -67,8 +67,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     imageSettings: {
       size: 'medium',
       aspectRatio: '1:1',
-      showBorder: true,
-      borderRadius: 8
+      cornerStyle: 'soft'
     }
   });
 
@@ -90,8 +89,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           imageSettings: option.imageSettings || {
             size: 'medium',
             aspectRatio: '1:1',
-            showBorder: true,
-            borderRadius: 8
+            cornerStyle: 'soft'
           },
           groupId: option.groupId
         });
@@ -107,8 +105,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           imageSettings: {
             size: 'medium',
             aspectRatio: '1:1',
-            showBorder: true,
-            borderRadius: 8
+            cornerStyle: 'soft'
           }
         });
       }
@@ -523,40 +520,50 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                             </select>
                           </div>
 
-                          {/* Border Settings */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="flex items-center justify-between">
-                              <label className="text-gray-400 text-sm font-medium">Show Border</label>
+                          {/* Corner Style */}
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
+                            <div className="grid grid-cols-3 gap-3">
                               <button
-                                onClick={() => updateImageSettings({ showBorder: !formData.imageSettings?.showBorder })}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                  formData.imageSettings?.showBorder ? 'bg-blue-600' : 'bg-gray-600'
+                                onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
+                                className={`p-3 rounded-lg border-2 transition-all ${
+                                  formData.imageSettings?.cornerStyle === 'squared'
+                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                    : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
                                 }`}
                               >
-                                <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    formData.imageSettings?.showBorder ? 'translate-x-6' : 'translate-x-1'
-                                  }`}
-                                />
+                                <div className="text-center">
+                                  <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '0px' }}></div>
+                                  <div className="font-semibold text-sm">Squared</div>
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
+                                className={`p-3 rounded-lg border-2 transition-all ${
+                                  formData.imageSettings?.cornerStyle === 'soft'
+                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                    : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
+                                  <div className="font-semibold text-sm">Soft</div>
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => updateImageSettings({ cornerStyle: 'rounded' })}
+                                className={`p-3 rounded-lg border-2 transition-all ${
+                                  formData.imageSettings?.cornerStyle === 'rounded'
+                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                    : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className="w-8 h-8 bg-gray-500 rounded-full mx-auto mb-2"></div>
+                                  <div className="font-semibold text-sm">Rounded</div>
+                                </div>
                               </button>
                             </div>
-
-                            {formData.imageSettings?.showBorder && (
-                              <div>
-                                <label className="block text-gray-400 text-sm mb-1 font-medium">Border Radius</label>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="20"
-                                  value={formData.imageSettings?.borderRadius || 8}
-                                  onChange={(e) => updateImageSettings({ borderRadius: parseInt(e.target.value) })}
-                                  className="w-full slider"
-                                />
-                                <div className="text-center text-gray-500 text-xs mt-1">
-                                  {formData.imageSettings?.borderRadius || 8}px
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </motion.div>
                       )}
