@@ -8,12 +8,7 @@ import {
   Layers,
   List,
   Grid3X3,
-  Zap,
-  Users,
-  FolderOpen,
-  ChevronRight,
-  Plus,
-  ArrowUpRight
+  Zap
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
 
@@ -24,10 +19,6 @@ interface DragDropOptionProps {
   onEdit: (option: ConfiguratorOption) => void;
   onDelete: (optionId: string) => void;
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
-  onMoveToGroup?: (optionId: string, groupId: string | null) => void;
-  allOptions?: ConfiguratorOption[];
-  childOptions?: ConfiguratorOption[];
-  isChild?: boolean;
 }
 
 const DragDropOption: React.FC<DragDropOptionProps> = ({
@@ -36,148 +27,100 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   onMove,
   onEdit,
   onDelete,
-  onEditConditionalLogic,
-  onMoveToGroup,
-  allOptions = [],
-  childOptions = [],
-  isChild = false
+  onEditConditionalLogic
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     type: 'option',
     item: () => ({ 
       id: option.id, 
       index, 
-      type: 'option',
-      isChild,
-      originalParentId: option.parentId 
+      type: 'option'
     }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
 
-  const [{ isOver, canDrop }, drop] = useDrop({
+  const [{ isOver }, drop] = useDrop({
     accept: 'option',
-    hover: (item: { id: string; index: number; isChild: boolean }, monitor) => {
+    hover: (item: { id: string; index: number }, monitor) => {
       if (!ref.current) return;
-      
-      // Don't allow reordering if this is a child item or the dragged item is a child
-      if (isChild || item.isChild) return;
       
       const dragIndex = item.index;
       const hoverIndex = index;
 
       if (dragIndex === hoverIndex) return;
 
+      // Get the bounding rectangle of the hovered element
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      
+      // Get the mouse position
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
       
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
-
-      onMove(dragIndex, hoverIndex);
-      item.index = hoverIndex;
-    },
-    drop: (item: { id: string; index: number; type: string; originalParentId?: string }) => {
-      // If dropping an option onto a group, move it to that group
-      if (option.isGroup && item.type === 'option' && item.id !== option.id) {
-        if (onMoveToGroup) {
-          onMoveToGroup(item.id, option.id);
-        }
-        return;
+      // Immediate switching - switch places when crossing just 10% of the target
+      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
       }
       
-      // If dropping onto a non-group and the item was in a group, remove it from the group
-      if (!option.isGroup && item.originalParentId && onMoveToGroup) {
-        onMoveToGroup(item.id, null);
+      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
+        onMove(dragIndex, hoverIndex);
+        item.index = hoverIndex;
       }
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
+      isOver: monitor.isOver(),
     }),
   });
+
+  // Create invisible drag preview for smooth dragging
+  React.useEffect(() => {
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
+  }, [dragPreview]);
 
   const dragDropRef = drag(drop(ref));
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
-
-  // Determine if this can be a drop target
-  const isDropTarget = option.isGroup || (!option.isGroup && !isChild);
-  const showDropZone = isOver && canDrop && option.isGroup;
-  const showRemoveFromGroup = isOver && canDrop && !option.isGroup && !isChild;
 
   return (
     <div ref={dragDropRef}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: isDragging ? 0.5 : 1, 
+          opacity: isDragging ? 0.6 : 1, 
           y: 0,
-          scale: isDragging ? 1.02 : 1,
-          rotate: isDragging ? 2 : 0,
-          zIndex: isDragging ? 50 : 1
+          scale: isDragging ? 1.05 : isOver ? 1.02 : 1,
         }}
         transition={{ 
           type: "spring", 
-          stiffness: 300, 
-          damping: 30,
-          opacity: { duration: 0.2 },
-          scale: { duration: 0.2 },
-          rotate: { duration: 0.2 }
+          stiffness: 400, 
+          damping: 25,
+          opacity: { duration: 0.15 },
+          scale: { duration: 0.15 }
         }}
-        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-200 relative ${
+        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-150 relative ${
           isDragging 
-            ? 'border-blue-500 shadow-2xl shadow-blue-500/20 cursor-grabbing' 
-            : showDropZone
-            ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/10'
-            : showRemoveFromGroup
-            ? 'border-green-400 shadow-lg shadow-green-400/20 bg-green-500/10'
-            : option.isGroup
-            ? 'bg-purple-900/20 border-purple-500/30 hover:border-purple-400'
-            : isChild
-            ? 'bg-gray-750 border-gray-600 hover:border-gray-500'
+            ? 'border-blue-500 shadow-2xl shadow-blue-500/30 cursor-grabbing z-50' 
+            : isOver
+            ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
             : 'border-gray-700 hover:border-gray-600 shadow-sm'
         }`}
         style={{
           cursor: isDragging ? 'grabbing' : 'grab',
-          transform: isDragging ? 'rotate(2deg) scale(1.02)' : undefined,
-          boxShadow: isDragging ? '0 25px 50px -12px rgba(59, 130, 246, 0.25)' : undefined
         }}
       >
         {/* Conditional Logic Indicator */}
         {hasConditionalLogic && (
           <div className="absolute -top-2 -right-2 bg-purple-600 text-white p-1.5 rounded-full shadow-lg border-2 border-gray-800">
             <Zap className="w-3 h-3" />
-          </div>
-        )}
-
-        {/* Drop Zone Indicator for Groups */}
-        {showDropZone && (
-          <div className="absolute inset-0 bg-purple-500/20 border-2 border-purple-400 border-dashed rounded-xl flex items-center justify-center z-10">
-            <div className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg">
-              Drop here to add to group
-            </div>
-          </div>
-        )}
-
-        {/* Remove from Group Indicator */}
-        {showRemoveFromGroup && (
-          <div className="absolute inset-0 bg-green-500/20 border-2 border-green-400 border-dashed rounded-xl flex items-center justify-center z-10">
-            <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg flex items-center space-x-2">
-              <ArrowUpRight className="w-4 h-4" />
-              <span>Drop here to remove from group</span>
-            </div>
           </div>
         )}
 
@@ -188,75 +131,43 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
             </div>
             <div className="flex-1">
               <div className="flex items-center space-x-2">
-                {option.isGroup ? (
-                  <FolderOpen className="w-5 h-5 text-purple-400" />
-                ) : (
-                  <Layers className="w-5 h-5 text-blue-400" />
-                )}
+                <Layers className="w-5 h-5 text-blue-400" />
                 <h4 className="text-white font-semibold text-lg">{option.name}</h4>
                 {hasConditionalLogic && (
                   <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
                     Conditional Logic
                   </span>
                 )}
-                {option.isGroup && (
-                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
-                    Group ({childOptions.length} items)
-                  </span>
-                )}
               </div>
               <div className="flex items-center space-x-3 mt-1">
-                {!option.isGroup && (
+                <p className="text-gray-400 text-sm flex items-center space-x-2">
+                  <Layers className="w-4 h-4" />
+                  <span className="capitalize font-medium">{option.manipulationType}</span>
+                </p>
+                <span className="text-gray-600">•</span>
+                <p className="text-gray-400 text-sm flex items-center space-x-2">
+                  {option.displayType === 'list' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
+                  <span className="capitalize font-medium">{option.displayType}</span>
+                </p>
+                {option.defaultBehavior && (
                   <>
-                    <p className="text-gray-400 text-sm flex items-center space-x-2">
-                      <Layers className="w-4 h-4" />
-                      <span className="capitalize font-medium">{option.manipulationType}</span>
-                    </p>
                     <span className="text-gray-600">•</span>
-                    <p className="text-gray-400 text-sm flex items-center space-x-2">
-                      {option.displayType === 'list' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
-                      <span className="capitalize font-medium">{option.displayType}</span>
-                    </p>
-                    {option.defaultBehavior && (
-                      <>
-                        <span className="text-gray-600">•</span>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          option.defaultBehavior === 'hide' 
-                            ? 'bg-red-500/20 text-red-300' 
-                            : 'bg-green-500/20 text-green-300'
-                        }`}>
-                          {option.defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
-                        </span>
-                      </>
-                    )}
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      option.defaultBehavior === 'hide' 
+                        ? 'bg-red-500/20 text-red-300' 
+                        : 'bg-green-500/20 text-green-300'
+                    }`}>
+                      {option.defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
+                    </span>
                   </>
-                )}
-                {option.parentId && (
-                  <div className="flex items-center space-x-1 text-purple-400 text-sm">
-                    <ChevronRight className="w-3 h-3" />
-                    <span>In Group</span>
-                  </div>
-                )}
-                {option.isGroup && childOptions.length === 0 && (
-                  <div className="flex items-center space-x-2 text-purple-400 text-sm bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
-                    <Plus className="w-3 h-3" />
-                    <span>Drag options here</span>
-                  </div>
                 )}
               </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              {!option.isGroup && (
-                <>
-                  <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
-                  <p className="text-gray-500 text-xs">{option.targetComponents.length} targets</p>
-                </>
-              )}
-              {option.isGroup && (
-                <span className="text-purple-400 text-sm font-medium">{childOptions.length} child options</span>
-              )}
+              <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
+              <p className="text-gray-500 text-xs">{option.targetComponents.length} targets</p>
             </div>
             <div className="flex items-center space-x-2">
               <button
@@ -288,26 +199,6 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           </div>
         </div>
       </motion.div>
-
-      {/* Child Options for Groups */}
-      {option.isGroup && childOptions.length > 0 && (
-        <div className="ml-8 mt-4 space-y-3 border-l-2 border-purple-500/30 pl-6">
-          {childOptions.map((childOption, childIndex) => (
-            <DragDropOption
-              key={childOption.id}
-              option={childOption}
-              index={childIndex}
-              onMove={() => {}} // Child options don't reorder within groups for now
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onEditConditionalLogic={onEditConditionalLogic}
-              onMoveToGroup={onMoveToGroup}
-              allOptions={allOptions}
-              isChild={true}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
