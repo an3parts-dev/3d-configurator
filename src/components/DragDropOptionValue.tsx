@@ -113,22 +113,6 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
   const hasConditionalLogic = value.conditionalLogic?.enabled;
 
-  // Calculate component counts for the new text
-  const getComponentCounts = () => {
-    const totalTargeted = filteredComponents.length;
-    let selectedCount = 0;
-
-    if (defaultBehavior === 'hide') {
-      selectedCount = value.visibleComponents?.length || 0;
-    } else {
-      selectedCount = value.hiddenComponents?.length || 0;
-    }
-
-    return { selectedCount, totalTargeted };
-  };
-
-  const { selectedCount, totalTargeted } = getComponentCounts();
-
   const getImageSizeClass = () => {
     if (!imageSettings) return 'h-24';
     
@@ -388,9 +372,6 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     label="Components to Show"
                     alwaysModal={true}
                   />
-                  <p className="text-gray-500 text-xs">
-                    Showing {selectedCount} of {totalTargeted} target components ({filteredComponents.length} of {availableComponents.length} total)
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -402,9 +383,6 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     label="Components to Hide"
                     alwaysModal={true}
                   />
-                  <p className="text-gray-500 text-xs">
-                    Hiding {selectedCount} of {totalTargeted} target components ({filteredComponents.length} of {availableComponents.length} total)
-                  </p>
                 </div>
               )}
             </div>

@@ -60,7 +60,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     name: '',
     description: '',
     displayType: 'buttons',
-    displayDirection: 'column',
+    displayDirection: 'row',
     manipulationType: 'visibility',
     targetComponents: [],
     defaultBehavior: 'hide',
@@ -82,7 +82,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           name: option.name,
           description: option.description || '',
           displayType: option.displayType,
-          displayDirection: option.displayDirection || 'column',
+          displayDirection: option.displayDirection || 'row',
           manipulationType: option.manipulationType,
           targetComponents: option.targetComponents,
           defaultBehavior: option.defaultBehavior || 'hide',
@@ -100,7 +100,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           name: '',
           description: '',
           displayType: 'buttons',
-          displayDirection: 'column',
+          displayDirection: 'row',
           manipulationType: 'visibility',
           targetComponents: [],
           defaultBehavior: 'hide',
@@ -440,19 +440,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     </label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
-                        onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'column' }))}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          formData.displayDirection === 'column'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="text-center">
-                          <div className="font-semibold">Column</div>
-                          <div className="text-sm opacity-80">Vertical layout</div>
-                        </div>
-                      </button>
-                      <button
                         onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'row' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
                           formData.displayDirection === 'row'
@@ -463,6 +450,19 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                         <div className="text-center">
                           <div className="font-semibold">Row</div>
                           <div className="text-sm opacity-80">Horizontal layout</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'column' }))}
+                        className={`p-4 rounded-lg border-2 transition-all ${
+                          formData.displayDirection === 'column'
+                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="font-semibold">Column</div>
+                          <div className="text-sm opacity-80">Vertical layout</div>
                         </div>
                       </button>
                     </div>
