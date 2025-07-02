@@ -529,17 +529,20 @@ const ConfiguratorBuilder: React.FC = () => {
           isEditing={!!editingGroup}
         />
 
-        <ConditionalLogicModal
-          isOpen={showConditionalLogicModal}
-          onClose={() => {
-            setShowConditionalLogicModal(false);
-            setConditionalLogicOption(null);
-          }}
-          onSave={handleSaveConditionalLogic}
-          currentOption={conditionalLogicOption!}
-          allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
-          conditionalLogic={conditionalLogicOption?.conditionalLogic}
-        />
+        {/* Only render ConditionalLogicModal when both conditions are met */}
+        {showConditionalLogicModal && conditionalLogicOption && (
+          <ConditionalLogicModal
+            isOpen={showConditionalLogicModal}
+            onClose={() => {
+              setShowConditionalLogicModal(false);
+              setConditionalLogicOption(null);
+            }}
+            onSave={handleSaveConditionalLogic}
+            currentOption={conditionalLogicOption}
+            allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
+            conditionalLogic={conditionalLogicOption.conditionalLogic}
+          />
+        )}
 
         <ConfirmationDialog
           isOpen={showDeleteConfirmation}
