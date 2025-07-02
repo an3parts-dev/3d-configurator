@@ -318,7 +318,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  // Helper function to get option image styles with proper padding
+  // Helper function to get option image styles with proper padding and no background
   const getOptionImageStyles = (imageSettings?: ImageSettings) => {
     if (!imageSettings) {
       return {
@@ -471,8 +471,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                   }`}
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    {/* Image container with proper padding to prevent clipping */}
-                    <div className="p-1">
+                    {/* Image container with proper padding to prevent clipping and no background */}
+                    <div className="p-2">
                       {value.image ? (
                         <div
                           className="overflow-hidden flex items-center justify-center"
@@ -566,7 +566,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
-  // Organize options by groups for display - FIXED to show standalone options
+  // FIXED: Organize options by groups for display - ensuring standalone options are shown
   const organizeOptionsForDisplay = () => {
     const organized: any[] = [];
     const processedOptionIds = new Set<string>();
@@ -594,13 +594,14 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       processedOptionIds.add(option.id);
     });
 
-    // Then, add standalone options (not in groups) - THIS WAS THE MISSING PART
+    // CRITICAL FIX: Add standalone options (not in groups) - this was missing before
     const standaloneOptions = visibleOptions.filter(opt => !opt.groupId && !processedOptionIds.has(opt.id));
     standaloneOptions.forEach(option => {
       organized.push({
         type: 'option',
         option
       });
+      processedOptionIds.add(option.id);
     });
 
     return organized;
