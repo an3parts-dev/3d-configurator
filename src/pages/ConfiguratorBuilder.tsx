@@ -805,18 +805,20 @@ const ConfiguratorBuilder: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Conditional Logic Modal */}
-      <ConditionalLogicModal
-        isOpen={showConditionalLogicModal}
-        onClose={() => {
-          setShowConditionalLogicModal(false);
-          setConditionalLogicOption(null);
-        }}
-        onSave={handleSaveConditionalLogic}
-        currentOption={conditionalLogicOption!}
-        allOptions={configuratorData.options}
-        conditionalLogic={conditionalLogicOption?.conditionalLogic}
-      />
+      {/* Conditional Logic Modal - Only render when conditionalLogicOption is not null */}
+      {showConditionalLogicModal && conditionalLogicOption && (
+        <ConditionalLogicModal
+          isOpen={showConditionalLogicModal}
+          onClose={() => {
+            setShowConditionalLogicModal(false);
+            setConditionalLogicOption(null);
+          }}
+          onSave={handleSaveConditionalLogic}
+          currentOption={conditionalLogicOption}
+          allOptions={configuratorData.options}
+          conditionalLogic={conditionalLogicOption.conditionalLogic}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
