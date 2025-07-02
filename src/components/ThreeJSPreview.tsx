@@ -612,6 +612,35 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               </button>
             ))}
           </div>
+        ) : option.displayType === 'grid' ? (
+          <div className="grid grid-cols-2 gap-3 max-w-md">
+            {visibleValues.map((value: any) => (
+              <button
+                key={value.id}
+                onClick={() => handleValueChange(option.id, value.id)}
+                className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${
+                  selectedValues[option.id] === value.id
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                    : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'
+                }`}
+              >
+                {option.manipulationType === 'material' && value.color && (
+                  <div 
+                    className="w-3 h-3 rounded-full border border-white/20 shadow-inner"
+                    style={{ backgroundColor: value.color }}
+                  />
+                )}
+                <span>{value.name}</span>
+                
+                {/* Conditional Logic Indicator */}
+                {value.conditionalLogic?.enabled && (
+                  <div className="absolute -top-1 -right-1 bg-orange-600 text-white p-0.5 rounded-full">
+                    <Zap className="w-2 h-2" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         ) : (
           <select
             value={selectedValues[option.id] || ''}

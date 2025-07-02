@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, EyeOff, FolderOpen } from 'lucide-react';
+import { Eye, EyeOff, FolderOpen, Palette } from 'lucide-react';
 import ComponentSelector from '../ComponentSelector';
 import { ConfiguratorOption, ConfiguratorOptionGroup } from '../../types/ConfiguratorTypes';
 
@@ -109,7 +109,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
             }`}
           >
             <div className="text-center">
-              <div className="w-6 h-6 mx-auto mb-2 bg-gradient-to-r from-red-400 to-blue-400 rounded"></div>
+              <Palette className="w-6 h-6 mx-auto mb-2" />
               <div className="font-semibold">Material</div>
               <div className="text-sm opacity-80">Change colors/materials</div>
             </div>
