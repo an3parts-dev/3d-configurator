@@ -260,16 +260,14 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                       <span className="text-gray-300 text-xs font-medium">Title</span>
                       <button
                         onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                          !value.hideTitle ? 'bg-blue-600' : 'bg-gray-500'
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          value.hideTitle 
+                            ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
+                            : 'text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20'
                         }`}
                         title={value.hideTitle ? 'Show title' : 'Hide title'}
                       >
-                        <span
-                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                            !value.hideTitle ? 'translate-x-5' : 'translate-x-1'
-                          }`}
-                        />
+                        {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   )}
