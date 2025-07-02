@@ -233,7 +233,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
           {/* Header with controls */}
           <div className="flex items-center justify-between">
-            {/* Left side - Drag Handle and Value Name with Title Toggle */}
+            {/* Left side - Drag Handle, Image Upload (for images), and Value Name with Title Toggle */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               {/* Drag Handle */}
               <div 
@@ -243,56 +243,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 <GripVertical className="w-5 h-5 text-gray-400" />
               </div>
 
-              {/* Value Name Input with Title Toggle */}
-              <div className="flex-1 max-w-md">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="text"
-                    value={value.name}
-                    onChange={(e) => onUpdate(value.id, { name: e.target.value })}
-                    className="flex-1 bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                    placeholder="Value name"
-                  />
-                  
-                  {/* Title Toggle - Only for Images */}
-                  {displayType === 'images' && (
-                    <button
-                      onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
-                      className={`p-2 rounded-lg transition-colors ${
-                        value.hideTitle 
-                          ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
-                          : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
-                      }`}
-                      title={value.hideTitle ? 'Show title' : 'Hide title'}
-                    >
-                      {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Center - Controls based on type */}
-            <div className="flex items-center space-x-4">
-              {/* Color picker for material manipulation */}
-              {manipulationType === 'material' && (
-                <div className="flex items-center space-x-3 bg-gray-800 px-4 py-3 rounded-lg border border-gray-600">
-                  <label className="text-gray-300 text-sm font-medium whitespace-nowrap">
-                    Colour:
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="color"
-                      value={value.color || '#000000'}
-                      onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                      className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-500 hover:border-gray-400 transition-colors"
-                      style={{ backgroundColor: value.color || '#000000' }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Image Upload/Preview for Images Display Type */}
+              {/* Image Upload - Only for Images Display Type - Moved to left */}
               {displayType === 'images' && (
                 <div className="flex-shrink-0">
                   <input
@@ -344,7 +295,55 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Value Name Input with Title Toggle */}
+              <div className="flex-1 max-w-md">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    value={value.name}
+                    onChange={(e) => onUpdate(value.id, { name: e.target.value })}
+                    className="flex-1 bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                    placeholder="Value name"
+                  />
+                  
+                  {/* Title Toggle - Only for Images */}
+                  {displayType === 'images' && (
+                    <button
+                      onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
+                      className={`p-2 rounded-lg transition-colors ${
+                        value.hideTitle 
+                          ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                          : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
+                      }`}
+                      title={value.hideTitle ? 'Show title' : 'Hide title'}
+                    >
+                      {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {/* Center - Color picker for material manipulation */}
+            {manipulationType === 'material' && (
+              <div className="flex items-center space-x-3 flex-shrink-0">
+                <label className="text-gray-300 text-sm font-medium whitespace-nowrap">
+                  Colour:
+                </label>
+                <input
+                  type="color"
+                  value={value.color || '#000000'}
+                  onChange={(e) => onUpdate(value.id, { color: e.target.value })}
+                  className="w-10 h-10 rounded-lg cursor-pointer transition-colors"
+                  style={{ 
+                    backgroundColor: value.color || '#000000',
+                    border: 'none',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            )}
             
             {/* Right side - Action Buttons */}
             <div className="flex items-center space-x-2 flex-shrink-0">
