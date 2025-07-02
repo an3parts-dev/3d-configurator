@@ -1,4 +1,3 @@
-// Enhanced types for the configurator system with new features
 export interface ConditionalRule {
   id: string;
   optionId: string;
@@ -25,7 +24,6 @@ export interface ConfiguratorOptionValue {
   name: string;
   color?: string;
   image?: string;
-  hideTitle?: boolean;
   visibleComponents?: string[];
   hiddenComponents?: string[];
   conditionalLogic?: OptionValueConditionalLogic;
@@ -33,9 +31,10 @@ export interface ConfiguratorOptionValue {
 
 export interface ImageSettings {
   size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
-  aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full';
-  showBorder: boolean;
-  borderRadius: number;
+  aspectRatio: 'square' | 'round' | '3:2' | '2:3' | 'auto';
+  cornerStyle: 'squared' | 'soft' | 'softer';
+  hideTitle: boolean;
+  titlePosition: 'below' | 'above' | 'left' | 'right' | 'center';
 }
 
 export interface ConfiguratorOptionGroup {
@@ -57,9 +56,9 @@ export interface ConfiguratorOption {
   conditionalLogic?: ConditionalLogic;
   imageSettings?: ImageSettings;
   values: ConfiguratorOptionValue[];
-  groupId?: string; // Reference to group
-  isGroup?: boolean; // Flag to identify if this is a group header
-  groupData?: ConfiguratorOptionGroup; // Group data when isGroup is true
+  groupId?: string;
+  isGroup?: boolean;
+  groupData?: ConfiguratorOptionGroup;
 }
 
 export interface ConfiguratorData {
