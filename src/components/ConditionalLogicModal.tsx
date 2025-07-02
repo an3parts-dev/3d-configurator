@@ -36,6 +36,7 @@ const ConditionalLogicModal: React.FC<ConditionalLogicModalProps> = ({
   );
   const [errors, setErrors] = useState<string[]>([]);
   const [availableOptions, setAvailableOptions] = useState<ConfiguratorOption[]>([]);
+  const [showValidationFlash, setShowValidationFlash] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,6 +48,7 @@ const ConditionalLogicModal: React.FC<ConditionalLogicModalProps> = ({
       } else {
         setLogic(ConditionalLogicEngine.createDefaultConditionalLogic());
       }
+      setShowValidationFlash(false);
     }
   }, [isOpen, currentOption.id, allOptions, conditionalLogic]);
 
@@ -67,6 +69,20 @@ const ConditionalLogicModal: React.FC<ConditionalLogicModalProps> = ({
 
     return validation.isValid;
   };
+
+  // Validation logic
+  const getValidationErrors = () => {
+    const validationErrors: string[] = [];
+    
+    if (logic.enabled && logic.rules.length === 0) {
+      validationErrors.push('At least one rule is required when conditional logic is enabled');
+    }
+    
+    return validationErrors;
+  };
+
+  const validationErrors = getValidationErrors();
+  const canSave = logic.enabled ? (logic.rules.length > 0 && errors.length === 0) : true;
 
   const addRule = () => {
     const newRule = ConditionalLogicEngine.createDefaultRule(availableOptions);
@@ -94,24 +110,14 @@ const ConditionalLogicModal: React.FC<ConditionalLogicModalProps> = ({
     }));
   };
 
-  // Validation logic
-  const getValidationErrors = () => {
-    const validationErrors: string[] = [];
-    
-    if (logic.enabled && logic.rules.length === 0) {
-      validationErrors.push('At least one rule is required when conditional logic is enabled');
-    }
-    
-    return validationErrors;
-  };
-
-  const validationErrors = getValidationErrors();
-  const canSave = logic.enabled ? (logic.rules.length > 0 && errors.length === 0) : true;
-
   const handleSave = () => {
     if (validateLogic() && canSave) {
       onSave(logic);
       onClose();
+    } else {
+      // Flash validation feedback
+      setShowValidationFlash(true);
+      setTimeout(() => setShowValidationFlash(false), 3000);
     }
   };
 
@@ -429,21 +435,38 @@ const ConditionalLogicModal: React.FC<ConditionalLogicModalProps> = ({
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl">
-          {/* Validation Feedback */}
-          {validationErrors.length > 0 && (
-            <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          {/* Validation Feedback - Show when validation fails or when flash is triggered */}
+          {(validationErrors.length > 0 || showValidationFlash) && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`mb-4 p-4 rounded-lg border ${
+                showValidationFlash 
+                  ? 'bg-red-500/10 border-red-500/20' 
+                  : 'bg-yellow-500/10 border-yellow-500/20'
+              }`}
+            >
               <div className="flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+                <AlertCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                  showValidationFlash ? 'text-red-400' : 'text-yellow-400'
+                }`} />
                 <div>
-                  <h4 className="text-yellow-300 font-semibold text-sm">Required to save:</h4>
-                  <ul className="text-yellow-200/80 text-sm mt-1 space-y-1">
+                  <h4 className={`font-semibold text-sm ${
+                    showValidationFlash ? 'text-red-300' : 'text-yellow-300'
+                  }`}>
+                    Required to save:
+                  </h4>
+                  <ul className={`text-sm mt-1 space-y-1 ${
+                    showValidationFlash ? 'text-red-200/80' : 'text-yellow-200/80'
+                  }`}>
                     {validationErrors.map((error, index) => (
                       <li key={index}>• {error}</li>
                     ))}
                   </ul>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           <div className="flex space-x-4">
@@ -459,7 +482,7 @@ const ConditionalLogicModal: React.FC<ConditionalLogicModalProps> = ({
               className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium ${
                 canSave
                   ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                  : 'bg-purple-600/50 text-white/70 cursor-not-allowed'
+                  : 'bg-purple-600/50 text-white/70 cursor-pointer hover:bg-purple-600/60'
               }`}
             >
               Save Conditional Logic
