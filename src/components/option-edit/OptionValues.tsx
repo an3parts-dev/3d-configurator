@@ -47,25 +47,14 @@ const OptionValues: React.FC<OptionValuesProps> = ({
         <button
           type="button"
           onClick={onAddValue}
-          disabled={!isEditing}
-          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-            isEditing
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-          }`}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>Add Value</span>
         </button>
       </div>
 
-      {!isEditing ? (
-        <div className="text-center py-12 text-gray-500">
-          <List className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">Save option first</p>
-          <p className="text-sm mt-2">You need to save the option before adding values</p>
-        </div>
-      ) : localValues.length === 0 ? (
+      {localValues.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <List className="w-16 h-16 mx-auto mb-4 opacity-50" />
           <p className="text-lg font-medium">No values yet</p>

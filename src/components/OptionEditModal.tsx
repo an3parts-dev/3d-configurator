@@ -126,7 +126,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     }
   }, [isOpen, option]);
 
-  // Validation logic
+  // Validation logic - only check for option name
   const getValidationErrors = () => {
     const errors: string[] = [];
     
@@ -144,7 +144,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     if (canSave) {
       onSave(formData);
     } else {
-      // Flash validation feedback
+      // Flash validation feedback only when clicking save with missing name
       setShowValidationFlash(true);
       setTimeout(() => setShowValidationFlash(false), 3000);
     }
@@ -152,8 +152,10 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
 
   const handleAddValue = () => {
     if (option) {
+      // If option exists, use the real add value function
       onAddValue(option.id);
-      // Optimistically add a new value to local state for immediate UI feedback
+    } else {
+      // If option doesn't exist yet, add to local state only
       const newValue: ConfiguratorOptionValue = {
         id: `temp_value_${Date.now()}`,
         name: 'New Value'
@@ -165,33 +167,33 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   const handleUpdateValue = (valueId: string, updates: Partial<ConfiguratorOptionValue>) => {
     if (option) {
       onUpdateValue(option.id, valueId, updates);
-      // Update local state immediately
-      setLocalValues(prev => prev.map(value => 
-        value.id === valueId ? { ...value, ...updates } : value
-      ));
     }
+    // Always update local state immediately for UI responsiveness
+    setLocalValues(prev => prev.map(value => 
+      value.id === valueId ? { ...value, ...updates } : value
+    ));
   };
 
   const handleDeleteValue = (valueId: string) => {
     if (option) {
       onDeleteValue(option.id, valueId);
-      // Update local state immediately
-      setLocalValues(prev => prev.filter(value => value.id !== valueId));
     }
+    // Always update local state immediately
+    setLocalValues(prev => prev.filter(value => value.id !== valueId));
   };
 
   const handleMoveValue = (dragIndex: number, hoverIndex: number) => {
     if (option) {
       onMoveValue(option.id, dragIndex, hoverIndex);
-      // Update local state immediately
-      setLocalValues(prev => {
-        const newValues = [...prev];
-        const draggedValue = newValues[dragIndex];
-        newValues.splice(dragIndex, 1);
-        newValues.splice(hoverIndex, 0, draggedValue);
-        return newValues;
-      });
     }
+    // Always update local state immediately
+    setLocalValues(prev => {
+      const newValues = [...prev];
+      const draggedValue = newValues[dragIndex];
+      newValues.splice(dragIndex, 1);
+      newValues.splice(hoverIndex, 0, draggedValue);
+      return newValues;
+    });
   };
 
   if (!isOpen) return null;
@@ -312,31 +314,21 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl">
-          {/* Validation Feedback - Show when validation fails or when flash is triggered */}
-          {(validationErrors.length > 0 || showValidationFlash) && (
+          {/* Validation Feedback - Only show when flash is triggered and there are errors */}
+          {showValidationFlash && validationErrors.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`mb-4 p-4 rounded-lg border ${
-                showValidationFlash 
-                  ? 'bg-red-500/10 border-red-500/20' 
-                  : 'bg-yellow-500/10 border-yellow-500/20'
-              }`}
+              className="mb-4 p-4 rounded-lg border bg-red-500/10 border-red-500/20"
             >
               <div className="flex items-start space-x-3">
-                <AlertCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                  showValidationFlash ? 'text-red-400' : 'text-yellow-400'
-                }`} />
+                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-400" />
                 <div>
-                  <h4 className={`font-semibold text-sm ${
-                    showValidationFlash ? 'text-red-300' : 'text-yellow-300'
-                  }`}>
+                  <h4 className="font-semibold text-sm text-red-300">
                     Required to save:
                   </h4>
-                  <ul className={`text-sm mt-1 space-y-1 ${
-                    showValidationFlash ? 'text-red-200/80' : 'text-yellow-200/80'
-                  }`}>
+                  <ul className="text-sm mt-1 space-y-1 text-red-200/80">
                     {validationErrors.map((error, index) => (
                       <li key={index}>• {error}</li>
                     ))}
@@ -357,11 +349,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             <button
               type="button"
               onClick={handleSave}
-              className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium ${
-                canSave
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-blue-600/50 text-white/70 cursor-pointer hover:bg-blue-600/60'
-              }`}
+              className="flex-1 py-3 px-4 rounded-lg transition-colors font-medium bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isEditing ? 'Update Option' : 'Create Option'}
             </button>
