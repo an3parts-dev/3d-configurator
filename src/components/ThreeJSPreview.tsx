@@ -408,6 +408,90 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     };
   };
 
+  // Helper function to render title based on position
+  const renderTitle = (value: any, titlePosition: string, hideTitle: boolean) => {
+    if (hideTitle) return null;
+    
+    return (
+      <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+        {value.name}
+      </p>
+    );
+  };
+
+  // Helper function to render image with title positioning
+  const renderImageWithTitle = (value: any, option: any, isSelected: boolean) => {
+    const { containerStyle, imageClass } = getOptionImageStyles(option.imageSettings);
+    const hideTitle = option.imageSettings?.hideTitle || false;
+    const titlePosition = option.imageSettings?.titlePosition || 'below';
+
+    const imageElement = (
+      <div className="p-2">
+        {value.image ? (
+          <div
+            className="overflow-hidden flex items-center justify-center"
+            style={containerStyle}
+          >
+            <img
+              src={value.image}
+              alt={value.name}
+              className={`w-full h-full ${imageClass}`}
+              style={{ borderRadius: containerStyle.borderRadius }}
+            />
+          </div>
+        ) : (
+          <div 
+            className="bg-gray-700 flex items-center justify-center"
+            style={containerStyle}
+          >
+            <ImageIcon className="w-6 h-6 text-gray-500" />
+          </div>
+        )}
+      </div>
+    );
+
+    const titleElement = renderTitle(value, titlePosition, hideTitle);
+
+    // Arrange image and title based on position
+    switch (titlePosition) {
+      case 'above':
+        return (
+          <div className="flex flex-col items-center space-y-1">
+            {titleElement}
+            {imageElement}
+          </div>
+        );
+      case 'below':
+        return (
+          <div className="flex flex-col items-center space-y-1">
+            {imageElement}
+            {titleElement}
+          </div>
+        );
+      case 'left':
+        return (
+          <div className="flex items-center space-x-2">
+            {titleElement}
+            {imageElement}
+          </div>
+        );
+      case 'right':
+        return (
+          <div className="flex items-center space-x-2">
+            {imageElement}
+            {titleElement}
+          </div>
+        );
+      default:
+        return (
+          <div className="flex flex-col items-center space-y-1">
+            {imageElement}
+            {titleElement}
+          </div>
+        );
+    }
+  };
+
   const renderOption = (option: any) => {
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
@@ -418,7 +502,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     if (visibleValues.length === 0) return null;
 
     const isRowDirection = option.displayDirection === 'row';
-    const hideTitle = option.imageSettings?.hideTitle || false;
 
     return (
       <div key={option.id} className="space-y-4">
@@ -458,68 +541,34 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         
         {option.displayType === 'images' ? (
           <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'flex flex-wrap gap-4'}`}>
-            {visibleValues.map((value: any) => {
-              const { containerStyle, imageClass } = getOptionImageStyles(option.imageSettings);
-              
-              return (
-                <button
-                  key={value.id}
-                  onClick={() => handleValueChange(option.id, value.id)}
-                  className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
-                    selectedValues[option.id] === value.id
-                      ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                      : 'hover:scale-102'
-                  }`}
-                >
-                  <div className="flex flex-col items-center space-y-2">
-                    {/* Image container with proper padding to prevent clipping and no background */}
-                    <div className="p-2">
-                      {value.image ? (
-                        <div
-                          className="overflow-hidden flex items-center justify-center"
-                          style={containerStyle}
-                        >
-                          <img
-                            src={value.image}
-                            alt={value.name}
-                            className={`w-full h-full ${imageClass}`}
-                            style={{ borderRadius: containerStyle.borderRadius }}
-                          />
-                        </div>
-                      ) : (
-                        <div 
-                          className="bg-gray-700 flex items-center justify-center"
-                          style={containerStyle}
-                        >
-                          <ImageIcon className="w-6 h-6 text-gray-500" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    {!hideTitle && (
-                      <p className="text-white text-xs font-medium text-center max-w-20 truncate">
-                        {value.name}
-                      </p>
-                    )}
+            {visibleValues.map((value: any) => (
+              <button
+                key={value.id}
+                onClick={() => handleValueChange(option.id, value.id)}
+                className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
+                  selectedValues[option.id] === value.id
+                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                    : 'hover:scale-102'
+                }`}
+              >
+                {renderImageWithTitle(value, option, selectedValues[option.id] === value.id)}
+                
+                {selectedValues[option.id] === value.id && (
+                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                  
-                  {selectedValues[option.id] === value.id && (
-                    <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
+                )}
 
-                  {/* Conditional Logic Indicator */}
-                  {value.conditionalLogic?.enabled && (
-                    <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
-                      <Zap className="w-2 h-2" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                {/* Conditional Logic Indicator */}
+                {value.conditionalLogic?.enabled && (
+                  <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
+                    <Zap className="w-2 h-2" />
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         ) : option.displayType === 'buttons' ? (
           <div className={`${isRowDirection ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2'}`}>

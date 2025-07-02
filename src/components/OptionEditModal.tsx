@@ -62,7 +62,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
       size: 'medium',
       aspectRatio: 'square',
       cornerStyle: 'softer',
-      hideTitle: false
+      hideTitle: false,
+      titlePosition: 'below'
     }
   });
 
@@ -94,7 +95,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             size: 'medium',
             aspectRatio: 'square',
             cornerStyle: 'softer',
-            hideTitle: false
+            hideTitle: false,
+            titlePosition: 'below'
           },
           groupId: option.groupId
         });
@@ -112,7 +114,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             size: 'medium',
             aspectRatio: 'square',
             cornerStyle: 'softer',
-            hideTitle: false
+            hideTitle: false,
+            titlePosition: 'below'
           }
         });
         setLocalValues([]);

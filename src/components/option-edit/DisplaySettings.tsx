@@ -20,22 +20,31 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     }));
   };
 
-  // Sample data for previews
-  const sampleValues = [
-    { id: '1', name: 'Option A', color: '#3B82F6', image: null },
-    { id: '2', name: 'Option B', color: '#EF4444', image: null },
-    { id: '3', name: 'Option C', color: '#10B981', image: null },
-    { id: '4', name: 'Option D', color: '#F59E0B', image: null }
-  ];
+  // Sample data for previews - use real images if available
+  const getSampleValues = () => {
+    const baseValues = [
+      { id: '1', name: 'Option A', color: '#3B82F6' },
+      { id: '2', name: 'Option B', color: '#EF4444' },
+      { id: '3', name: 'Option C', color: '#10B981' },
+      { id: '4', name: 'Option D', color: '#F59E0B' }
+    ];
 
-  // Find the first uploaded image from option values for preview
-  const getPreviewImage = () => {
+    // Use real images from option values if available
     if (option?.values) {
-      const valueWithImage = option.values.find(value => value.image);
-      return valueWithImage?.image;
+      return baseValues.map((baseValue, index) => {
+        const realValue = option.values[index];
+        return {
+          ...baseValue,
+          image: realValue?.image || null,
+          name: realValue?.name || baseValue.name
+        };
+      });
     }
-    return null;
+
+    return baseValues.map(value => ({ ...value, image: null }));
   };
+
+  const sampleValues = getSampleValues();
 
   // Generate precise preview styles based on current settings
   const getPreviewStyles = () => {
@@ -126,8 +135,93 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
   const { containerStyle, imageObjectFitClass, borderRadius } = getPreviewStyles();
   const isRoundAspectRatio = formData.imageSettings?.aspectRatio === 'round';
   const isAutoAspectRatio = formData.imageSettings?.aspectRatio === 'auto';
-  const previewImage = getPreviewImage();
   const hideTitle = formData.imageSettings?.hideTitle || false;
+  const titlePosition = formData.imageSettings?.titlePosition || 'below';
+
+  // Helper function to render title based on position
+  const renderTitle = (value: any, position: string) => {
+    if (hideTitle) return null;
+    
+    const titleElement = (
+      <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+        {value.name}
+      </p>
+    );
+
+    return titleElement;
+  };
+
+  // Helper function to render image with title positioning
+  const renderImageWithTitle = (value: any, index: number, isSelected: boolean = false) => {
+    const imageElement = (
+      <div className="p-2">
+        {value.image ? (
+          <div
+            className="overflow-hidden flex items-center justify-center"
+            style={containerStyle}
+          >
+            <img
+              src={value.image}
+              alt={value.name}
+              className={`w-full h-full ${imageObjectFitClass}`}
+              style={{ borderRadius }}
+            />
+          </div>
+        ) : (
+          <div 
+            className="flex items-center justify-center"
+            style={{
+              ...containerStyle,
+              background: `linear-gradient(135deg, ${value.color}88, ${value.color})`
+            }}
+          >
+            <ImageIcon className="w-6 h-6 text-white opacity-80" />
+          </div>
+        )}
+      </div>
+    );
+
+    const titleElement = renderTitle(value, titlePosition);
+
+    // Arrange image and title based on position
+    switch (titlePosition) {
+      case 'above':
+        return (
+          <div className="flex flex-col items-center space-y-1">
+            {titleElement}
+            {imageElement}
+          </div>
+        );
+      case 'below':
+        return (
+          <div className="flex flex-col items-center space-y-1">
+            {imageElement}
+            {titleElement}
+          </div>
+        );
+      case 'left':
+        return (
+          <div className="flex items-center space-x-2">
+            {titleElement}
+            {imageElement}
+          </div>
+        );
+      case 'right':
+        return (
+          <div className="flex items-center space-x-2">
+            {imageElement}
+            {titleElement}
+          </div>
+        );
+      default:
+        return (
+          <div className="flex flex-col items-center space-y-1">
+            {imageElement}
+            {titleElement}
+          </div>
+        );
+    }
+  };
 
   // Preview Components
   const renderListPreview = () => (
@@ -146,7 +240,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       {sampleValues.slice(0, direction === 'row' ? 4 : 3).map((value, index) => (
         <button
           key={value.id}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border-2 cursor-pointer ${
             index === 0
               ? 'bg-blue-600 text-white border-blue-500'
               : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
@@ -169,45 +263,13 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       {sampleValues.slice(0, direction === 'row' ? 4 : 3).map((value, index) => (
         <button
           key={value.id}
-          className={`relative group transition-all duration-200 ${
+          className={`relative group transition-all duration-200 cursor-pointer ${
             index === 0
               ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
               : 'hover:scale-102'
           } ${direction === 'row' ? 'flex-shrink-0' : ''}`}
         >
-          <div className="flex flex-col items-center space-y-2">
-            <div className="p-1">
-              {previewImage && index === 0 ? (
-                <div
-                  className="overflow-hidden flex items-center justify-center"
-                  style={containerStyle}
-                >
-                  <img
-                    src={previewImage}
-                    alt={value.name}
-                    className={`w-full h-full ${imageObjectFitClass}`}
-                    style={{ borderRadius }}
-                  />
-                </div>
-              ) : (
-                <div 
-                  className="flex items-center justify-center"
-                  style={{
-                    ...containerStyle,
-                    background: `linear-gradient(135deg, ${value.color}88, ${value.color})`
-                  }}
-                >
-                  <ImageIcon className="w-6 h-6 text-white opacity-80" />
-                </div>
-              )}
-            </div>
-            
-            {!hideTitle && (
-              <p className="text-white text-xs font-medium text-center max-w-20 truncate">
-                {value.name}
-              </p>
-            )}
-          </div>
+          {renderImageWithTitle(value, index, index === 0)}
           
           {index === 0 && (
             <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
@@ -431,25 +493,101 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                 )}
               </div>
 
-              {/* Global Hide Title Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg border border-gray-600">
-                <div>
-                  <label className="text-gray-400 text-sm font-medium">Show Titles</label>
-                  <p className="text-gray-500 text-xs mt-1">Display option value names below images</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ hideTitle: !hideTitle })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    !hideTitle ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      !hideTitle ? 'translate-x-6' : 'translate-x-1'
+              {/* Title Settings */}
+              <div className="space-y-4">
+                {/* Global Hide Title Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg border border-gray-600">
+                  <div>
+                    <label className="text-gray-400 text-sm font-medium">Show Titles</label>
+                    <p className="text-gray-500 text-xs mt-1">Display option value names with images</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateImageSettings({ hideTitle: !hideTitle })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      !hideTitle ? 'bg-blue-600' : 'bg-gray-600'
                     }`}
-                  />
-                </button>
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        !hideTitle ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Title Position */}
+                {!hideTitle && (
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-3 font-medium">Title Position</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => updateImageSettings({ titlePosition: 'above' })}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          titlePosition === 'above'
+                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-xs font-medium mb-1">Title</div>
+                          <div className="w-8 h-6 bg-gray-500 mx-auto rounded"></div>
+                          <div className="font-semibold text-sm mt-2">Above</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateImageSettings({ titlePosition: 'below' })}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          titlePosition === 'below'
+                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="w-8 h-6 bg-gray-500 mx-auto rounded"></div>
+                          <div className="text-xs font-medium mt-1 mb-1">Title</div>
+                          <div className="font-semibold text-sm">Below</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateImageSettings({ titlePosition: 'left' })}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          titlePosition === 'left'
+                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="flex items-center justify-center space-x-1">
+                            <div className="text-xs font-medium">T</div>
+                            <div className="w-6 h-4 bg-gray-500 rounded"></div>
+                          </div>
+                          <div className="font-semibold text-sm mt-2">Left</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateImageSettings({ titlePosition: 'right' })}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          titlePosition === 'right'
+                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="flex items-center justify-center space-x-1">
+                            <div className="w-6 h-4 bg-gray-500 rounded"></div>
+                            <div className="text-xs font-medium">T</div>
+                          </div>
+                          <div className="font-semibold text-sm mt-2">Right</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -457,36 +595,12 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
             <div className="flex flex-col items-center justify-center">
               <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Single Image Preview</label>
               <div className="flex items-center justify-center">
-                {previewImage ? (
-                  <div
-                    className="overflow-hidden flex items-center justify-center bg-gray-700"
-                    style={containerStyle}
-                  >
-                    <img
-                      src={previewImage}
-                      alt="Preview"
-                      className={`${imageObjectFitClass} ${
-                        isAutoAspectRatio ? 'w-full h-full' : 'w-full h-full'
-                      }`}
-                      style={{ borderRadius }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
-                    style={{
-                      ...containerStyle,
-                      minHeight: isAutoAspectRatio ? '48px' : containerStyle.height
-                    }}
-                  >
-                    <ImageIcon className="w-6 h-6 text-white opacity-80" />
-                  </div>
-                )}
+                {renderImageWithTitle(sampleValues[0], 0, false)}
               </div>
               <p className="text-gray-500 text-xs mt-2 text-center">
                 {formData.imageSettings?.size} • {formData.imageSettings?.aspectRatio} • {formData.imageSettings?.cornerStyle}
               </p>
-              {previewImage && (
+              {sampleValues[0].image && (
                 <p className="text-green-400 text-xs mt-1 text-center">
                   Using uploaded image
                 </p>

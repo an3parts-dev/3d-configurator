@@ -34,7 +34,8 @@ export interface ImageSettings {
   size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
   aspectRatio: 'square' | 'round' | '3:2' | '2:3' | 'auto';
   cornerStyle: 'squared' | 'soft' | 'softer';
-  hideTitle: boolean; // Moved from individual values to global setting
+  hideTitle: boolean;
+  titlePosition: 'below' | 'above' | 'left' | 'right';
 }
 
 export interface ConfiguratorOptionGroup {
