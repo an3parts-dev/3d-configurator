@@ -482,6 +482,19 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             {titleElement}
           </div>
         );
+      case 'center':
+        return (
+          <div className="relative">
+            {imageElement}
+            {titleElement && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
+                  {value.name}
+                </div>
+              </div>
+            )}
+          </div>
+        );
       default:
         return (
           <div className="flex flex-col items-center space-y-1">

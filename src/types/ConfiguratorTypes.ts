@@ -35,7 +35,7 @@ export interface ImageSettings {
   aspectRatio: 'square' | 'round' | '3:2' | '2:3' | 'auto';
   cornerStyle: 'squared' | 'soft' | 'softer';
   hideTitle: boolean;
-  titlePosition: 'below' | 'above' | 'left' | 'right';
+  titlePosition: 'below' | 'above' | 'left' | 'right' | 'center';
 }
 
 export interface ConfiguratorOptionGroup {

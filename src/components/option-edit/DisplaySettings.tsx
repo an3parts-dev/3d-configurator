@@ -213,6 +213,19 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
             {titleElement}
           </div>
         );
+      case 'center':
+        return (
+          <div className="relative">
+            {imageElement}
+            {titleElement && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
+                  {value.name}
+                </div>
+              </div>
+            )}
+          </div>
+        );
       default:
         return (
           <div className="flex flex-col items-center space-y-1">
@@ -520,7 +533,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                 {!hideTitle && (
                   <div>
                     <label className="block text-gray-400 text-sm mb-3 font-medium">Title Position</label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <button
                         type="button"
                         onClick={() => updateImageSettings({ titlePosition: 'above' })}
@@ -531,7 +544,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                         }`}
                       >
                         <div className="text-center">
-                          <div className="text-xs font-medium mb-1">Title</div>
+                          <div className="text-xs font-medium mb-1">Text</div>
                           <div className="w-8 h-6 bg-gray-500 mx-auto rounded"></div>
                           <div className="font-semibold text-sm mt-2">Above</div>
                         </div>
@@ -547,8 +560,26 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                       >
                         <div className="text-center">
                           <div className="w-8 h-6 bg-gray-500 mx-auto rounded"></div>
-                          <div className="text-xs font-medium mt-1 mb-1">Title</div>
+                          <div className="text-xs font-medium mt-1 mb-1">Text</div>
                           <div className="font-semibold text-sm">Below</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateImageSettings({ titlePosition: 'center' })}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          titlePosition === 'center'
+                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                            : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="relative w-8 h-6 bg-gray-500 mx-auto rounded">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="text-xs font-bold text-white">T</div>
+                            </div>
+                          </div>
+                          <div className="font-semibold text-sm mt-2">Center</div>
                         </div>
                       </button>
                       <button
