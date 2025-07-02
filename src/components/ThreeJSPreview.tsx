@@ -411,7 +411,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                         alt={value.name}
                         className={`${
                           option.imageSettings?.aspectRatio === 'auto' 
-                            ? 'object-contain max-w-32 max-h-32' 
+                            ? 'object-contain' 
                             : 'object-cover'
                         } ${
                           option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
