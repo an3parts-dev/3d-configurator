@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
-import { GripVertical, Trash2, Zap, Eye, EyeOff, Image as ImageIcon, Upload, X } from 'lucide-react';
+import { GripVertical, Trash2, Zap, Eye, EyeOff, Image as ImageIcon, Upload, X, Droplets } from 'lucide-react';
 import ComponentSelector from './ComponentSelector';
 import ValueConditionalLogicModal from './ValueConditionalLogicModal';
 import { ConfiguratorOptionValue, ConfiguratorOption, ImageSettings } from '../types/ConfiguratorTypes';
@@ -201,6 +201,20 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
   const { containerStyle, imageObjectFitClass, borderRadius } = getUploadBoxStyles();
 
+  // Function to determine if text should be light or dark based on background color
+  const getContrastColor = (hexColor: string) => {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return white for dark backgrounds, dark for light backgrounds
+    return luminance > 0.5 ? '#374151' : '#ffffff';
+  };
+
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -281,7 +295,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   
                   <div
                     onClick={handleImageClick}
-                    className="border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800"
+                    className="cursor-pointer hover:opacity-80 transition-opacity overflow-hidden relative group"
                     style={containerStyle}
                   >
                     {value.image ? (
@@ -310,7 +324,10 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                         </div>
                       </>
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                      <div 
+                        className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-800"
+                        style={{ borderRadius }}
+                      >
                         <ImageIcon className="w-6 h-6" />
                       </div>
                     )}
@@ -350,20 +367,27 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             {/* Center - Color picker for material manipulation */}
             {manipulationType === 'material' && (
               <div className="flex items-center space-x-3 flex-shrink-0">
-                <label className="text-gray-300 text-sm font-medium whitespace-nowrap">
-                  Colour:
-                </label>
-                <input
-                  type="color"
-                  value={value.color || '#000000'}
-                  onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                  className="w-10 h-10 rounded-lg cursor-pointer transition-colors"
-                  style={{ 
-                    backgroundColor: value.color || '#000000',
-                    border: 'none',
-                    outline: 'none'
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={value.color || '#000000'}
+                    onChange={(e) => onUpdate(value.id, { color: e.target.value })}
+                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                  />
+                  <div 
+                    className="w-12 h-12 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 flex items-center justify-center relative overflow-hidden"
+                    style={{ 
+                      backgroundColor: value.color || '#000000'
+                    }}
+                  >
+                    <Droplets 
+                      className="w-5 h-5 transition-colors duration-200" 
+                      style={{ 
+                        color: getContrastColor(value.color || '#000000')
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             )}
             
