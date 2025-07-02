@@ -319,12 +319,18 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 
   const getBorderStyles = (imageSettings?: any) => {
-    if (!imageSettings?.showBorder) return {};
+    if (!imageSettings?.borderStyle) return { borderRadius: '8px' };
     
-    return {
-      borderRadius: `${imageSettings.borderRadius || 8}px`,
-      border: '2px solid #4b5563'
-    };
+    switch (imageSettings.borderStyle) {
+      case 'squared':
+        return { borderRadius: '0px' };
+      case 'rounded':
+        return { borderRadius: '8px' };
+      case 'round':
+        return { borderRadius: '50%' };
+      default:
+        return { borderRadius: '8px' };
+    }
   };
 
   const renderOption = (option: any) => {

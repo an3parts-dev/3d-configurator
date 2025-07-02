@@ -12,7 +12,10 @@ import {
   Grid3X3,
   ChevronDown,
   FolderOpen,
-  AlertTriangle
+  AlertTriangle,
+  Square,
+  RoundedRect,
+  Circle
 } from 'lucide-react';
 import DragDropOptionValue from './DragDropOptionValue';
 import ComponentSelector from './ComponentSelector';
@@ -69,8 +72,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     imageSettings: {
       size: 'medium',
       aspectRatio: '1:1',
-      showBorder: true,
-      borderRadius: 8
+      borderStyle: 'rounded'
     }
   });
 
@@ -93,8 +95,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         imageSettings: option.imageSettings || {
           size: 'medium',
           aspectRatio: '1:1',
-          showBorder: true,
-          borderRadius: 8
+          borderStyle: 'rounded'
         },
         groupId: option.groupId
       } : {
@@ -108,8 +109,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         imageSettings: {
           size: 'medium' as const,
           aspectRatio: '1:1' as const,
-          showBorder: true,
-          borderRadius: 8
+          borderStyle: 'rounded' as const
         }
       };
 
@@ -556,40 +556,50 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                               </select>
                             </div>
 
-                            {/* Border Settings */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="flex items-center justify-between">
-                                <label className="text-gray-400 text-sm font-medium">Show Border</label>
+                            {/* Border Style */}
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-3 font-medium">Border Style</label>
+                              <div className="grid grid-cols-3 gap-3">
                                 <button
-                                  onClick={() => updateImageSettings({ showBorder: !formData.imageSettings?.showBorder })}
-                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                    formData.imageSettings?.showBorder ? 'bg-blue-600' : 'bg-gray-600'
+                                  onClick={() => updateImageSettings({ borderStyle: 'squared' })}
+                                  className={`p-3 rounded-lg border-2 transition-all ${
+                                    formData.imageSettings?.borderStyle === 'squared'
+                                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
                                   }`}
                                 >
-                                  <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                      formData.imageSettings?.showBorder ? 'translate-x-6' : 'translate-x-1'
-                                    }`}
-                                  />
+                                  <div className="text-center">
+                                    <Square className="w-5 h-5 mx-auto mb-1" />
+                                    <div className="text-xs font-medium">Squared</div>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => updateImageSettings({ borderStyle: 'rounded' })}
+                                  className={`p-3 rounded-lg border-2 transition-all ${
+                                    formData.imageSettings?.borderStyle === 'rounded'
+                                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                                  }`}
+                                >
+                                  <div className="text-center">
+                                    <RoundedRect className="w-5 h-5 mx-auto mb-1" />
+                                    <div className="text-xs font-medium">Rounded</div>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => updateImageSettings({ borderStyle: 'round' })}
+                                  className={`p-3 rounded-lg border-2 transition-all ${
+                                    formData.imageSettings?.borderStyle === 'round'
+                                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                                  }`}
+                                >
+                                  <div className="text-center">
+                                    <Circle className="w-5 h-5 mx-auto mb-1" />
+                                    <div className="text-xs font-medium">Round</div>
+                                  </div>
                                 </button>
                               </div>
-
-                              {formData.imageSettings?.showBorder && (
-                                <div>
-                                  <label className="block text-gray-400 text-sm mb-1 font-medium">Border Radius</label>
-                                  <input
-                                    type="range"
-                                    min="0"
-                                    max="20"
-                                    value={formData.imageSettings?.borderRadius || 8}
-                                    onChange={(e) => updateImageSettings({ borderRadius: parseInt(e.target.value) })}
-                                    className="w-full slider"
-                                  />
-                                  <div className="text-center text-gray-500 text-xs mt-1">
-                                    {formData.imageSettings?.borderRadius || 8}px
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </motion.div>
                         )}
