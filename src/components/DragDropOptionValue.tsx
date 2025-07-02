@@ -289,6 +289,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     value={value.color || '#000000'}
                     onChange={(e) => onUpdate(value.id, { color: e.target.value })}
                     className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
+                    title="Colour"
                   />
                   <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
                 </div>
@@ -312,6 +313,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     onClick={handleImageClick}
                     className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
                     style={value.image ? getBorderStyles() : { borderRadius: '8px' }}
+                    title={value.image ? "Image" : "Upload Image"}
                   >
                     {value.image ? (
                       <>
@@ -341,7 +343,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
                         <ImageIcon className="w-6 h-6 mb-1" />
-                        <span className="text-xs">Upload</span>
+                        <span className="text-xs">Upload Image</span>
                       </div>
                     )}
                   </div>

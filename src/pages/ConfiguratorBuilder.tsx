@@ -11,7 +11,7 @@ import {
   FolderPlus,
   Layers
 } from 'lucide-react';
-import { DndProvider } from 'react-dnd';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import DragDropOption from '../components/DragDropOption';
@@ -27,6 +27,155 @@ import {
   ModelComponent 
 } from '../types/ConfiguratorTypes';
 import { useConfiguratorPersistence } from '../hooks/useConfiguratorPersistence';
+
+// Enhanced DragDropOption wrapper that handles group assignment
+const DraggableOptionWrapper: React.FC<{
+  option: ConfiguratorOption;
+  index: number;
+  onMove: (dragIndex: number, hoverIndex: number) => void;
+  onEdit: (option: ConfiguratorOption) => void;
+  onDelete: (optionId: string) => void;
+  onEditConditionalLogic: (option: ConfiguratorOption) => void;
+  onToggleGroup?: (groupId: string) => void;
+  onAssignToGroup?: (optionId: string, groupId: string | null) => void;
+  isGrouped?: boolean;
+  groupedOptions?: ConfiguratorOption[];
+  availableGroups: ConfiguratorOption[];
+}> = ({
+  option,
+  index,
+  onMove,
+  onEdit,
+  onDelete,
+  onEditConditionalLogic,
+  onToggleGroup,
+  onAssignToGroup,
+  isGrouped = false,
+  groupedOptions = [],
+  availableGroups
+}) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'configurator-option',
+    item: { id: option.id, index, type: 'option' },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: ['configurator-option', 'group-assignment'],
+    hover: (item: any, monitor) => {
+      if (item.type === 'option' && item.id !== option.id) {
+        const dragIndex = item.index;
+        const hoverIndex = index;
+        if (dragIndex !== hoverIndex) {
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        }
+      }
+    },
+    drop: (item: any, monitor) => {
+      if (item.type === 'group-assignment' && !option.isGroup && onAssignToGroup) {
+        // Assign option to group
+        onAssignToGroup(option.id, item.groupId);
+      } else if (item.type === 'option' && option.isGroup && !item.isGroup && onAssignToGroup) {
+        // Assign dragged option to this group
+        onAssignToGroup(item.id, option.id);
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+
+  const ref = drop(drag(React.createRef<HTMLDivElement>()));
+
+  return (
+    <div 
+      ref={ref}
+      className={`${isDragging ? 'opacity-50' : ''} ${
+        isOver && canDrop ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
+      }`}
+    >
+      <DragDropOption
+        option={option}
+        index={index}
+        onMove={onMove}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onEditConditionalLogic={onEditConditionalLogic}
+        onToggleGroup={onToggleGroup}
+        isGrouped={isGrouped}
+        groupedOptions={groupedOptions}
+      />
+    </div>
+  );
+};
+
+// Group assignment helper component
+const GroupAssignmentHelper: React.FC<{
+  groups: ConfiguratorOption[];
+  onAssignToGroup: (optionId: string, groupId: string | null) => void;
+}> = ({ groups, onAssignToGroup }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'group-assignment',
+    item: { type: 'group-assignment', groupId: null },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  return (
+    <div className="mb-4 p-4 bg-gray-750 rounded-lg border border-gray-600">
+      <h4 className="text-white font-medium mb-3">Quick Group Assignment</h4>
+      <div className="flex flex-wrap gap-2">
+        <div
+          ref={drag}
+          className={`px-3 py-2 bg-gray-600 text-gray-300 rounded-lg cursor-move hover:bg-gray-500 transition-colors ${
+            isDragging ? 'opacity-50' : ''
+          }`}
+        >
+          Remove from Group
+        </div>
+        {groups.map(group => (
+          <GroupAssignmentButton
+            key={group.id}
+            group={group}
+            onAssignToGroup={onAssignToGroup}
+          />
+        ))}
+      </div>
+      <p className="text-gray-500 text-xs mt-2">
+        Drag these buttons onto options to quickly assign them to groups
+      </p>
+    </div>
+  );
+};
+
+const GroupAssignmentButton: React.FC<{
+  group: ConfiguratorOption;
+  onAssignToGroup: (optionId: string, groupId: string | null) => void;
+}> = ({ group, onAssignToGroup }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'group-assignment',
+    item: { type: 'group-assignment', groupId: group.id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  return (
+    <div
+      ref={drag}
+      className={`px-3 py-2 bg-purple-600 text-white rounded-lg cursor-move hover:bg-purple-500 transition-colors ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+    >
+      {group.name}
+    </div>
+  );
+};
 
 const ConfiguratorBuilder: React.FC = () => {
   // State management
@@ -125,6 +274,18 @@ const ConfiguratorBuilder: React.FC = () => {
                 isExpanded: !option.groupData.isExpanded 
               } 
             }
+          : option
+      )
+    }));
+  }, []);
+
+  // Enhanced option assignment to groups
+  const assignOptionToGroup = useCallback((optionId: string, groupId: string | null) => {
+    setConfiguratorData(prev => ({
+      ...prev,
+      options: prev.options.map(option => 
+        option.id === optionId && !option.isGroup
+          ? { ...option, groupId }
           : option
       )
     }));
@@ -329,7 +490,7 @@ const ConfiguratorBuilder: React.FC = () => {
         const { group, options } = item;
         return (
           <div key={group.id}>
-            <DragDropOption
+            <DraggableOptionWrapper
               option={group}
               index={index}
               onMove={moveOption}
@@ -337,7 +498,9 @@ const ConfiguratorBuilder: React.FC = () => {
               onDelete={handleDeleteOption}
               onEditConditionalLogic={handleConditionalLogic}
               onToggleGroup={toggleGroupExpansion}
+              onAssignToGroup={assignOptionToGroup}
               groupedOptions={options}
+              availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
             />
             
             {/* Render grouped options when expanded */}
@@ -350,7 +513,7 @@ const ConfiguratorBuilder: React.FC = () => {
                   className="ml-8 mt-4 space-y-4"
                 >
                   {options.map((option, optIndex) => (
-                    <DragDropOption
+                    <DraggableOptionWrapper
                       key={option.id}
                       option={option}
                       index={configuratorData.options.findIndex(opt => opt.id === option.id)}
@@ -358,7 +521,9 @@ const ConfiguratorBuilder: React.FC = () => {
                       onEdit={handleEditOption}
                       onDelete={handleDeleteOption}
                       onEditConditionalLogic={handleConditionalLogic}
+                      onAssignToGroup={assignOptionToGroup}
                       isGrouped={true}
+                      availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
                     />
                   ))}
                 </motion.div>
@@ -370,7 +535,7 @@ const ConfiguratorBuilder: React.FC = () => {
         // Standalone option
         const option = item as ConfiguratorOption;
         return (
-          <DragDropOption
+          <DraggableOptionWrapper
             key={option.id}
             option={option}
             index={index}
@@ -378,6 +543,8 @@ const ConfiguratorBuilder: React.FC = () => {
             onEdit={handleEditOption}
             onDelete={handleDeleteOption}
             onEditConditionalLogic={handleConditionalLogic}
+            onAssignToGroup={assignOptionToGroup}
+            availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
           />
         );
       }
@@ -394,6 +561,8 @@ const ConfiguratorBuilder: React.FC = () => {
       </div>
     );
   }
+
+  const availableGroups = configuratorData.options.filter(opt => opt.isGroup && opt.groupData);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -476,6 +645,14 @@ const ConfiguratorBuilder: React.FC = () => {
             {/* Options List */}
             <div className="flex-1 overflow-auto p-6">
               <div className="space-y-4">
+                {/* Group Assignment Helper */}
+                {availableGroups.length > 0 && configuratorData.options.some(opt => !opt.isGroup) && (
+                  <GroupAssignmentHelper
+                    groups={availableGroups}
+                    onAssignToGroup={assignOptionToGroup}
+                  />
+                )}
+
                 {configuratorData.options.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <Layers className="w-16 h-16 mx-auto mb-4 opacity-50" />
