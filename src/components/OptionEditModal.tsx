@@ -10,7 +10,8 @@ import {
   Image as ImageIcon,
   List,
   Grid3X3,
-  FolderOpen
+  FolderOpen,
+  AlertCircle
 } from 'lucide-react';
 import DragDropOptionValue from './DragDropOptionValue';
 import ComponentSelector from './ComponentSelector';
@@ -123,9 +124,22 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     }
   }, [isOpen, option]);
 
+  // Validation logic
+  const getValidationErrors = () => {
+    const errors: string[] = [];
+    
+    if (!formData.name.trim()) {
+      errors.push('Option name is required');
+    }
+    
+    return errors;
+  };
+
+  const validationErrors = getValidationErrors();
+  const canSave = validationErrors.length === 0;
+
   const handleSave = () => {
-    // Only require name to be filled - removed target components requirement
-    if (formData.name.trim()) {
+    if (canSave) {
       onSave(formData);
     }
   };
@@ -242,8 +256,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   if (!isOpen) return null;
 
   const isEditing = !!option;
-  // Simplified validation - only require name
-  const canSave = formData.name.trim();
   const previewStyles = getPreviewImageStyles();
 
   return (
@@ -750,26 +762,44 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex space-x-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave}
-            className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium ${
-              canSave
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isEditing ? 'Update Option' : 'Create Option'}
-          </button>
+        <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl">
+          {/* Validation Feedback */}
+          {validationErrors.length > 0 && (
+            <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-yellow-300 font-semibold text-sm">Required to save:</h4>
+                  <ul className="text-yellow-200/80 text-sm mt-1 space-y-1">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium ${
+                canSave
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600/50 text-white/70 cursor-pointer'
+              }`}
+            >
+              {isEditing ? 'Update Option' : 'Create Option'}
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
