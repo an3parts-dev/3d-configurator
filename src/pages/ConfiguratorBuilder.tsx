@@ -1,16 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Plus, 
-  Download, 
-  Upload, 
-  Eye,
-  FolderPlus
-} from 'lucide-react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import ThreeJSPreview from '../components/ThreeJSPreview';
-import { OptionsList } from '../components/option-management';
+import ConfiguratorOptionsPanel from '../components/ConfiguratorOptionsPanel';
+import Configurator3DView from '../components/Configurator3DView';
 import OptionEditModal from '../components/OptionEditModal';
 import { ConditionalLogicModal } from '../components/conditional-logic';
 import { GroupEditModal } from '../components/groups';
@@ -286,6 +278,21 @@ const ConfiguratorBuilder: React.FC = () => {
     }
   }, [importConfigurations]);
 
+  // UI handlers
+  const handleCreateOption = useCallback(() => {
+    setEditingOption(null);
+    setShowOptionModal(true);
+  }, []);
+
+  const handleCreateGroup = useCallback(() => {
+    setEditingGroup(null);
+    setShowGroupModal(true);
+  }, []);
+
+  const handleTogglePreviewMode = useCallback(() => {
+    setIsPreviewMode(prev => !prev);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -301,103 +308,29 @@ const ConfiguratorBuilder: React.FC = () => {
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-gray-900 flex">
         {/* Left Panel - Configuration */}
-        <div className={`bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
-          isPreviewMode ? 'w-0 overflow-hidden' : 'w-1/2'
-        }`}>
-          <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="p-6 border-b border-gray-700 bg-gray-750">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-white font-bold text-2xl">3D Configurator Builder</h1>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Design interactive 3D product configurators
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-3 rounded-lg transition-colors ${
-                    isPreviewMode 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                  title={isPreviewMode ? 'Show Builder' : 'Preview Mode'}
-                >
-                  <Eye className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => {
-                    setEditingOption(null);
-                    setShowOptionModal(true);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Option</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setEditingGroup(null);
-                    setShowGroupModal(true);
-                  }}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                >
-                  <FolderPlus className="w-4 h-4" />
-                  <span>Add Group</span>
-                </button>
-
-                <button
-                  onClick={handleExport}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Export</span>
-                </button>
-
-                <button
-                  onClick={handleImport}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Import</span>
-                </button>
-              </div>
-
-              {lastSaved && (
-                <p className="text-gray-500 text-xs mt-3">
-                  Last saved: {lastSaved.toLocaleTimeString()}
-                </p>
-              )}
-            </div>
-
-            {/* Options List */}
-            <div className="flex-1 overflow-auto p-6">
-              <OptionsList
-                options={configuratorData.options}
-                onMove={moveOption}
-                onEdit={handleEditOption}
-                onDelete={handleDeleteOption}
-                onEditConditionalLogic={handleConditionalLogic}
-                onToggleGroup={toggleGroupExpansion}
-              />
-            </div>
-          </div>
-        </div>
+        <ConfiguratorOptionsPanel
+          configuratorData={configuratorData}
+          modelComponents={modelComponents}
+          lastSaved={lastSaved}
+          isPreviewMode={isPreviewMode}
+          onTogglePreviewMode={handleTogglePreviewMode}
+          onCreateOption={handleCreateOption}
+          onCreateGroup={handleCreateGroup}
+          onExport={handleExport}
+          onImport={handleImport}
+          onMoveOption={moveOption}
+          onEditOption={handleEditOption}
+          onDeleteOption={handleDeleteOption}
+          onEditConditionalLogic={handleConditionalLogic}
+          onToggleGroup={toggleGroupExpansion}
+        />
 
         {/* Right Panel - 3D Preview */}
-        <div className={`transition-all duration-300 ${
-          isPreviewMode ? 'w-full' : 'w-1/2'
-        }`}>
-          <ThreeJSPreview
-            configuratorData={configuratorData}
-            onComponentsLoaded={setModelComponents}
-          />
-        </div>
+        <Configurator3DView
+          configuratorData={configuratorData}
+          isPreviewMode={isPreviewMode}
+          onComponentsLoaded={setModelComponents}
+        />
 
         {/* Modals */}
         <OptionEditModal
