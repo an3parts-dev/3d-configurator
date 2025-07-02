@@ -1,22 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Plus, 
-  Settings, 
-  Layers, 
-  Eye, 
-  EyeOff,
-  Image as ImageIcon,
-  List,
-  Grid3X3,
-  ChevronDown,
-  FolderOpen,
-  AlertTriangle,
-  Square,
-  RoundedRect,
-  Circle
-} from 'lucide-react';
+import { X, Plus, Settings, Layers, Eye, EyeOff, Image as ImageIcon, List, Grid3X3, ChevronDown, FolderOpen, AlertTriangle, Square, KeyRound as RoundedRect, Circle } from 'lucide-react';
 import DragDropOptionValue from './DragDropOptionValue';
 import ComponentSelector from './ComponentSelector';
 import ConfirmationDialog from './ConfirmationDialog';
