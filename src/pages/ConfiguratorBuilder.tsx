@@ -1,24 +1,20 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Plus, 
-  Settings, 
-  Save, 
-  Upload, 
   Download, 
-  Trash2, 
+  Upload, 
   Eye,
-  FolderPlus,
-  Layers
+  FolderPlus
 } from 'lucide-react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import ThreeJSPreview from '../components/ThreeJSPreview';
-import DragDropOption from '../components/DragDropOption';
+import { OptionsList } from '../components/option-management';
 import OptionEditModal from '../components/OptionEditModal';
-import ConditionalLogicModal from '../components/ConditionalLogicModal';
+import { ConditionalLogicModal } from '../components/conditional-logic';
+import { GroupEditModal } from '../components/groups';
 import ConfirmationDialog from '../components/ConfirmationDialog';
-import GroupEditModal from '../components/GroupEditModal';
 import { 
   ConfiguratorData, 
   ConfiguratorOption, 
@@ -56,8 +52,7 @@ const ConfiguratorBuilder: React.FC = () => {
     loadFromStorage,
     saveToStorage,
     exportConfigurations,
-    importConfigurations,
-    clearStorage
+    importConfigurations
   } = useConfiguratorPersistence();
 
   // Load data on mount
@@ -245,12 +240,9 @@ const ConfiguratorBuilder: React.FC = () => {
   }, [editingGroup, updateGroup, createGroup]);
 
   const handleDeleteOption = useCallback((optionId: string) => {
-    const option = configuratorData.options.find(opt => opt.id === optionId);
-    if (!option) return;
-
     setDeletingOptionId(optionId);
     setShowDeleteConfirmation(true);
-  }, [configuratorData.options]);
+  }, []);
 
   const confirmDelete = useCallback(() => {
     if (deletingOptionId) {
@@ -293,96 +285,6 @@ const ConfiguratorBuilder: React.FC = () => {
       console.error('Import failed:', error);
     }
   }, [importConfigurations]);
-
-  // Render organized options with groups
-  const renderOrganizedOptions = () => {
-    const organizedOptions: (ConfiguratorOption | { type: 'grouped'; group: ConfiguratorOption; options: ConfiguratorOption[] })[] = [];
-    const processedOptionIds = new Set<string>();
-
-    configuratorData.options.forEach(option => {
-      if (processedOptionIds.has(option.id)) return;
-
-      if (option.isGroup && option.groupData) {
-        // Find all options that belong to this group
-        const groupedOptions = configuratorData.options.filter(opt => 
-          !opt.isGroup && opt.groupId === option.id
-        );
-        
-        // Mark grouped options as processed
-        groupedOptions.forEach(opt => processedOptionIds.add(opt.id));
-        
-        organizedOptions.push({
-          type: 'grouped',
-          group: option,
-          options: groupedOptions
-        });
-      } else if (!option.groupId) {
-        // Standalone option (not in a group)
-        organizedOptions.push(option);
-      }
-      
-      processedOptionIds.add(option.id);
-    });
-
-    return organizedOptions.map((item, index) => {
-      if ('type' in item && item.type === 'grouped') {
-        const { group, options } = item;
-        return (
-          <div key={group.id}>
-            <DragDropOption
-              option={group}
-              index={index}
-              onMove={moveOption}
-              onEdit={handleEditOption}
-              onDelete={handleDeleteOption}
-              onEditConditionalLogic={handleConditionalLogic}
-              onToggleGroup={toggleGroupExpansion}
-              groupedOptions={options}
-            />
-            
-            {/* Render grouped options when expanded */}
-            <AnimatePresence>
-              {group.groupData?.isExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="ml-8 mt-4 space-y-4"
-                >
-                  {options.map((option, optIndex) => (
-                    <DragDropOption
-                      key={option.id}
-                      option={option}
-                      index={configuratorData.options.findIndex(opt => opt.id === option.id)}
-                      onMove={moveOption}
-                      onEdit={handleEditOption}
-                      onDelete={handleDeleteOption}
-                      onEditConditionalLogic={handleConditionalLogic}
-                      isGrouped={true}
-                    />
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      } else {
-        // Standalone option
-        const option = item as ConfiguratorOption;
-        return (
-          <DragDropOption
-            key={option.id}
-            option={option}
-            index={index}
-            onMove={moveOption}
-            onEdit={handleEditOption}
-            onDelete={handleDeleteOption}
-            onEditConditionalLogic={handleConditionalLogic}
-          />
-        );
-      }
-    });
-  };
 
   if (isLoading) {
     return (
@@ -475,17 +377,14 @@ const ConfiguratorBuilder: React.FC = () => {
 
             {/* Options List */}
             <div className="flex-1 overflow-auto p-6">
-              <div className="space-y-4">
-                {configuratorData.options.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <Layers className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium">No options yet</p>
-                    <p className="text-sm mt-2">Add your first option or group to get started</p>
-                  </div>
-                ) : (
-                  renderOrganizedOptions()
-                )}
-              </div>
+              <OptionsList
+                options={configuratorData.options}
+                onMove={moveOption}
+                onEdit={handleEditOption}
+                onDelete={handleDeleteOption}
+                onEditConditionalLogic={handleConditionalLogic}
+                onToggleGroup={toggleGroupExpansion}
+              />
             </div>
           </div>
         </div>
@@ -529,7 +428,6 @@ const ConfiguratorBuilder: React.FC = () => {
           isEditing={!!editingGroup}
         />
 
-        {/* Only render ConditionalLogicModal when both conditions are met */}
         {showConditionalLogicModal && conditionalLogicOption && (
           <ConditionalLogicModal
             isOpen={showConditionalLogicModal}
