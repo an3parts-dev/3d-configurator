@@ -276,14 +276,19 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             <div className="flex items-center space-x-4">
               {/* Color picker for material manipulation */}
               {manipulationType === 'material' && (
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="color"
-                    value={value.color || '#000000'}
-                    onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                    className="w-12 h-12 rounded-lg cursor-pointer shadow-sm border-0 bg-transparent"
-                    style={{ backgroundColor: value.color || '#000000' }}
-                  />
+                <div className="flex items-center space-x-3 bg-gray-800 px-4 py-3 rounded-lg border border-gray-600">
+                  <label className="text-gray-300 text-sm font-medium whitespace-nowrap">
+                    Colour:
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="color"
+                      value={value.color || '#000000'}
+                      onChange={(e) => onUpdate(value.id, { color: e.target.value })}
+                      className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-500 hover:border-gray-400 transition-colors"
+                      style={{ backgroundColor: value.color || '#000000' }}
+                    />
+                  </div>
                 </div>
               )}
 
