@@ -124,7 +124,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   }, [isOpen, option]);
 
   const handleSave = () => {
-    if (formData.name.trim() && formData.targetComponents.length > 0) {
+    // Only require name to be filled - removed target components requirement
+    if (formData.name.trim()) {
       onSave(formData);
     }
   };
@@ -241,7 +242,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   if (!isOpen) return null;
 
   const isEditing = !!option;
-  const canSave = formData.name.trim() && formData.targetComponents.length > 0;
+  // Simplified validation - only require name
+  const canSave = formData.name.trim();
   const previewStyles = getPreviewImageStyles();
 
   return (
@@ -402,17 +404,17 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   </div>
                 </div>
 
-                {/* Target Components */}
+                {/* Target Components - Made Optional */}
                 <div>
                   <ComponentSelector
                     availableComponents={modelComponents}
                     selectedComponents={formData.targetComponents}
                     onSelectionChange={(components) => setFormData(prev => ({ ...prev, targetComponents: components }))}
-                    placeholder="Select target components..."
-                    label="Target Components *"
+                    placeholder="Select target components (optional)..."
+                    label="Target Components"
                   />
                   <p className="text-gray-500 text-xs mt-2">
-                    These components will be affected by this option's values
+                    These components will be affected by this option's values. You can add these later.
                   </p>
                 </div>
 
