@@ -318,191 +318,13 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  // Helper function to get option image styles with proper padding and no background
-  const getOptionImageStyles = (imageSettings?: ImageSettings) => {
-    if (!imageSettings) {
-      return {
-        containerStyle: { width: '80px', height: '80px' },
-        imageClass: 'object-cover'
-      };
-    }
+  const getBorderStyles = (imageSettings?: any) => {
+    if (!imageSettings?.showBorder) return {};
     
-    let baseSizePx = 80;
-    
-    switch (imageSettings.size) {
-      case 'x-small': baseSizePx = 48; break;
-      case 'small': baseSizePx = 64; break;
-      case 'medium': baseSizePx = 80; break;
-      case 'large': baseSizePx = 96; break;
-      case 'x-large': baseSizePx = 128; break;
-    }
-
-    let containerStyle: React.CSSProperties = {};
-    let imageClass = 'object-cover';
-
-    // Handle aspect ratios with precise container sizing
-    switch (imageSettings.aspectRatio) {
-      case 'square':
-        containerStyle = {
-          width: `${baseSizePx}px`,
-          height: `${baseSizePx}px`
-        };
-        imageClass = 'object-cover';
-        break;
-      case 'round':
-        containerStyle = {
-          width: `${baseSizePx}px`,
-          height: `${baseSizePx}px`
-        };
-        imageClass = 'object-cover';
-        break;
-      case '3:2':
-        containerStyle = {
-          width: `${baseSizePx}px`,
-          height: `${Math.round(baseSizePx * 2 / 3)}px`
-        };
-        imageClass = 'object-cover';
-        break;
-      case '2:3':
-        containerStyle = {
-          width: `${Math.round(baseSizePx * 2 / 3)}px`,
-          height: `${baseSizePx}px`
-        };
-        imageClass = 'object-cover';
-        break;
-      case 'auto':
-        containerStyle = {
-          width: 'auto',
-          height: 'auto',
-          maxWidth: `${baseSizePx}px`,
-          maxHeight: `${baseSizePx}px`
-        };
-        imageClass = 'object-contain';
-        break;
-    }
-
-    // Handle corner styles
-    let borderRadius = '0px';
-    switch (imageSettings.cornerStyle) {
-      case 'squared': 
-        borderRadius = '0px'; 
-        break;
-      case 'soft': 
-        borderRadius = '4px'; 
-        break;
-      case 'softer': 
-        borderRadius = '8px'; 
-        break;
-    }
-
-    // Force round shape for round aspect ratio
-    if (imageSettings.aspectRatio === 'round') {
-      borderRadius = '50%';
-    }
-
-    containerStyle.borderRadius = borderRadius;
-
     return {
-      containerStyle,
-      imageClass
+      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      border: '2px solid #4b5563'
     };
-  };
-
-  // Helper function to render title based on position
-  const renderTitle = (value: any, titlePosition: string, hideTitle: boolean) => {
-    if (hideTitle) return null;
-    
-    return (
-      <p className="text-white text-xs font-medium text-center max-w-20 truncate">
-        {value.name}
-      </p>
-    );
-  };
-
-  // Helper function to render image with title positioning
-  const renderImageWithTitle = (value: any, option: any, isSelected: boolean) => {
-    const { containerStyle, imageClass } = getOptionImageStyles(option.imageSettings);
-    const hideTitle = option.imageSettings?.hideTitle || false;
-    const titlePosition = option.imageSettings?.titlePosition || 'below';
-
-    const imageElement = (
-      <div className="p-2">
-        {value.image ? (
-          <div
-            className="overflow-hidden flex items-center justify-center"
-            style={containerStyle}
-          >
-            <img
-              src={value.image}
-              alt={value.name}
-              className={`w-full h-full ${imageClass}`}
-              style={{ borderRadius: containerStyle.borderRadius }}
-            />
-          </div>
-        ) : (
-          <div 
-            className="bg-gray-700 flex items-center justify-center"
-            style={containerStyle}
-          >
-            <ImageIcon className="w-6 h-6 text-gray-500" />
-          </div>
-        )}
-      </div>
-    );
-
-    const titleElement = renderTitle(value, titlePosition, hideTitle);
-
-    // Arrange image and title based on position
-    switch (titlePosition) {
-      case 'above':
-        return (
-          <div className="flex flex-col items-center space-y-1">
-            {titleElement}
-            {imageElement}
-          </div>
-        );
-      case 'below':
-        return (
-          <div className="flex flex-col items-center space-y-1">
-            {imageElement}
-            {titleElement}
-          </div>
-        );
-      case 'left':
-        return (
-          <div className="flex items-center space-x-2">
-            {titleElement}
-            {imageElement}
-          </div>
-        );
-      case 'right':
-        return (
-          <div className="flex items-center space-x-2">
-            {imageElement}
-            {titleElement}
-          </div>
-        );
-      case 'center':
-        return (
-          <div className="relative">
-            {imageElement}
-            {titleElement && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
-                  {value.name}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      default:
-        return (
-          <div className="flex flex-col items-center space-y-1">
-            {imageElement}
-            {titleElement}
-          </div>
-        );
-    }
   };
 
   const renderOption = (option: any) => {
@@ -515,6 +337,19 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     if (visibleValues.length === 0) return null;
 
     const isRowDirection = option.displayDirection === 'row';
+    const isColumnDirection = option.displayDirection === 'column';
+    const isGridDirection = option.displayDirection === 'grid';
+
+    // Helper function to get layout classes
+    const getLayoutClasses = () => {
+      if (isGridDirection) {
+        return 'grid grid-cols-2 md:grid-cols-3 gap-4';
+      } else if (isRowDirection) {
+        return 'flex gap-4 overflow-x-auto pb-2';
+      } else {
+        return 'flex flex-col gap-4';
+      }
+    };
 
     return (
       <div key={option.id} className="space-y-4">
@@ -540,6 +375,11 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               {option.displayType === 'images' && <ImageIcon className="w-3 h-3" />}
               <span>{option.displayType}</span>
             </span>
+            {option.displayDirection && (
+              <span className="px-2 py-1 bg-gray-700 rounded-full capitalize font-medium">
+                {option.displayDirection}
+              </span>
+            )}
             {option.defaultBehavior && (
               <span className={`px-2 py-1 rounded-full font-medium ${
                 option.defaultBehavior === 'hide' 
@@ -553,7 +393,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'flex flex-wrap gap-4'}`}>
+          <div className={getLayoutClasses()}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
@@ -564,7 +404,50 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     : 'hover:scale-102'
                 }`}
               >
-                {renderImageWithTitle(value, option, selectedValues[option.id] === value.id)}
+                <div className="flex flex-col items-center space-y-2">
+                  <div 
+                    className={`
+                      flex items-center justify-center overflow-hidden
+                      ${value.image ? '' : 'bg-gray-700 w-16 h-16 rounded-lg'}
+                    `}
+                    style={value.image ? getBorderStyles(option.imageSettings) : {}}
+                  >
+                    {value.image ? (
+                      <img
+                        src={value.image}
+                        alt={value.name}
+                        className={`${
+                          option.imageSettings?.aspectRatio === 'auto' 
+                            ? 'object-contain max-w-32 max-h-32' 
+                            : 'object-cover'
+                        } ${
+                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
+                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
+                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
+                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
+                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
+                          'w-20 h-20'
+                        } ${
+                          option.imageSettings?.aspectRatio === 'square' ? 'aspect-square' :
+                          option.imageSettings?.aspectRatio === 'round' ? 'aspect-square rounded-full' :
+                          option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
+                          option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
+                          option.imageSettings?.aspectRatio === 'auto' ? '' :
+                          'aspect-square'
+                        }`}
+                        style={getBorderStyles(option.imageSettings)}
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-gray-500" />
+                    )}
+                  </div>
+                  
+                  {!value.hideTitle && !option.imageSettings?.hideTitle && (
+                    <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+                      {value.name}
+                    </p>
+                  )}
+                </div>
                 
                 {selectedValues[option.id] === value.id && (
                   <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
@@ -584,7 +467,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className={`${isRowDirection ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2'}`}>
+          <div className={getLayoutClasses()}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
@@ -629,12 +512,11 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
-  // FIXED: Organize options by groups for display - ensuring standalone options are shown
+  // Organize options by groups for display
   const organizeOptionsForDisplay = () => {
     const organized: any[] = [];
     const processedOptionIds = new Set<string>();
 
-    // First, process groups and their options
     configuratorData.options.forEach(option => {
       if (processedOptionIds.has(option.id)) return;
 
@@ -657,14 +539,15 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       processedOptionIds.add(option.id);
     });
 
-    // CRITICAL FIX: Add standalone options (not in groups) - this was missing before
-    const standaloneOptions = visibleOptions.filter(opt => !opt.groupId && !processedOptionIds.has(opt.id));
+    // Add standalone options (not in groups)
+    const standaloneOptions = visibleOptions.filter(opt => !opt.groupId);
     standaloneOptions.forEach(option => {
-      organized.push({
-        type: 'option',
-        option
-      });
-      processedOptionIds.add(option.id);
+      if (!processedOptionIds.has(option.id)) {
+        organized.push({
+          type: 'option',
+          option
+        });
+      }
     });
 
     return organized;

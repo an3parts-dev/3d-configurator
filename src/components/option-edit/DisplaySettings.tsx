@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff, Grid2X2 } from 'lucide-react';
 import { ConfiguratorOption, ImageSettings } from '../../types/ConfiguratorTypes';
 
 interface DisplaySettingsProps {
@@ -26,7 +26,9 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       { id: '1', name: 'Option A', color: '#3B82F6' },
       { id: '2', name: 'Option B', color: '#EF4444' },
       { id: '3', name: 'Option C', color: '#10B981' },
-      { id: '4', name: 'Option D', color: '#F59E0B' }
+      { id: '4', name: 'Option D', color: '#F59E0B' },
+      { id: '5', name: 'Option E', color: '#8B5CF6' },
+      { id: '6', name: 'Option F', color: '#F97316' }
     ];
 
     // Use real images from option values if available
@@ -248,53 +250,83 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     </div>
   );
 
-  const renderButtonsPreview = (direction: 'row' | 'column') => (
-    <div className={`flex ${direction === 'row' ? 'flex-row gap-2 flex-wrap' : 'flex-col gap-2'} ${direction === 'row' ? 'max-w-md' : 'max-w-xs'}`}>
-      {sampleValues.slice(0, direction === 'row' ? 4 : 3).map((value, index) => (
-        <button
-          key={value.id}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border-2 cursor-pointer ${
-            index === 0
-              ? 'bg-blue-600 text-white border-blue-500'
-              : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-          } ${direction === 'row' ? 'flex-shrink-0' : ''}`}
-        >
-          {formData.manipulationType === 'material' && (
-            <div 
-              className="w-3 h-3 rounded-full border border-white/20"
-              style={{ backgroundColor: value.color }}
-            />
-          )}
-          <span>{value.name}</span>
-        </button>
-      ))}
-    </div>
-  );
+  const renderButtonsPreview = (direction: 'row' | 'column' | 'grid') => {
+    const getLayoutClasses = () => {
+      switch (direction) {
+        case 'row':
+          return 'flex flex-row gap-2 flex-wrap max-w-md';
+        case 'column':
+          return 'flex flex-col gap-2 max-w-xs';
+        case 'grid':
+          return 'grid grid-cols-2 gap-2 max-w-sm';
+        default:
+          return 'flex flex-row gap-2 flex-wrap max-w-md';
+      }
+    };
 
-  const renderImagesPreview = (direction: 'row' | 'column') => (
-    <div className={`flex ${direction === 'row' ? 'flex-row gap-4 flex-wrap' : 'flex-col gap-4'} ${direction === 'row' ? 'max-w-lg' : 'max-w-xs'}`}>
-      {sampleValues.slice(0, direction === 'row' ? 4 : 3).map((value, index) => (
-        <button
-          key={value.id}
-          className={`relative group transition-all duration-200 cursor-pointer ${
-            index === 0
-              ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-              : 'hover:scale-102'
-          } ${direction === 'row' ? 'flex-shrink-0' : ''}`}
-        >
-          {renderImageWithTitle(value, index, index === 0)}
-          
-          {index === 0 && (
-            <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-          )}
-        </button>
-      ))}
-    </div>
-  );
+    return (
+      <div className={getLayoutClasses()}>
+        {sampleValues.slice(0, direction === 'grid' ? 4 : direction === 'row' ? 4 : 3).map((value, index) => (
+          <button
+            key={value.id}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border-2 cursor-pointer ${
+              index === 0
+                ? 'bg-blue-600 text-white border-blue-500'
+                : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+            } ${direction === 'row' ? 'flex-shrink-0' : ''}`}
+          >
+            {formData.manipulationType === 'material' && (
+              <div 
+                className="w-3 h-3 rounded-full border border-white/20"
+                style={{ backgroundColor: value.color }}
+              />
+            )}
+            <span>{value.name}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderImagesPreview = (direction: 'row' | 'column' | 'grid') => {
+    const getLayoutClasses = () => {
+      switch (direction) {
+        case 'row':
+          return 'flex flex-row gap-4 flex-wrap max-w-lg';
+        case 'column':
+          return 'flex flex-col gap-4 max-w-xs';
+        case 'grid':
+          return 'grid grid-cols-2 gap-4 max-w-md';
+        default:
+          return 'flex flex-row gap-4 flex-wrap max-w-lg';
+      }
+    };
+
+    return (
+      <div className={getLayoutClasses()}>
+        {sampleValues.slice(0, direction === 'grid' ? 4 : direction === 'row' ? 4 : 3).map((value, index) => (
+          <button
+            key={value.id}
+            className={`relative group transition-all duration-200 cursor-pointer ${
+              index === 0
+                ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                : 'hover:scale-102'
+            } ${direction === 'row' ? 'flex-shrink-0' : ''}`}
+          >
+            {renderImageWithTitle(value, index, index === 0)}
+            
+            {index === 0 && (
+              <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="p-6 space-y-8">
@@ -368,13 +400,13 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         </div>
       </div>
 
-      {/* Display Direction */}
+      {/* Layout */}
       {(formData.displayType === 'buttons' || formData.displayType === 'images') && (
         <div>
           <label className="block text-gray-400 text-sm mb-4 font-medium">
-            Layout Direction
+            Layout
           </label>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-3 gap-4">
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'row' }))}
@@ -385,7 +417,14 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               }`}
             >
               <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Row</div>
+                <div className="flex justify-center mb-3">
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                  </div>
+                </div>
+                <div className="font-semibold text-lg">Row</div>
                 <div className="text-sm opacity-80">Horizontal arrangement</div>
               </div>
             </button>
@@ -400,8 +439,38 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               }`}
             >
               <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Vertical Row</div>
+                <div className="flex justify-center mb-3">
+                  <div className="flex flex-col space-y-1">
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                  </div>
+                </div>
+                <div className="font-semibold text-lg">Column</div>
                 <div className="text-sm opacity-80">Vertical arrangement</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'grid' }))}
+              className={`p-6 rounded-xl border-2 transition-all ${
+                formData.displayDirection === 'grid'
+                  ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                  : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+              }`}
+            >
+              <div className="text-center">
+                <div className="flex justify-center mb-3">
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                    <div className="w-3 h-3 bg-current rounded"></div>
+                  </div>
+                </div>
+                <div className="font-semibold text-lg">Grid</div>
+                <div className="text-sm opacity-80">Grid arrangement</div>
               </div>
             </button>
           </div>
