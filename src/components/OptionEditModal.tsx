@@ -10,7 +10,6 @@ import {
   Image as ImageIcon,
   List,
   Grid3X3,
-  ChevronDown,
   FolderOpen
 } from 'lucide-react';
 import DragDropOptionValue from './DragDropOptionValue';
@@ -72,7 +71,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   });
 
   const [activeTab, setActiveTab] = useState<'basic' | 'display' | 'values'>('basic');
-  const [showImageSettings, setShowImageSettings] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -110,7 +108,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         });
       }
       setActiveTab('basic');
-      setShowImageSettings(false);
     }
   }, [isOpen, option]);
 
@@ -151,10 +148,52 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     }
   };
 
+  // Generate preview image based on current settings
+  const getPreviewImageStyles = () => {
+    const settings = formData.imageSettings!;
+    
+    let width = '48px';
+    let height = '48px';
+    
+    switch (settings.size) {
+      case 'x-small': width = height = '48px'; break;
+      case 'small': width = height = '64px'; break;
+      case 'medium': width = height = '80px'; break;
+      case 'large': width = height = '96px'; break;
+      case 'x-large': width = height = '128px'; break;
+    }
+
+    let aspectRatioClass = '';
+    if (settings.aspectRatio !== 'full') {
+      switch (settings.aspectRatio) {
+        case '1:1': aspectRatioClass = 'aspect-square'; break;
+        case '4:3': aspectRatioClass = 'aspect-[4/3]'; break;
+        case '16:9': aspectRatioClass = 'aspect-video'; break;
+        case '3:2': aspectRatioClass = 'aspect-[3/2]'; break;
+        case '2:3': aspectRatioClass = 'aspect-[2/3]'; break;
+      }
+    }
+
+    let borderRadius = '0px';
+    switch (settings.cornerStyle) {
+      case 'squared': borderRadius = '0px'; break;
+      case 'soft': borderRadius = '4px'; break;
+      case 'rounded': borderRadius = '50%'; break;
+    }
+
+    return {
+      width: settings.aspectRatio === 'full' ? 'auto' : width,
+      height,
+      borderRadius,
+      aspectRatioClass
+    };
+  };
+
   if (!isOpen) return null;
 
   const isEditing = !!option;
   const canSave = formData.name.trim() && formData.targetComponents.length > 0;
+  const previewStyles = getPreviewImageStyles();
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
@@ -410,10 +449,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       </div>
                     </button>
                     <button
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, displayType: 'images' }));
-                        setShowImageSettings(true);
-                      }}
+                      onClick={() => setFormData(prev => ({ ...prev, displayType: 'images' }))}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.displayType === 'images'
                           ? 'border-blue-500 bg-blue-500/20 text-blue-300'
@@ -469,105 +505,113 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 {/* Image Settings */}
                 {formData.displayType === 'images' && (
                   <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-white font-semibold">Image Settings</h4>
-                      <button
-                        onClick={() => setShowImageSettings(!showImageSettings)}
-                        className="text-gray-400 hover:text-white transition-colors"
-                      >
-                        <ChevronDown className={`w-5 h-5 transition-transform ${showImageSettings ? 'rotate-180' : ''}`} />
-                      </button>
+                    <h4 className="text-white font-semibold mb-6">Image Settings</h4>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Left Column - Size and Aspect Ratio */}
+                      <div className="lg:col-span-2 space-y-6">
+                        {/* Image Size */}
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Size</label>
+                          <select
+                            value={formData.imageSettings?.size || 'medium'}
+                            onChange={(e) => updateImageSettings({ size: e.target.value as any })}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                          >
+                            <option value="x-small">Extra Small (48px)</option>
+                            <option value="small">Small (64px)</option>
+                            <option value="medium">Medium (80px)</option>
+                            <option value="large">Large (96px)</option>
+                            <option value="x-large">Extra Large (128px)</option>
+                          </select>
+                        </div>
+
+                        {/* Aspect Ratio */}
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
+                          <select
+                            value={formData.imageSettings?.aspectRatio || '1:1'}
+                            onChange={(e) => updateImageSettings({ aspectRatio: e.target.value as any })}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                          >
+                            <option value="1:1">Square (1:1)</option>
+                            <option value="4:3">Standard (4:3)</option>
+                            <option value="16:9">Widescreen (16:9)</option>
+                            <option value="3:2">Photo (3:2)</option>
+                            <option value="2:3">Portrait (2:3)</option>
+                            <option value="full">Full Size</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Right Column - Preview */}
+                      <div className="flex flex-col items-center justify-center">
+                        <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Preview</label>
+                        <div className="bg-gray-800 p-4 rounded-lg border border-gray-600 flex items-center justify-center">
+                          <div
+                            className={`bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-gray-500 flex items-center justify-center ${previewStyles.aspectRatioClass}`}
+                            style={{
+                              width: previewStyles.width,
+                              height: previewStyles.height,
+                              borderRadius: previewStyles.borderRadius,
+                              maxWidth: '120px',
+                              maxHeight: '120px'
+                            }}
+                          >
+                            <ImageIcon className="w-6 h-6 text-white opacity-80" />
+                          </div>
+                        </div>
+                        <p className="text-gray-500 text-xs mt-2 text-center">
+                          {formData.imageSettings?.size} • {formData.imageSettings?.aspectRatio} • {formData.imageSettings?.cornerStyle}
+                        </p>
+                      </div>
                     </div>
 
-                    <AnimatePresence>
-                      {showImageSettings && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-4"
+                    {/* Corner Style - Full Width */}
+                    <div className="mt-6">
+                      <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            formData.imageSettings?.cornerStyle === 'squared'
+                              ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                              : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                          }`}
                         >
-                          {/* Image Size */}
-                          <div>
-                            <label className="block text-gray-400 text-sm mb-2 font-medium">Size</label>
-                            <select
-                              value={formData.imageSettings?.size || 'medium'}
-                              onChange={(e) => updateImageSettings({ size: e.target.value as any })}
-                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
-                            >
-                              <option value="x-small">Extra Small (48px)</option>
-                              <option value="small">Small (64px)</option>
-                              <option value="medium">Medium (80px)</option>
-                              <option value="large">Large (96px)</option>
-                              <option value="x-large">Extra Large (128px)</option>
-                            </select>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '0px' }}></div>
+                            <div className="font-semibold text-sm">Squared</div>
                           </div>
-
-                          {/* Aspect Ratio */}
-                          <div>
-                            <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
-                            <select
-                              value={formData.imageSettings?.aspectRatio || '1:1'}
-                              onChange={(e) => updateImageSettings({ aspectRatio: e.target.value as any })}
-                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
-                            >
-                              <option value="1:1">Square (1:1)</option>
-                              <option value="4:3">Standard (4:3)</option>
-                              <option value="16:9">Widescreen (16:9)</option>
-                              <option value="3:2">Photo (3:2)</option>
-                              <option value="2:3">Portrait (2:3)</option>
-                              <option value="full">Full Size</option>
-                            </select>
+                        </button>
+                        <button
+                          onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            formData.imageSettings?.cornerStyle === 'soft'
+                              ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                              : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                          }`}
+                        >
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
+                            <div className="font-semibold text-sm">Soft</div>
                           </div>
-
-                          {/* Corner Style */}
-                          <div>
-                            <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
-                            <div className="grid grid-cols-3 gap-3">
-                              <button
-                                onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
-                                className={`p-3 rounded-lg border-2 transition-all ${
-                                  formData.imageSettings?.cornerStyle === 'squared'
-                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                                    : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                                }`}
-                              >
-                                <div className="text-center">
-                                  <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '0px' }}></div>
-                                  <div className="font-semibold text-sm">Squared</div>
-                                </div>
-                              </button>
-                              <button
-                                onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
-                                className={`p-3 rounded-lg border-2 transition-all ${
-                                  formData.imageSettings?.cornerStyle === 'soft'
-                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                                    : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                                }`}
-                              >
-                                <div className="text-center">
-                                  <div className="w-8 h-8 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
-                                  <div className="font-semibold text-sm">Soft</div>
-                                </div>
-                              </button>
-                              <button
-                                onClick={() => updateImageSettings({ cornerStyle: 'rounded' })}
-                                className={`p-3 rounded-lg border-2 transition-all ${
-                                  formData.imageSettings?.cornerStyle === 'rounded'
-                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                                    : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                                }`}
-                              >
-                                <div className="text-center">
-                                  <div className="w-8 h-8 bg-gray-500 rounded-full mx-auto mb-2"></div>
-                                  <div className="font-semibold text-sm">Rounded</div>
-                                </div>
-                              </button>
-                            </div>
+                        </button>
+                        <button
+                          onClick={() => updateImageSettings({ cornerStyle: 'rounded' })}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            formData.imageSettings?.cornerStyle === 'rounded'
+                              ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                              : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                          }`}
+                        >
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-gray-500 rounded-full mx-auto mb-2"></div>
+                            <div className="font-semibold text-sm">Rounded</div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </motion.div>
