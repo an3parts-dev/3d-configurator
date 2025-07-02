@@ -71,6 +71,16 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   });
 
   const [activeTab, setActiveTab] = useState<'basic' | 'display' | 'values'>('basic');
+  const [localValues, setLocalValues] = useState<ConfiguratorOptionValue[]>([]);
+
+  // Sync local values with option values
+  useEffect(() => {
+    if (option?.values) {
+      setLocalValues([...option.values]);
+    } else {
+      setLocalValues([]);
+    }
+  }, [option?.values]);
 
   useEffect(() => {
     if (isOpen) {
@@ -91,6 +101,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           },
           groupId: option.groupId
         });
+        setLocalValues([...option.values]);
       } else {
         setFormData({
           name: '',
@@ -106,6 +117,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             cornerStyle: 'soft'
           }
         });
+        setLocalValues([]);
       }
       setActiveTab('basic');
     }
@@ -127,24 +139,44 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   const handleAddValue = () => {
     if (option) {
       onAddValue(option.id);
+      // Optimistically add a new value to local state for immediate UI feedback
+      const newValue: ConfiguratorOptionValue = {
+        id: `temp_value_${Date.now()}`,
+        name: 'New Value'
+      };
+      setLocalValues(prev => [...prev, newValue]);
     }
   };
 
   const handleUpdateValue = (valueId: string, updates: Partial<ConfiguratorOptionValue>) => {
     if (option) {
       onUpdateValue(option.id, valueId, updates);
+      // Update local state immediately
+      setLocalValues(prev => prev.map(value => 
+        value.id === valueId ? { ...value, ...updates } : value
+      ));
     }
   };
 
   const handleDeleteValue = (valueId: string) => {
     if (option) {
       onDeleteValue(option.id, valueId);
+      // Update local state immediately
+      setLocalValues(prev => prev.filter(value => value.id !== valueId));
     }
   };
 
   const handleMoveValue = (dragIndex: number, hoverIndex: number) => {
     if (option) {
       onMoveValue(option.id, dragIndex, hoverIndex);
+      // Update local state immediately
+      setLocalValues(prev => {
+        const newValues = [...prev];
+        const draggedValue = newValues[dragIndex];
+        newValues.splice(dragIndex, 1);
+        newValues.splice(hoverIndex, 0, draggedValue);
+        return newValues;
+      });
     }
   };
 
@@ -338,6 +370,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     <button
+                      type="button"
                       onClick={() => setFormData(prev => ({ ...prev, manipulationType: 'visibility' }))}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.manipulationType === 'visibility'
@@ -352,6 +385,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       </div>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setFormData(prev => ({ ...prev, manipulationType: 'material' }))}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.manipulationType === 'material'
@@ -390,6 +424,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     </label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
+                        type="button"
                         onClick={() => setFormData(prev => ({ ...prev, defaultBehavior: 'hide' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
                           formData.defaultBehavior === 'hide'
@@ -404,6 +439,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                         </div>
                       </button>
                       <button
+                        type="button"
                         onClick={() => setFormData(prev => ({ ...prev, defaultBehavior: 'show' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
                           formData.defaultBehavior === 'show'
@@ -438,6 +474,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   </label>
                   <div className="grid grid-cols-3 gap-4">
                     <button
+                      type="button"
                       onClick={() => setFormData(prev => ({ ...prev, displayType: 'list' }))}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.displayType === 'list'
@@ -452,6 +489,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       </div>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setFormData(prev => ({ ...prev, displayType: 'buttons' }))}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.displayType === 'buttons'
@@ -466,6 +504,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       </div>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setFormData(prev => ({ ...prev, displayType: 'images' }))}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.displayType === 'images'
@@ -490,6 +529,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     </label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
+                        type="button"
                         onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'row' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
                           formData.displayDirection === 'row'
@@ -503,6 +543,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                         </div>
                       </button>
                       <button
+                        type="button"
                         onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'column' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
                           formData.displayDirection === 'column'
@@ -589,6 +630,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
                       <div className="grid grid-cols-3 gap-3">
                         <button
+                          type="button"
                           onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
                           className={`p-3 rounded-lg border-2 transition-all ${
                             formData.imageSettings?.cornerStyle === 'squared'
@@ -602,6 +644,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                           </div>
                         </button>
                         <button
+                          type="button"
                           onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
                           className={`p-3 rounded-lg border-2 transition-all ${
                             formData.imageSettings?.cornerStyle === 'soft'
@@ -615,6 +658,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                           </div>
                         </button>
                         <button
+                          type="button"
                           onClick={() => updateImageSettings({ cornerStyle: 'rounded' })}
                           className={`p-3 rounded-lg border-2 transition-all ${
                             formData.imageSettings?.cornerStyle === 'rounded'
@@ -650,6 +694,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={handleAddValue}
                     disabled={!isEditing}
                     className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
@@ -669,7 +714,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     <p className="text-lg font-medium">Save option first</p>
                     <p className="text-sm mt-2">You need to save the option before adding values</p>
                   </div>
-                ) : option?.values.length === 0 ? (
+                ) : localValues.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <List className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">No values yet</p>
@@ -677,7 +722,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {option?.values.map((value, index) => (
+                    {localValues.map((value, index) => (
                       <DragDropOptionValue
                         key={value.id}
                         value={value}
@@ -692,7 +737,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                         onMove={handleMoveValue}
                         onUpdate={handleUpdateValue}
                         onDelete={handleDeleteValue}
-                        canDelete={option.values.length > 1}
+                        canDelete={localValues.length > 1}
                       />
                     ))}
                   </div>
@@ -705,12 +750,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         {/* Footer */}
         <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex space-x-4">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={!canSave}
             className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium ${
