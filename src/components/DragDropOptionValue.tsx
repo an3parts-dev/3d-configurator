@@ -46,6 +46,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
   const [showConditionalLogicModal, setShowConditionalLogicModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -235,6 +236,17 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     onUpdate(value.id, { image: undefined });
   };
 
+  // Fixed color picker handler
+  const handleColorPickerClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    colorInputRef.current?.click();
+  };
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(value.id, { color: e.target.value });
+  };
+
   return (
     <>
       <div ref={dragDropRef}>
@@ -368,17 +380,24 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             {manipulationType === 'material' && (
               <div className="flex items-center space-x-3 flex-shrink-0">
                 <div className="relative">
+                  {/* Hidden color input */}
                   <input
+                    ref={colorInputRef}
                     type="color"
                     value={value.color || '#000000'}
-                    onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                    onChange={handleColorChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: -1 }}
                   />
-                  <div 
-                    className="w-12 h-12 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 flex items-center justify-center relative overflow-hidden"
+                  {/* Visible color button */}
+                  <button
+                    type="button"
+                    onClick={handleColorPickerClick}
+                    className="w-12 h-12 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 flex items-center justify-center relative overflow-hidden border-2 border-gray-500 hover:border-gray-400"
                     style={{ 
                       backgroundColor: value.color || '#000000'
                     }}
+                    title="Click to change color"
                   >
                     <Droplets 
                       className="w-5 h-5 transition-colors duration-200" 
@@ -386,7 +405,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                         color: getContrastColor(value.color || '#000000')
                       }}
                     />
-                  </div>
+                  </button>
                 </div>
               </div>
             )}
