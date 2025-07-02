@@ -378,6 +378,37 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
           {/* Component Selection for Visibility */}
           {manipulationType === 'visibility' && (
             <div className="space-y-4">
+              {/* Default Behavior Display */}
+              <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-600/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-lg ${
+                      defaultBehavior === 'hide' 
+                        ? 'bg-red-500/20 text-red-400' 
+                        : 'bg-green-500/20 text-green-400'
+                    }`}>
+                      {defaultBehavior === 'hide' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <h5 className="text-white font-medium text-sm">Default Behavior</h5>
+                      <p className="text-gray-400 text-xs">
+                        {defaultBehavior === 'hide' 
+                          ? 'Hide all target components by default, then show selected ones'
+                          : 'Show all target components by default, then hide selected ones'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    defaultBehavior === 'hide' 
+                      ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+                      : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                  }`}>
+                    {defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
+                  </span>
+                </div>
+              </div>
+
               {defaultBehavior === 'hide' ? (
                 <div className="space-y-2">
                   <ComponentSelector
