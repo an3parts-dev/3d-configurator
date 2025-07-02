@@ -281,9 +281,9 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                     type="color"
                     value={value.color || '#000000'}
                     onChange={(e) => onUpdate(value.id, { color: e.target.value })}
-                    className="w-12 h-12 rounded-lg border-2 border-gray-600 cursor-pointer shadow-sm"
+                    className="w-12 h-12 rounded-lg cursor-pointer shadow-sm border-0 bg-transparent"
+                    style={{ backgroundColor: value.color || '#000000' }}
                   />
-                  <div className="absolute inset-0 rounded-lg border-2 border-gray-600 pointer-events-none"></div>
                 </div>
               )}
 
