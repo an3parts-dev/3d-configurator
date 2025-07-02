@@ -27,6 +27,8 @@ interface DragDropOptionValueProps {
   onUpdate: (valueId: string, updates: any) => void;
   onDelete: (valueId: string) => void;
   canDelete: boolean;
+  onMoveToGroup?: (valueId: string, targetGroupId: string | null) => void;
+  availableGroups?: ConfiguratorOption[];
 }
 
 const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
@@ -42,7 +44,9 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   onMove,
   onUpdate,
   onDelete,
-  canDelete
+  canDelete,
+  onMoveToGroup,
+  availableGroups = []
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +57,12 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     type: 'optionValue',
     item: () => {
       setIsDragging(true);
-      return { id: value.id, index };
+      return { 
+        id: value.id, 
+        index,
+        type: 'value',
+        sourceType: 'value'
+      };
     },
     collect: (monitor) => ({
       isDraggingState: monitor.isDragging(),
@@ -63,39 +72,50 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }
   });
 
-  const [{ isOver }, drop] = useDrop({
-    accept: 'optionValue',
-    hover: (item: { id: string; index: number }, monitor) => {
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: ['optionValue', 'configurator-option'],
+    hover: (item: { id: string; index: number; type: string }, monitor) => {
       if (!ref.current) return;
       
-      const dragIndex = item.index;
-      const hoverIndex = index;
+      // Only handle value-to-value reordering here
+      if (item.type === 'value' && item.id !== value.id) {
+        const dragIndex = item.index;
+        const hoverIndex = index;
 
-      if (dragIndex === hoverIndex) return;
+        if (dragIndex === hoverIndex) return;
 
-      // Get the bounding rectangle of the hovered element
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      
-      // Get the mouse position
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) return;
-      
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+        // Get the bounding rectangle of the hovered element
+        const hoverBoundingRect = ref.current.getBoundingClientRect();
+        
+        // Get the mouse position
+        const clientOffset = monitor.getClientOffset();
+        if (!clientOffset) return;
+        
+        const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+        const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Immediate switching - switch places when touching
-      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
-        onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
+        // Immediate switching - switch places when touching
+        if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        }
+        
+        if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
+          onMove(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        }
       }
-      
-      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
-        onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
+    },
+    drop: (item: any, monitor) => {
+      // Handle moving values between groups
+      if (item.type === 'option' && !item.isGroup && onMoveToGroup) {
+        // This would be handled by the parent component
+        return;
       }
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
     }),
   });
 
