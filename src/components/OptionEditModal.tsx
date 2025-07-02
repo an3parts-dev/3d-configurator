@@ -61,7 +61,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     imageSettings: {
       size: 'medium',
       aspectRatio: 'square',
-      cornerStyle: 'softer'
+      cornerStyle: 'softer',
+      hideTitle: false
     }
   });
 
@@ -92,7 +93,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           imageSettings: option.imageSettings || {
             size: 'medium',
             aspectRatio: 'square',
-            cornerStyle: 'softer'
+            cornerStyle: 'softer',
+            hideTitle: false
           },
           groupId: option.groupId
         });
@@ -109,7 +111,8 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           imageSettings: {
             size: 'medium',
             aspectRatio: 'square',
-            cornerStyle: 'softer'
+            cornerStyle: 'softer',
+            hideTitle: false
           }
         });
         setLocalValues([]);

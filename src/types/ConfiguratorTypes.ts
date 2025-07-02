@@ -25,7 +25,6 @@ export interface ConfiguratorOptionValue {
   name: string;
   color?: string;
   image?: string;
-  hideTitle?: boolean;
   visibleComponents?: string[];
   hiddenComponents?: string[];
   conditionalLogic?: OptionValueConditionalLogic;
@@ -35,6 +34,7 @@ export interface ImageSettings {
   size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
   aspectRatio: 'square' | 'round' | '3:2' | '2:3' | 'auto';
   cornerStyle: 'squared' | 'soft' | 'softer';
+  hideTitle: boolean; // Moved from individual values to global setting
 }
 
 export interface ConfiguratorOptionGroup {

@@ -418,6 +418,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     if (visibleValues.length === 0) return null;
 
     const isRowDirection = option.displayDirection === 'row';
+    const hideTitle = option.imageSettings?.hideTitle || false;
 
     return (
       <div key={option.id} className="space-y-4">
@@ -495,7 +496,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                       )}
                     </div>
                     
-                    {!value.hideTitle && (
+                    {!hideTitle && (
                       <p className="text-white text-xs font-medium text-center max-w-20 truncate">
                         {value.name}
                       </p>

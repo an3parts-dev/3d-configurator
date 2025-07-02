@@ -127,6 +127,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
   const isRoundAspectRatio = formData.imageSettings?.aspectRatio === 'round';
   const isAutoAspectRatio = formData.imageSettings?.aspectRatio === 'auto';
   const previewImage = getPreviewImage();
+  const hideTitle = formData.imageSettings?.hideTitle || false;
 
   // Preview Components
   const renderListPreview = () => (
@@ -201,9 +202,11 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               )}
             </div>
             
-            <p className="text-white text-xs font-medium text-center max-w-20 truncate">
-              {value.name}
-            </p>
+            {!hideTitle && (
+              <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+                {value.name}
+              </p>
+            )}
           </div>
           
           {index === 0 && (
@@ -426,6 +429,27 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                     Images will maintain their natural proportions within the size constraints
                   </p>
                 )}
+              </div>
+
+              {/* Global Hide Title Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg border border-gray-600">
+                <div>
+                  <label className="text-gray-400 text-sm font-medium">Show Titles</label>
+                  <p className="text-gray-500 text-xs mt-1">Display option value names below images</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateImageSettings({ hideTitle: !hideTitle })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    !hideTitle ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      !hideTitle ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 

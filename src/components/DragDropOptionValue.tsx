@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
-import { GripVertical, Trash2, Zap, Eye, EyeOff, Image as ImageIcon, Upload, X, Droplets } from 'lucide-react';
+import { GripVertical, Trash2, Zap, Image as ImageIcon, Upload, X, Droplets } from 'lucide-react';
 import ComponentSelector from './ComponentSelector';
 import ValueConditionalLogicModal from './ValueConditionalLogicModal';
 import { ConfiguratorOptionValue, ConfiguratorOption, ImageSettings } from '../types/ConfiguratorTypes';
@@ -281,7 +281,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
           {/* Header with controls */}
           <div className="flex items-center justify-between">
-            {/* Left side - Drag Handle, Image Upload (for images), and Value Name with Title Toggle */}
+            {/* Left side - Drag Handle, Image Upload (for images), and Value Name */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               {/* Drag Handle */}
               <div 
@@ -347,32 +347,15 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 </div>
               )}
 
-              {/* Value Name Input with Title Toggle */}
+              {/* Value Name Input */}
               <div className="flex-1 max-w-md">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="text"
-                    value={value.name}
-                    onChange={(e) => onUpdate(value.id, { name: e.target.value })}
-                    className="flex-1 bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                    placeholder="Value name"
-                  />
-                  
-                  {/* Title Toggle - Only for Images */}
-                  {displayType === 'images' && (
-                    <button
-                      onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
-                      className={`p-2 rounded-lg transition-colors ${
-                        value.hideTitle 
-                          ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
-                          : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
-                      }`}
-                      title={value.hideTitle ? 'Show title' : 'Hide title'}
-                    >
-                      {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  value={value.name}
+                  onChange={(e) => onUpdate(value.id, { name: e.target.value })}
+                  className="w-full bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                  placeholder="Value name"
+                />
               </div>
             </div>
 
