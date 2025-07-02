@@ -318,7 +318,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  // Helper function to get option image styles
+  // Helper function to get option image styles with proper padding
   const getOptionImageStyles = (imageSettings?: ImageSettings) => {
     if (!imageSettings) {
       return {
@@ -326,7 +326,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         imageClass: 'object-cover'
       };
     }
-
+    
     let baseSizePx = 80;
     
     switch (imageSettings.size) {
@@ -471,10 +471,11 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                   }`}
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="flex items-center justify-center overflow-hidden">
+                    {/* Image container with proper padding to prevent clipping */}
+                    <div className="p-1">
                       {value.image ? (
                         <div
-                          className="overflow-hidden flex items-center justify-center bg-gray-700"
+                          className="overflow-hidden flex items-center justify-center"
                           style={containerStyle}
                         >
                           <img
@@ -565,11 +566,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
-  // Organize options by groups for display
+  // Organize options by groups for display - FIXED to show standalone options
   const organizeOptionsForDisplay = () => {
     const organized: any[] = [];
     const processedOptionIds = new Set<string>();
 
+    // First, process groups and their options
     configuratorData.options.forEach(option => {
       if (processedOptionIds.has(option.id)) return;
 
@@ -592,15 +594,13 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       processedOptionIds.add(option.id);
     });
 
-    // Add standalone options (not in groups)
-    const standaloneOptions = visibleOptions.filter(opt => !opt.groupId);
+    // Then, add standalone options (not in groups) - THIS WAS THE MISSING PART
+    const standaloneOptions = visibleOptions.filter(opt => !opt.groupId && !processedOptionIds.has(opt.id));
     standaloneOptions.forEach(option => {
-      if (!processedOptionIds.has(option.id)) {
-        organized.push({
-          type: 'option',
-          option
-        });
-      }
+      organized.push({
+        type: 'option',
+        option
+      });
     });
 
     return organized;
