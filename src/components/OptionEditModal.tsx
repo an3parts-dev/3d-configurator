@@ -12,7 +12,8 @@ import {
   Grid3X3,
   ChevronDown,
   FolderOpen,
-  AlertTriangle
+  AlertTriangle,
+  Save
 } from 'lucide-react';
 import DragDropOptionValue from './DragDropOptionValue';
 import ComponentSelector from './ComponentSelector';
@@ -200,32 +201,70 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleClose}
-                className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <div className="flex items-center space-x-3">
+                {/* Save Button in Header for New Options */}
+                {!isEditing && (
+                  <button
+                    onClick={handleSave}
+                    disabled={!canSave}
+                    className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                      canSave
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Save Option</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleClose}
+                  className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
+
+            {/* Save Requirements Notice for New Options */}
+            {!isEditing && (
+              <div className="mt-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-blue-300 text-sm font-medium">Save Required</p>
+                    <p className="text-blue-200/80 text-xs mt-1">
+                      You need to save the option first before you can add values. Make sure to fill in the required fields: Title and Target Components.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Tabs */}
             <div className="flex space-x-1 mt-6 bg-gray-700 p-1 rounded-lg">
               {[
                 { id: 'basic', label: 'Basic Settings', icon: Settings },
                 { id: 'display', label: 'Display & Style', icon: Eye },
-                { id: 'values', label: 'Option Values', icon: List }
+                { id: 'values', label: 'Option Values', icon: List, disabled: !isEditing }
               ].map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => !tab.disabled && setActiveTab(tab.id as any)}
+                  disabled={tab.disabled}
                   className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white shadow-sm'
+                      : tab.disabled
+                      ? 'text-gray-500 cursor-not-allowed'
                       : 'text-gray-400 hover:text-white hover:bg-gray-600'
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
                   <span className="font-medium">{tab.label}</span>
+                  {tab.disabled && (
+                    <span className="text-xs bg-gray-600 px-1.5 py-0.5 rounded">Save first</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -246,7 +285,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-gray-400 text-sm mb-2 font-medium">
-                        Title
+                        Title *
                       </label>
                       <div className="flex items-center space-x-3">
                         <input
@@ -398,6 +437,39 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                           </div>
                         </button>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Save Button for New Options at Bottom of Basic Tab */}
+                  {!isEditing && (
+                    <div className="bg-gray-750 p-4 rounded-lg border border-gray-600">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white font-medium">Ready to save?</p>
+                          <p className="text-gray-400 text-sm">Save the option to start adding values</p>
+                        </div>
+                        <button
+                          onClick={handleSave}
+                          disabled={!canSave}
+                          className={`px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors ${
+                            canSave
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <Save className="w-4 h-4" />
+                          <span>Save Option</span>
+                        </button>
+                      </div>
+                      {!canSave && (
+                        <div className="mt-3 text-red-400 text-sm">
+                          <p>Missing required fields:</p>
+                          <ul className="list-disc list-inside mt-1 space-y-1">
+                            {!formData.name.trim() && <li>Title is required</li>}
+                            {formData.targetComponents.length === 0 && <li>At least one target component is required</li>}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
                 </motion.div>
@@ -633,6 +705,12 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       <List className="w-16 h-16 mx-auto mb-4 opacity-50" />
                       <p className="text-lg font-medium">Save option first</p>
                       <p className="text-sm mt-2">You need to save the option before adding values</p>
+                      <button
+                        onClick={() => setActiveTab('basic')}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      >
+                        Go to Basic Settings
+                      </button>
                     </div>
                   ) : option?.values.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
@@ -675,17 +753,20 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             >
               Cancel
             </button>
-            <button
-              onClick={handleSave}
-              disabled={!canSave}
-              className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium ${
-                canSave
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isEditing ? 'Update Option' : 'Create Option'}
-            </button>
+            {isEditing && (
+              <button
+                onClick={handleSave}
+                disabled={!canSave}
+                className={`flex-1 py-3 px-4 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${
+                  canSave
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <Save className="w-4 h-4" />
+                <span>Update Option</span>
+              </button>
+            )}
           </div>
         </motion.div>
       </div>
