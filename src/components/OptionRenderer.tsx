@@ -196,3 +196,5 @@ const OptionRenderer: React.FC<OptionRendererProps> = ({
 };
 
 export default OptionRenderer;
+
+export { OptionRenderer }
