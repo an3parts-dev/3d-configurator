@@ -149,11 +149,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   const handleAddValue = () => {
     if (option) {
       onAddValue(option.id);
-      // Force a re-render by updating the key or triggering a state change
-      setTimeout(() => {
-        // This ensures the component re-renders with the new value
-        setActiveTab('values');
-      }, 100);
     }
   };
 
@@ -190,17 +185,17 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           className="bg-gray-800 rounded-xl border border-gray-600 shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col"
         >
           {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-gray-700 bg-gray-750 rounded-t-xl">
+          <div className="p-6 border-b border-gray-700 bg-gray-750 rounded-t-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-600 rounded-lg">
                   <Layers className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-lg sm:text-xl">
+                  <h3 className="text-white font-semibold text-xl">
                     {isEditing ? 'Edit Option' : 'Create Option'}
                   </h3>
-                  <p className="text-gray-400 text-xs sm:text-sm">
+                  <p className="text-gray-400 text-sm">
                     {isEditing ? 'Modify option settings and values' : 'Configure a new configurator option'}
                   </p>
                 </div>
@@ -209,12 +204,12 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 onClick={handleClose}
                 className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex space-x-1 mt-4 sm:mt-6 bg-gray-700 p-1 rounded-lg">
+            <div className="flex space-x-1 mt-6 bg-gray-700 p-1 rounded-lg">
               {[
                 { id: 'basic', label: 'Basic Settings', icon: Settings },
                 { id: 'display', label: 'Display & Style', icon: Eye },
@@ -223,14 +218,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors ${
+                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-gray-400 hover:text-white hover:bg-gray-600'
                   }`}
                 >
-                  <tab.icon className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="font-medium text-xs sm:text-sm">{tab.label}</span>
+                  <tab.icon className="w-4 h-4" />
+                  <span className="font-medium">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -245,10 +240,10 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+                  className="p-6 space-y-6"
                 >
                   {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-gray-400 text-sm mb-2 font-medium">
                         Title
@@ -321,7 +316,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     <label className="block text-gray-400 text-sm mb-3 font-medium">
                       Manipulation Type *
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <button
                         onClick={() => setFormData(prev => ({ ...prev, manipulationType: 'visibility' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
@@ -373,7 +368,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       <label className="block text-gray-400 text-sm mb-3 font-medium">
                         Default Behavior
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={() => setFormData(prev => ({ ...prev, defaultBehavior: 'hide' }))}
                           className={`p-4 rounded-lg border-2 transition-all ${
@@ -414,14 +409,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+                  className="p-6 space-y-6"
                 >
                   {/* Display Type */}
                   <div>
                     <label className="block text-gray-400 text-sm mb-3 font-medium">
                       Display Type
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <button
                         onClick={() => setFormData(prev => ({ ...prev, displayType: 'list' }))}
                         className={`p-4 rounded-lg border-2 transition-all ${
@@ -476,7 +471,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       <label className="block text-gray-400 text-sm mb-3 font-medium">
                         Direction
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'column' }))}
                           className={`p-4 rounded-lg border-2 transition-all ${
@@ -509,7 +504,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
 
                   {/* Image Settings */}
                   {formData.displayType === 'images' && (
-                    <div className="bg-gray-750 p-4 sm:p-6 rounded-xl border border-gray-600">
+                    <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-white font-semibold">Image Settings</h4>
                         <button
@@ -562,7 +557,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                             </div>
 
                             {/* Border Settings */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4">
                               <div className="flex items-center justify-between">
                                 <label className="text-gray-400 text-sm font-medium">Show Border</label>
                                 <button
@@ -610,9 +605,9 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="p-4 sm:p-6"
+                  className="p-6"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
                       <h4 className="text-white font-semibold text-lg">Option Values</h4>
                       <p className="text-gray-400 text-sm mt-1">
@@ -629,7 +624,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                       }`}
                     >
                       <Plus className="w-4 h-4" />
-                      <span>+ Add Option</span>
+                      <span>Add Value</span>
                     </button>
                   </div>
 
@@ -649,7 +644,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                     <div className="space-y-4">
                       {option?.values.map((value, index) => (
                         <DragDropOptionValue
-                          key={`${value.id}-${option.values.length}`} // Force re-render when values change
+                          key={value.id}
                           value={value}
                           index={index}
                           manipulationType={formData.manipulationType}
@@ -673,7 +668,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 sm:p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex space-x-4">
             <button
               onClick={handleClose}
               className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"
