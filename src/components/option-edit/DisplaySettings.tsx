@@ -302,7 +302,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
         <h4 className="text-white font-semibold text-lg mb-4 flex items-center">
           <Eye className="w-5 h-5 mr-2 text-blue-400" />
-          Live Preview: Sample Option
+          Live Preview
         </h4>
         
         <div className="flex items-center justify-center min-h-[120px]">
@@ -331,14 +331,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               <List className="w-8 h-8 mx-auto mb-3" />
               <div className="font-semibold text-lg">List</div>
               <div className="text-sm opacity-80 mt-1">Dropdown selection</div>
-              
-              {/* Mini Preview */}
-              <div className="mt-4 flex justify-center">
-                <div className="w-24 h-6 bg-gray-600 rounded border border-gray-500 flex items-center justify-between px-2">
-                  <span className="text-xs text-gray-300">Select...</span>
-                  <ChevronDown className="w-3 h-3 text-gray-400" />
-                </div>
-              </div>
             </div>
           </button>
           
@@ -355,15 +347,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               <Grid3X3 className="w-8 h-8 mx-auto mb-3" />
               <div className="font-semibold text-lg">Buttons</div>
               <div className="text-sm opacity-80 mt-1">Button selection</div>
-              
-              {/* Mini Preview */}
-              <div className="mt-4 flex justify-center">
-                <div className="flex gap-1">
-                  <div className="w-6 h-4 bg-blue-600 rounded-sm"></div>
-                  <div className="w-6 h-4 bg-gray-600 rounded-sm"></div>
-                  <div className="w-6 h-4 bg-gray-600 rounded-sm"></div>
-                </div>
-              </div>
             </div>
           </button>
           
@@ -380,15 +363,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               <ImageIcon className="w-8 h-8 mx-auto mb-3" />
               <div className="font-semibold text-lg">Images</div>
               <div className="text-sm opacity-80 mt-1">Visual selection</div>
-              
-              {/* Mini Preview */}
-              <div className="mt-4 flex justify-center">
-                <div className="flex gap-1">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded ring-2 ring-blue-400"></div>
-                  <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-orange-600 rounded"></div>
-                  <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-teal-600 rounded"></div>
-                </div>
-              </div>
             </div>
           </button>
         </div>
@@ -412,13 +386,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
             >
               <div className="text-center">
                 <div className="font-semibold text-lg mb-2">Row</div>
-                <div className="text-sm opacity-80 mb-4">Horizontal arrangement</div>
-                
-                {/* Row Preview */}
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  {formData.displayType === 'buttons' && renderButtonsPreview('row')}
-                  {formData.displayType === 'images' && renderImagesPreview('row')}
-                </div>
+                <div className="text-sm opacity-80">Horizontal arrangement</div>
               </div>
             </button>
             
@@ -433,13 +401,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
             >
               <div className="text-center">
                 <div className="font-semibold text-lg mb-2">Vertical Row</div>
-                <div className="text-sm opacity-80 mb-4">Vertical arrangement</div>
-                
-                {/* Column Preview */}
-                <div className="bg-gray-800 p-4 rounded-lg flex justify-center">
-                  {formData.displayType === 'buttons' && renderButtonsPreview('column')}
-                  {formData.displayType === 'images' && renderImagesPreview('column')}
-                </div>
+                <div className="text-sm opacity-80">Vertical arrangement</div>
               </div>
             </button>
           </div>
