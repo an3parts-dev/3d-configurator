@@ -38,6 +38,13 @@ export interface ImageSettings {
   borderRadius: number; // Changed from borderWidth to borderRadius
 }
 
+export interface ConfiguratorOptionGroup {
+  id: string;
+  name: string;
+  description?: string;
+  isExpanded?: boolean;
+}
+
 export interface ConfiguratorOption {
   id: string;
   name: string;
@@ -50,6 +57,9 @@ export interface ConfiguratorOption {
   conditionalLogic?: ConditionalLogic;
   imageSettings?: ImageSettings;
   values: ConfiguratorOptionValue[];
+  groupId?: string; // Reference to group
+  isGroup?: boolean; // Flag to identify if this is a group header
+  groupData?: ConfiguratorOptionGroup; // Group data when isGroup is true
 }
 
 export interface ConfiguratorData {

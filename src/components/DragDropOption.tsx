@@ -8,7 +8,11 @@ import {
   Layers,
   List,
   Grid3X3,
-  Zap
+  Zap,
+  FolderOpen,
+  ChevronDown,
+  ChevronRight,
+  Users
 } from 'lucide-react';
 import { ConfiguratorOption } from '../types/ConfiguratorTypes';
 
@@ -19,6 +23,9 @@ interface DragDropOptionProps {
   onEdit: (option: ConfiguratorOption) => void;
   onDelete: (optionId: string) => void;
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
+  onToggleGroup?: (groupId: string) => void;
+  isGrouped?: boolean;
+  groupedOptions?: ConfiguratorOption[];
 }
 
 const DragDropOption: React.FC<DragDropOptionProps> = ({
@@ -27,7 +34,10 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
   onMove,
   onEdit,
   onDelete,
-  onEditConditionalLogic
+  onEditConditionalLogic,
+  onToggleGroup,
+  isGrouped = false,
+  groupedOptions = []
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -90,6 +100,100 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
 
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
+  // Group rendering
+  if (option.isGroup && option.groupData) {
+    return (
+      <div ref={dragDropRef}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: isDragging ? 0.6 : 1, 
+            y: 0,
+            scale: isDragging ? 1.05 : isOver ? 1.02 : 1,
+          }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 400, 
+            damping: 25,
+            opacity: { duration: 0.15 },
+            scale: { duration: 0.15 }
+          }}
+          className={`bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-5 rounded-xl border transition-all duration-150 relative ${
+            isDragging 
+              ? 'border-purple-500 shadow-2xl shadow-purple-500/30 cursor-grabbing z-50' 
+              : isOver
+              ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/5'
+              : 'border-purple-700/50 hover:border-purple-600/50 shadow-sm'
+          }`}
+          style={{
+            cursor: isDragging ? 'grabbing' : 'grab',
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-purple-700/30 transition-colors">
+                <GripVertical className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                    <FolderOpen className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h4 className="text-white font-semibold text-lg">{option.groupData.name}</h4>
+                      <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
+                        GROUP
+                      </span>
+                      <button
+                        onClick={() => onToggleGroup?.(option.groupData!.id)}
+                        className="text-purple-400 hover:text-purple-300 p-1 rounded hover:bg-purple-500/10 transition-colors"
+                      >
+                        {option.groupData.isExpanded ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    {option.groupData.description && (
+                      <p className="text-purple-200/80 text-sm mt-1">{option.groupData.description}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <span className="text-purple-300 text-sm font-medium flex items-center space-x-1">
+                  <Users className="w-4 h-4" />
+                  <span>{groupedOptions.length} options</span>
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onEdit(option)}
+                  className="text-purple-400 hover:text-purple-300 p-2 rounded-lg hover:bg-purple-500/10 transition-colors"
+                  title="Edit Group"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => onDelete(option.id)}
+                  className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                  title="Delete Group"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Regular option rendering
   return (
     <div ref={dragDropRef}>
       <motion.div
@@ -106,7 +210,11 @@ const DragDropOption: React.FC<DragDropOptionProps> = ({
           opacity: { duration: 0.15 },
           scale: { duration: 0.15 }
         }}
-        className={`bg-gray-800 p-5 rounded-xl border transition-all duration-150 relative ${
+        className={`p-5 rounded-xl border transition-all duration-150 relative ${
+          isGrouped 
+            ? 'bg-gray-800/50 ml-8 border-l-4 border-l-blue-500/50' 
+            : 'bg-gray-800'
+        } ${
           isDragging 
             ? 'border-blue-500 shadow-2xl shadow-blue-500/30 cursor-grabbing z-50' 
             : isOver

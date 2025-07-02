@@ -3,7 +3,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Image as ImageIcon } from 'lucide-react';
+import { Zap, Image as ImageIcon, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -129,7 +129,7 @@ const GLBModel = ({
 
     // Get visible options based on conditional logic
     const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
-      configuratorData.options,
+      configuratorData.options.filter(opt => !opt.isGroup),
       selectedValues
     );
 
@@ -147,7 +147,7 @@ const GLBModel = ({
       const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
         option,
         selectedValues,
-        configuratorData.options
+        configuratorData.options.filter(opt => !opt.isGroup)
       );
 
       if (!visibleValues.some(v => v.id === selectedValueId)) {
@@ -253,6 +253,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const handleComponentsLoaded = useCallback((components: ModelComponent[]) => {
     console.log('📦 Components loaded in preview:', components.length);
@@ -265,14 +266,25 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       onComponentsLoaded(components);
     }
     
-    // Initialize default selections for all options
+    // Initialize default selections for all non-group options
     const defaultSelections: Record<string, string> = {};
     configuratorData.options.forEach(option => {
-      const validValues = option.values.filter(Boolean);
-      if (validValues.length > 0) {
-        defaultSelections[option.id] = validValues[0].id;
+      if (!option.isGroup) {
+        const validValues = option.values.filter(Boolean);
+        if (validValues.length > 0) {
+          defaultSelections[option.id] = validValues[0].id;
+        }
       }
     });
+    
+    // Initialize expanded groups
+    const initialExpandedGroups = new Set<string>();
+    configuratorData.options.forEach(option => {
+      if (option.isGroup && option.groupData?.isExpanded) {
+        initialExpandedGroups.add(option.id);
+      }
+    });
+    setExpandedGroups(initialExpandedGroups);
     
     if (Object.keys(defaultSelections).length > 0) {
       setSelectedValues(defaultSelections);
@@ -288,9 +300,21 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }));
   }, []);
 
-  // Get visible options based on conditional logic
+  const toggleGroup = useCallback((groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Get visible options based on conditional logic (excluding groups)
   const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
-    configuratorData.options,
+    configuratorData.options.filter(opt => !opt.isGroup),
     selectedValues
   );
 
@@ -307,7 +331,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
       selectedValues,
-      configuratorData.options
+      configuratorData.options.filter(opt => !opt.isGroup)
     );
 
     if (visibleValues.length === 0) return null;
@@ -471,6 +495,47 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   };
 
+  // Organize options by groups for display
+  const organizeOptionsForDisplay = () => {
+    const organized: any[] = [];
+    const processedOptionIds = new Set<string>();
+
+    configuratorData.options.forEach(option => {
+      if (processedOptionIds.has(option.id)) return;
+
+      if (option.isGroup && option.groupData) {
+        // Find all visible options that belong to this group
+        const groupedOptions = visibleOptions.filter(opt => opt.groupId === option.id);
+        
+        if (groupedOptions.length > 0) {
+          organized.push({
+            type: 'group',
+            group: option,
+            options: groupedOptions
+          });
+        }
+        
+        // Mark grouped options as processed
+        groupedOptions.forEach(opt => processedOptionIds.add(opt.id));
+      }
+      
+      processedOptionIds.add(option.id);
+    });
+
+    // Add standalone options (not in groups)
+    const standaloneOptions = visibleOptions.filter(opt => !opt.groupId);
+    standaloneOptions.forEach(option => {
+      if (!processedOptionIds.has(option.id)) {
+        organized.push({
+          type: 'option',
+          option
+        });
+      }
+    });
+
+    return organized;
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* 3D Canvas - 50% screen height */}
@@ -564,7 +629,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <span className="text-sm font-medium">Smart Logic Active</span>
             </div>
             <p className="text-xs text-purple-200/80 mt-1">
-              {visibleOptions.length} of {configuratorData.options.length} options visible
+              {visibleOptions.length} of {configuratorData.options.filter(opt => !opt.isGroup).length} options visible
             </p>
           </div>
         )}
@@ -586,7 +651,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       {/* Options Panel - 50% screen height with clean design */}
       <div className="bg-gray-900 flex flex-col" style={{ height: '50vh' }}>
         <div className="flex-1 overflow-auto p-6">
-          {visibleOptions.length === 0 ? (
+          {organizeOptionsForDisplay().length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <motion.div
@@ -597,7 +662,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               </div>
               <p className="text-lg font-medium">No options available</p>
               <p className="text-sm mt-1">
-                {configuratorData.options.length > 0 
+                {configuratorData.options.filter(opt => !opt.isGroup).length > 0 
                   ? 'Options are hidden by conditional logic'
                   : 'Add options in the left panel to see them here'
                 }
@@ -605,16 +670,87 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             </div>
           ) : (
             <div className="space-y-8">
-              {visibleOptions.map((option) => (
-                <motion.div
-                  key={option.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-4"
-                >
-                  {renderOption(option)}
-                </motion.div>
-              ))}
+              {organizeOptionsForDisplay().map((item, index) => {
+                if (item.type === 'group') {
+                  const { group, options } = item;
+                  const isExpanded = expandedGroups.has(group.id);
+                  
+                  return (
+                    <motion.div
+                      key={group.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-4"
+                    >
+                      {/* Group Header */}
+                      <div 
+                        className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-4 rounded-xl border border-purple-700/50 cursor-pointer hover:border-purple-600/50 transition-colors"
+                        onClick={() => toggleGroup(group.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                              <FolderOpen className="w-5 h-5 text-purple-400" />
+                            </div>
+                            <div>
+                              <h3 className="text-white font-semibold text-lg flex items-center space-x-2">
+                                <span>{group.name}</span>
+                                <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
+                                  {options.length} options
+                                </span>
+                              </h3>
+                              {group.description && (
+                                <p className="text-purple-200/80 text-sm mt-1">{group.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-purple-400">
+                            {isExpanded ? (
+                              <ChevronDown className="w-5 h-5" />
+                            ) : (
+                              <ChevronRight className="w-5 h-5" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Group Options */}
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="ml-6 space-y-6 border-l-2 border-purple-500/20 pl-6"
+                        >
+                          {options.map((option: any) => (
+                            <motion.div
+                              key={option.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="space-y-4"
+                            >
+                              {renderOption(option)}
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  );
+                } else {
+                  // Standalone option
+                  const { option } = item;
+                  return (
+                    <motion.div
+                      key={option.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-4"
+                    >
+                      {renderOption(option)}
+                    </motion.div>
+                  );
+                }
+              })}
             </div>
           )}
         </div>
