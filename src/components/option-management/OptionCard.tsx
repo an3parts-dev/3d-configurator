@@ -11,8 +11,7 @@ import {
   Users,
   Layers,
   List,
-  Grid3X3,
-  LayoutGrid
+  Grid3X3
 } from 'lucide-react';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
 
@@ -136,22 +135,6 @@ const OptionCard: React.FC<OptionCardProps> = ({
     );
   }
 
-  // Get display type icon
-  const getDisplayTypeIcon = () => {
-    switch (option.displayType) {
-      case 'list':
-        return <List className="w-4 h-4" />;
-      case 'buttons':
-        return <Grid3X3 className="w-4 h-4" />;
-      case 'grid':
-        return <LayoutGrid className="w-4 h-4" />;
-      case 'images':
-        return <Grid3X3 className="w-4 h-4" />;
-      default:
-        return <Grid3X3 className="w-4 h-4" />;
-    }
-  };
-
   // Regular option rendering
   return (
     <motion.div
@@ -212,7 +195,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
               </p>
               <span className="text-gray-600">•</span>
               <p className="text-gray-400 text-sm flex items-center space-x-2">
-                {getDisplayTypeIcon()}
+                {option.displayType === 'list' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
                 <span className="capitalize font-medium">{option.displayType}</span>
               </p>
               {option.defaultBehavior && (

@@ -49,7 +49,7 @@ export interface ConfiguratorOption {
   id: string;
   name: string;
   description?: string;
-  displayType: 'list' | 'buttons' | 'images' | 'grid';
+  displayType: 'list' | 'buttons' | 'images';
   displayDirection?: 'column' | 'row';
   manipulationType: 'visibility' | 'material';
   targetComponents: string[];

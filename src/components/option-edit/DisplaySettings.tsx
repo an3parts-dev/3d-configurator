@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff, LayoutGrid } from 'lucide-react';
+import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { ConfiguratorOption, ImageSettings } from '../../types/ConfiguratorTypes';
 
 interface DisplaySettingsProps {
@@ -271,29 +271,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     </div>
   );
 
-  const renderGridPreview = () => (
-    <div className="grid grid-cols-2 gap-3 max-w-xs">
-      {sampleValues.map((value, index) => (
-        <button
-          key={value.id}
-          className={`flex items-center justify-center space-x-2 px-3 py-3 rounded-lg text-sm font-medium transition-all border-2 cursor-pointer ${
-            index === 0
-              ? 'bg-blue-600 text-white border-blue-500'
-              : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-          }`}
-        >
-          {formData.manipulationType === 'material' && (
-            <div 
-              className="w-3 h-3 rounded-full border border-white/20"
-              style={{ backgroundColor: value.color }}
-            />
-          )}
-          <span>{value.name}</span>
-        </button>
-      ))}
-    </div>
-  );
-
   const renderImagesPreview = (direction: 'row' | 'column') => (
     <div className={`flex ${direction === 'row' ? 'flex-row gap-4 flex-wrap' : 'flex-col gap-4'} ${direction === 'row' ? 'max-w-lg' : 'max-w-xs'}`}>
       {sampleValues.slice(0, direction === 'row' ? 4 : 3).map((value, index) => (
@@ -331,7 +308,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         <div className="flex items-center justify-center min-h-[120px]">
           {formData.displayType === 'list' && renderListPreview()}
           {formData.displayType === 'buttons' && renderButtonsPreview(formData.displayDirection || 'row')}
-          {formData.displayType === 'grid' && renderGridPreview()}
           {formData.displayType === 'images' && renderImagesPreview(formData.displayDirection || 'row')}
         </div>
       </div>
@@ -341,7 +317,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         <label className="block text-gray-400 text-sm mb-4 font-medium">
           Display Type
         </label>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, displayType: 'list' }))}
@@ -371,22 +347,6 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               <Grid3X3 className="w-8 h-8 mx-auto mb-3" />
               <div className="font-semibold text-lg">Buttons</div>
               <div className="text-sm opacity-80 mt-1">Button selection</div>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setFormData(prev => ({ ...prev, displayType: 'grid' }))}
-            className={`p-6 rounded-xl border-2 transition-all ${
-              formData.displayType === 'grid'
-                ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-            }`}
-          >
-            <div className="text-center">
-              <LayoutGrid className="w-8 h-8 mx-auto mb-3" />
-              <div className="font-semibold text-lg">Grid</div>
-              <div className="text-sm opacity-80 mt-1">Grid layout</div>
             </div>
           </button>
           
@@ -440,7 +400,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               }`}
             >
               <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Column</div>
+                <div className="font-semibold text-lg mb-2">Vertical Row</div>
                 <div className="text-sm opacity-80">Vertical arrangement</div>
               </div>
             </button>
