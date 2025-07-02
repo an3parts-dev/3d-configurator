@@ -256,20 +256,17 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   
                   {/* Title Toggle - Only for Images */}
                   {displayType === 'images' && (
-                    <div className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2 border border-gray-500">
-                      <span className="text-gray-300 text-xs font-medium">Title</span>
-                      <button
-                        onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          value.hideTitle 
-                            ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
-                            : 'text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20'
-                        }`}
-                        title={value.hideTitle ? 'Show title' : 'Hide title'}
-                      >
-                        {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
+                      className={`p-2 rounded-lg transition-colors ${
+                        value.hideTitle 
+                          ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                          : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
+                      }`}
+                      title={value.hideTitle ? 'Show title' : 'Hide title'}
+                    >
+                      {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   )}
                 </div>
               </div>
