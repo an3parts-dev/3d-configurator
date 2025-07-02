@@ -5,17 +5,28 @@ import { ConfiguratorOption, ImageSettings } from '../../types/ConfiguratorTypes
 interface DisplaySettingsProps {
   formData: Omit<ConfiguratorOption, 'id' | 'values'>;
   setFormData: React.Dispatch<React.SetStateAction<Omit<ConfiguratorOption, 'id' | 'values'>>>;
+  option?: ConfiguratorOption | null; // Add option prop to access uploaded images
 }
 
 const DisplaySettings: React.FC<DisplaySettingsProps> = ({
   formData,
-  setFormData
+  setFormData,
+  option
 }) => {
   const updateImageSettings = (updates: Partial<ImageSettings>) => {
     setFormData(prev => ({
       ...prev,
       imageSettings: { ...prev.imageSettings!, ...updates }
     }));
+  };
+
+  // Find the first uploaded image from option values for preview
+  const getPreviewImage = () => {
+    if (option?.values) {
+      const valueWithImage = option.values.find(value => value.image);
+      return valueWithImage?.image;
+    }
+    return null;
   };
 
   // Generate preview image based on current settings
@@ -35,7 +46,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     let width = baseSize;
     let height = baseSize;
 
-    // Handle new aspect ratios
+    // Handle aspect ratios
     switch (settings.aspectRatio) {
       case 'square':
         width = baseSize;
@@ -54,8 +65,9 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         height = baseSize;
         break;
       case 'auto':
+        // For auto, maintain the base size but allow natural image proportions
         width = baseSize;
-        height = baseSize; // Default to square for preview
+        height = 'auto';
         break;
     }
 
@@ -78,8 +90,8 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     }
 
     return {
-      width: `${width}px`,
-      height: `${height}px`,
+      width: typeof width === 'number' ? `${width}px` : width,
+      height: typeof height === 'number' ? `${height}px` : height,
       borderRadius,
       maxWidth: '120px',
       maxHeight: '120px'
@@ -88,6 +100,8 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   const previewStyles = getPreviewImageStyles();
   const isRoundAspectRatio = formData.imageSettings?.aspectRatio === 'round';
+  const isAutoAspectRatio = formData.imageSettings?.aspectRatio === 'auto';
+  const previewImage = getPreviewImage();
 
   return (
     <div className="p-6 space-y-6">
@@ -230,6 +244,11 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                   <option value="2:3">2:3</option>
                   <option value="auto">Auto (adapts to image)</option>
                 </select>
+                {isAutoAspectRatio && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    Images will maintain their natural proportions within the size constraints
+                  </p>
+                )}
               </div>
             </div>
 
@@ -237,22 +256,54 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
             <div className="flex flex-col items-center justify-center">
               <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Preview</label>
               <div className="flex items-center justify-center">
-                <div
-                  className="bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
-                  style={{
-                    width: previewStyles.width,
-                    height: previewStyles.height,
-                    borderRadius: previewStyles.borderRadius,
-                    maxWidth: previewStyles.maxWidth,
-                    maxHeight: previewStyles.maxHeight
-                  }}
-                >
-                  <ImageIcon className="w-6 h-6 text-white opacity-80" />
-                </div>
+                {previewImage ? (
+                  <div
+                    className="overflow-hidden flex items-center justify-center bg-gray-700"
+                    style={{
+                      width: previewStyles.width,
+                      height: isAutoAspectRatio ? 'auto' : previewStyles.height,
+                      borderRadius: previewStyles.borderRadius,
+                      maxWidth: previewStyles.maxWidth,
+                      maxHeight: previewStyles.maxHeight,
+                      minHeight: isAutoAspectRatio ? '48px' : previewStyles.height
+                    }}
+                  >
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className={`${
+                        isAutoAspectRatio 
+                          ? 'object-contain max-w-full max-h-full' 
+                          : 'object-cover w-full h-full'
+                      }`}
+                      style={{
+                        borderRadius: previewStyles.borderRadius
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+                    style={{
+                      width: previewStyles.width,
+                      height: isAutoAspectRatio ? '80px' : previewStyles.height,
+                      borderRadius: previewStyles.borderRadius,
+                      maxWidth: previewStyles.maxWidth,
+                      maxHeight: previewStyles.maxHeight
+                    }}
+                  >
+                    <ImageIcon className="w-6 h-6 text-white opacity-80" />
+                  </div>
+                )}
               </div>
               <p className="text-gray-500 text-xs mt-2 text-center">
                 {formData.imageSettings?.size} • {formData.imageSettings?.aspectRatio} • {formData.imageSettings?.cornerStyle}
               </p>
+              {previewImage && (
+                <p className="text-green-400 text-xs mt-1 text-center">
+                  Using uploaded image
+                </p>
+              )}
             </div>
           </div>
 

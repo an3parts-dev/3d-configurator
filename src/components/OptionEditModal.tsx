@@ -270,6 +270,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 <DisplaySettings
                   formData={formData}
                   setFormData={setFormData}
+                  option={option}
                 />
               </motion.div>
             )}
