@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, Environment, PerspectiveCamera, ContactShadows, Stage, Lightformer } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Image as ImageIcon } from 'lucide-react';
+import { Zap, Image as ImageIcon, Sun, Lightbulb } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -12,6 +12,75 @@ interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
   onComponentsLoaded?: (components: ModelComponent[]) => void;
 }
+
+// Professional lighting setup component
+const ProductLighting = () => {
+  return (
+    <>
+      {/* Key Light - Main directional light from top-front-right */}
+      <directionalLight
+        position={[10, 15, 5]}
+        intensity={2.5}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={4096}
+        shadow-mapSize-height={4096}
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        shadow-bias={-0.0001}
+      />
+
+      {/* Fill Light - Softer light from the left to fill shadows */}
+      <directionalLight
+        position={[-8, 10, 3]}
+        intensity={1.2}
+        color="#f0f8ff"
+      />
+
+      {/* Rim Light - Backlight to create edge definition */}
+      <directionalLight
+        position={[-5, 8, -8]}
+        intensity={1.8}
+        color="#fff5e6"
+      />
+
+      {/* Ambient Light - Very soft overall illumination */}
+      <ambientLight intensity={0.3} color="#f5f5f5" />
+
+      {/* Point Lights for additional detail illumination */}
+      <pointLight
+        position={[5, 5, 5]}
+        intensity={1.5}
+        color="#ffffff"
+        distance={20}
+        decay={2}
+      />
+
+      <pointLight
+        position={[-3, 3, 8]}
+        intensity={1.0}
+        color="#f0f8ff"
+        distance={15}
+        decay={2}
+      />
+
+      {/* Spot Light for dramatic accent */}
+      <spotLight
+        position={[0, 12, 0]}
+        intensity={2.0}
+        angle={Math.PI / 6}
+        penumbra={0.3}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+    </>
+  );
+};
 
 // Enhanced GLB Model Component with precise component targeting
 const GLBModel = ({ 
@@ -53,23 +122,50 @@ const GLBModel = ({
       const scale = targetSize / maxDimension;
       gltf.scene.scale.setScalar(scale);
       
-      // Traverse scene to collect all mesh components
+      // Enable shadows and enhance materials for better lighting response
       gltf.scene.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.name) {
-          // Clone the original material to preserve it
-          const originalMaterial = child.material instanceof THREE.Material 
-            ? child.material.clone() 
-            : child.material;
-            
-          const component: ModelComponent = {
-            name: child.name,
-            mesh: child,
-            visible: child.visible,
-            originalVisible: child.visible,
-            material: child.material as THREE.Material,
-            originalMaterial: originalMaterial as THREE.Material
-          };
-          modelComponents.push(component);
+        if (child instanceof THREE.Mesh) {
+          // Enable shadow casting and receiving
+          child.castShadow = true;
+          child.receiveShadow = true;
+          
+          // Enhance material properties for better lighting
+          if (child.material) {
+            if (child.material instanceof THREE.MeshStandardMaterial) {
+              // Enhance PBR properties
+              child.material.envMapIntensity = 1.0;
+              child.material.roughness = Math.max(0.1, child.material.roughness || 0.5);
+              child.material.metalness = child.material.metalness || 0.0;
+            } else if (child.material instanceof THREE.MeshBasicMaterial) {
+              // Convert basic materials to standard for better lighting
+              const standardMaterial = new THREE.MeshStandardMaterial({
+                color: child.material.color,
+                map: child.material.map,
+                transparent: child.material.transparent,
+                opacity: child.material.opacity,
+                roughness: 0.5,
+                metalness: 0.0
+              });
+              child.material = standardMaterial;
+            }
+          }
+          
+          if (child.name) {
+            // Clone the original material to preserve it
+            const originalMaterial = child.material instanceof THREE.Material 
+              ? child.material.clone() 
+              : child.material;
+              
+            const component: ModelComponent = {
+              name: child.name,
+              mesh: child,
+              visible: child.visible,
+              originalVisible: child.visible,
+              material: child.material as THREE.Material,
+              originalMaterial: originalMaterial as THREE.Material
+            };
+            modelComponents.push(component);
+          }
         }
       });
 
@@ -209,6 +305,9 @@ const GLBModel = ({
             const colorHex = selectedValue.color!.replace('#', '0x');
             const newColor = new THREE.Color(parseInt(colorHex, 16));
             component.material.color.copy(newColor);
+            
+            // Ensure material responds well to lighting
+            component.material.needsUpdate = true;
             console.log(`🎨 Changed material color for ${component.name} to ${selectedValue.color}`);
           }
         });
@@ -228,10 +327,13 @@ const GLBModel = ({
 
   }, [selectedValues, components, configuratorData, isInitialized]);
 
-  // Subtle animation
+  // Subtle animation for product showcase
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.03;
+      // Very subtle rotation for product showcase
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.02;
+      // Subtle floating motion
+      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.02;
     }
   });
 
@@ -253,6 +355,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lightingMode, setLightingMode] = useState<'studio' | 'product' | 'dramatic'>('product');
 
   const handleComponentsLoaded = useCallback((components: ModelComponent[]) => {
     console.log('📦 Components loaded in preview:', components.length);
@@ -475,11 +578,21 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     <div className="h-full flex flex-col">
       {/* 3D Canvas - 50% screen height */}
       <div className="relative" style={{ height: '50vh' }}>
-        <Canvas shadows>
+        <Canvas 
+          shadows={{ 
+            enabled: true, 
+            type: THREE.PCFSoftShadowMap 
+          }}
+          gl={{ 
+            antialias: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.2
+          }}
+        >
           <PerspectiveCamera 
             makeDefault 
-            position={[2, 1.5, 3]} 
-            fov={45}
+            position={[3, 2, 4]} 
+            fov={40}
             near={0.1}
             far={100}
           />
@@ -487,35 +600,56 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             enablePan={true} 
             enableZoom={true} 
             enableRotate={true}
-            minDistance={1.5}
-            maxDistance={8}
-            maxPolarAngle={Math.PI * 0.75}
-            minPolarAngle={Math.PI * 0.25}
+            minDistance={2}
+            maxDistance={12}
+            maxPolarAngle={Math.PI * 0.8}
+            minPolarAngle={Math.PI * 0.2}
             target={[0, 0, 0]}
             enableDamping={true}
-            dampingFactor={0.05}
+            dampingFactor={0.03}
+            rotateSpeed={0.5}
+            zoomSpeed={0.8}
           />
           
-          {/* Professional lighting setup */}
-          <ambientLight intensity={0.4} />
-          <directionalLight 
-            position={[5, 5, 5]} 
-            intensity={1.2} 
-            castShadow 
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-          />
-          <directionalLight position={[-5, 5, -5]} intensity={0.8} />
-          <pointLight position={[0, 10, 0]} intensity={0.6} />
-          <spotLight 
-            position={[0, 8, 4]} 
-            intensity={1} 
-            angle={0.4} 
-            penumbra={0.5} 
-            castShadow
+          {/* Professional Product Lighting Setup */}
+          {lightingMode === 'product' && <ProductLighting />}
+          
+          {/* Studio Lighting Alternative */}
+          {lightingMode === 'studio' && (
+            <>
+              <ambientLight intensity={0.4} />
+              <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
+              <Environment preset="studio" />
+            </>
+          )}
+          
+          {/* Dramatic Lighting Alternative */}
+          {lightingMode === 'dramatic' && (
+            <>
+              <ambientLight intensity={0.2} />
+              <directionalLight position={[10, 10, 5]} intensity={3} castShadow />
+              <spotLight position={[-5, 10, -5]} intensity={2} angle={0.3} penumbra={0.5} />
+              <Environment preset="night" />
+            </>
+          )}
+          
+          {/* Professional ground plane with contact shadows */}
+          <ContactShadows
+            position={[0, -2, 0]}
+            opacity={0.4}
+            scale={20}
+            blur={2}
+            far={4}
+            resolution={256}
+            color="#000000"
           />
           
-          <Environment preset="studio" />
+          {/* Environment for realistic reflections */}
+          <Environment 
+            preset={lightingMode === 'dramatic' ? 'night' : 'studio'}
+            background={false}
+            blur={0.8}
+          />
           
           {/* Single model instance */}
           <GLBModel 
@@ -533,13 +667,41 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-white text-xl font-semibold">Loading 3D Model</p>
-              <p className="text-gray-400 text-sm mt-2">Analyzing components...</p>
+              <p className="text-gray-400 text-sm mt-2">Optimizing lighting & materials...</p>
             </div>
           </div>
         )}
         
-        {/* Info overlays */}
+        {/* Lighting Controls */}
         <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md rounded-xl px-5 py-4 border border-gray-600">
+          <div className="flex items-center space-x-3 mb-3">
+            <Lightbulb className="w-5 h-5 text-yellow-400" />
+            <p className="text-white text-sm font-semibold">Lighting Setup</p>
+          </div>
+          <div className="flex space-x-2">
+            {[
+              { mode: 'product', label: 'Product', icon: Sun },
+              { mode: 'studio', label: 'Studio', icon: Lightbulb },
+              { mode: 'dramatic', label: 'Dramatic', icon: Zap }
+            ].map(({ mode, label, icon: Icon }) => (
+              <button
+                key={mode}
+                onClick={() => setLightingMode(mode as any)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  lightingMode === mode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Model Info */}
+        <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md rounded-xl px-5 py-4 border border-gray-600">
           <p className="text-white text-sm font-semibold mb-1">3D Model Preview</p>
           <div className="flex items-center space-x-4 text-xs text-gray-300">
             <span>Components: {modelComponents.length}</span>
@@ -553,7 +715,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
         {/* Conditional Logic Status */}
         {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-          <div className="absolute top-4 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
+          <div className="absolute bottom-20 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
             <div className="flex items-center space-x-2 text-purple-300">
               <motion.div
                 animate={{ rotate: 360 }}
@@ -569,6 +731,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           </div>
         )}
 
+        {/* Camera Controls */}
         <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md rounded-xl px-4 py-3 border border-gray-600">
           <div className="text-xs text-gray-300 space-y-1">
             <div className="flex items-center space-x-2">
@@ -578,6 +741,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span>Scroll to zoom</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              <span>Professional lighting</span>
             </div>
           </div>
         </div>
