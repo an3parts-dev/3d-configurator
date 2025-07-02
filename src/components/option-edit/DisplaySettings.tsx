@@ -215,9 +215,9 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
             {/* Right Column - Preview */}
             <div className="flex flex-col items-center justify-center">
               <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Preview</label>
-              <div className="bg-gray-800 p-4 rounded-lg border border-gray-600 flex items-center justify-center">
+              <div className="flex items-center justify-center">
                 <div
-                  className="bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-gray-500 flex items-center justify-center"
+                  className="bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
                   style={{
                     width: previewStyles.width,
                     height: previewStyles.height,
