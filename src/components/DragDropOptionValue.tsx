@@ -233,7 +233,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
           {/* Header with controls */}
           <div className="flex items-center justify-between">
-            {/* Left side - Drag Handle and Value Name */}
+            {/* Left side - Drag Handle and Value Name with Title Toggle */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               {/* Drag Handle */}
               <div 
@@ -243,40 +243,42 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                 <GripVertical className="w-5 h-5 text-gray-400" />
               </div>
 
-              {/* Value Name Input */}
-              <div className="flex-1 max-w-xs">
-                <input
-                  type="text"
-                  value={value.name}
-                  onChange={(e) => onUpdate(value.id, { name: e.target.value })}
-                  className="w-full bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                  placeholder="Value name"
-                />
+              {/* Value Name Input with Title Toggle */}
+              <div className="flex-1 max-w-md">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    value={value.name}
+                    onChange={(e) => onUpdate(value.id, { name: e.target.value })}
+                    className="flex-1 bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                    placeholder="Value name"
+                  />
+                  
+                  {/* Title Toggle - Only for Images */}
+                  {displayType === 'images' && (
+                    <div className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2 border border-gray-500">
+                      <span className="text-gray-300 text-xs font-medium">Title</span>
+                      <button
+                        onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          !value.hideTitle ? 'bg-blue-600' : 'bg-gray-500'
+                        }`}
+                        title={value.hideTitle ? 'Show title' : 'Hide title'}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            !value.hideTitle ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Center - Controls based on type */}
             <div className="flex items-center space-x-4">
-              {/* Hide Title Toggle for Images */}
-              {displayType === 'images' && (
-                <div className="flex items-center space-x-2 flex-shrink-0">
-                  <button
-                    onClick={() => onUpdate(value.id, { hideTitle: !value.hideTitle })}
-                    className={`p-2 rounded-lg transition-colors ${
-                      value.hideTitle 
-                        ? 'text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20' 
-                        : 'text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20'
-                    }`}
-                    title={value.hideTitle ? 'Show title' : 'Hide title'}
-                  >
-                    {value.hideTitle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                  <span className="text-gray-400 text-xs font-medium">
-                    {value.hideTitle ? 'Hidden' : 'Visible'}
-                  </span>
-                </div>
-              )}
-
               {/* Color picker for material manipulation */}
               {manipulationType === 'material' && (
                 <div className="relative flex-shrink-0">
