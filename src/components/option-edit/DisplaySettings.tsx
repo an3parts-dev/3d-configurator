@@ -298,24 +298,17 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   return (
     <div className="p-6 space-y-8">
-      {/* Live Preview Section */}
+      {/* Live Preview Section - Simplified */}
       <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
         <h4 className="text-white font-semibold text-lg mb-4 flex items-center">
           <Eye className="w-5 h-5 mr-2 text-blue-400" />
-          Live Preview
+          Live Preview: Sample Option
         </h4>
         
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <div className="mb-4">
-            <h5 className="text-white font-medium text-base mb-2">Sample Option</h5>
-            <p className="text-gray-400 text-sm">This is how your option will appear to users</p>
-          </div>
-          
-          <div className="flex items-center justify-center min-h-[120px]">
-            {formData.displayType === 'list' && renderListPreview()}
-            {formData.displayType === 'buttons' && renderButtonsPreview(formData.displayDirection || 'row')}
-            {formData.displayType === 'images' && renderImagesPreview(formData.displayDirection || 'row')}
-          </div>
+        <div className="flex items-center justify-center min-h-[120px]">
+          {formData.displayType === 'list' && renderListPreview()}
+          {formData.displayType === 'buttons' && renderButtonsPreview(formData.displayDirection || 'row')}
+          {formData.displayType === 'images' && renderImagesPreview(formData.displayDirection || 'row')}
         </div>
       </div>
 
@@ -418,7 +411,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               }`}
             >
               <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Row Layout</div>
+                <div className="font-semibold text-lg mb-2">Row</div>
                 <div className="text-sm opacity-80 mb-4">Horizontal arrangement</div>
                 
                 {/* Row Preview */}
@@ -439,7 +432,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               }`}
             >
               <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Column Layout</div>
+                <div className="font-semibold text-lg mb-2">Vertical Row</div>
                 <div className="text-sm opacity-80 mb-4">Vertical arrangement</div>
                 
                 {/* Column Preview */}
