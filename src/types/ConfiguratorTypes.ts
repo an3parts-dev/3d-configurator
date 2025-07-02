@@ -35,7 +35,7 @@ export interface ImageSettings {
   size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
   aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full';
   showBorder: boolean;
-  borderRadius: number; // Changed from borderWidth to borderRadius
+  borderRadius: number;
 }
 
 export interface ConfiguratorOption {
@@ -62,9 +62,9 @@ export interface ConfiguratorData {
 
 export interface ModelComponent {
   name: string;
-  mesh: any;
+  mesh: any; // Babylon.js AbstractMesh
   visible: boolean;
-  material?: any;
+  material?: any; // Babylon.js Material
   originalVisible?: boolean;
   originalMaterial?: any;
 }
