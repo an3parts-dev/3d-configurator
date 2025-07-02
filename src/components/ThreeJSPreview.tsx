@@ -3,7 +3,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Layers, Image as ImageIcon } from 'lucide-react';
+import { Zap, Image as ImageIcon } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -137,9 +137,6 @@ const GLBModel = ({
 
     // Apply each visible option's configuration with precise targeting
     visibleOptions.forEach((option) => {
-      // Skip groups
-      if (option.isGroup) return;
-
       const selectedValueId = selectedValues[option.id];
       if (!selectedValueId) return;
 
@@ -268,14 +265,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       onComponentsLoaded(components);
     }
     
-    // Initialize default selections for non-group options
+    // Initialize default selections for all options
     const defaultSelections: Record<string, string> = {};
     configuratorData.options.forEach(option => {
-      if (!option.isGroup) {
-        const validValues = option.values.filter(Boolean);
-        if (validValues.length > 0) {
-          defaultSelections[option.id] = validValues[0].id;
-        }
+      const validValues = option.values.filter(Boolean);
+      if (validValues.length > 0) {
+        defaultSelections[option.id] = validValues[0].id;
       }
     });
     
@@ -293,39 +288,20 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     }));
   }, []);
 
-  // Get visible options based on conditional logic (excluding groups for display)
+  // Get visible options based on conditional logic
   const visibleOptions = ConditionalLogicEngine.getVisibleOptions(
     configuratorData.options,
     selectedValues
-  ).filter(option => !option.isGroup);
-
-  // Get grouped structure for display
-  const groupedOptions = ConditionalLogicEngine.getGroupedOptions(
-    ConditionalLogicEngine.getVisibleOptions(configuratorData.options, selectedValues)
   );
 
-  const renderOptionGroup = (group: any, childOptions: any[]) => (
-    <motion.div
-      key={group.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4 bg-gray-750 p-6 rounded-xl border border-gray-600"
-    >
-      <div className="flex items-center space-x-3 mb-4">
-        <div className="p-2 bg-purple-600 rounded-lg">
-          <Layers className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h3 className="text-white font-semibold text-lg">{group.name}</h3>
-          <p className="text-gray-400 text-sm">{childOptions.length} options</p>
-        </div>
-      </div>
-      
-      <div className="space-y-6 pl-4 border-l-2 border-purple-500/30">
-        {childOptions.map(option => renderOption(option))}
-      </div>
-    </motion.div>
-  );
+  const getBorderStyles = (imageSettings?: any) => {
+    if (!imageSettings?.showBorder) return {};
+    
+    return {
+      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      border: '2px solid #4b5563'
+    };
+  };
 
   const renderOption = (option: any) => {
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
@@ -336,23 +312,24 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
     if (visibleValues.length === 0) return null;
 
+    const isRowDirection = option.displayDirection === 'row';
+
     return (
-      <motion.div
-        key={option.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-4 bg-gray-800 p-6 rounded-xl border border-gray-700"
-      >
+      <div key={option.id} className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-white font-semibold text-lg flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-            {option.name}
-            {option.conditionalLogic?.enabled && (
-              <div className="ml-2 p-1 bg-purple-500/20 rounded-full">
-                <Zap className="w-3 h-3 text-purple-400" />
-              </div>
+          <div>
+            <h4 className="text-white font-semibold text-xl">
+              {option.name}
+              {option.conditionalLogic?.enabled && (
+                <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
+                  <Zap className="w-3 h-3 text-purple-400" />
+                </span>
+              )}
+            </h4>
+            {option.description && (
+              <p className="text-gray-400 text-sm mt-1">{option.description}</p>
             )}
-          </h4>
+          </div>
           <div className="flex items-center space-x-2 text-xs text-gray-400">
             <span className="px-2 py-1 bg-gray-700 rounded-full capitalize font-medium">
               {option.manipulationType}
@@ -374,72 +351,87 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'flex flex-wrap gap-4'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 rounded-xl overflow-hidden border-2 ${
+                className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
                   selectedValues[option.id] === value.id
-                    ? 'border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'border-gray-600 hover:border-gray-500 hover:scale-102'
+                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                    : 'hover:scale-102'
                 }`}
               >
-                <div className={`
-                  ${option.imageSettings?.size === 'small' ? 'h-20' : 
-                    option.imageSettings?.size === 'large' ? 'h-32' : 'h-24'}
-                  ${option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
-                    option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
-                    option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
-                    option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
-                    option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' : ''}
-                  bg-gray-700 flex items-center justify-center
-                `}>
-                  {value.image ? (
-                    <img
-                      src={value.image}
-                      alt={value.name}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  ) : (
-                    <ImageIcon className="w-8 h-8 text-gray-500" />
+                <div className="flex flex-col items-center space-y-2">
+                  <div 
+                    className={`
+                      flex items-center justify-center overflow-hidden
+                      ${value.image ? '' : 'bg-gray-700 w-16 h-16 rounded-lg'}
+                    `}
+                    style={value.image ? getBorderStyles(option.imageSettings) : {}}
+                  >
+                    {value.image ? (
+                      <img
+                        src={value.image}
+                        alt={value.name}
+                        className={`${
+                          option.imageSettings?.aspectRatio === 'full' 
+                            ? 'object-contain max-w-32 max-h-32' 
+                            : 'object-cover'
+                        } ${
+                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
+                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
+                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
+                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
+                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
+                          'w-20 h-20'
+                        } ${
+                          option.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
+                          option.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
+                          option.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
+                          option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
+                          option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
+                          option.imageSettings?.aspectRatio === 'full' ? '' :
+                          'aspect-square'
+                        }`}
+                        style={getBorderStyles(option.imageSettings)}
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-gray-500" />
+                    )}
+                  </div>
+                  
+                  {!value.hideTitle && (
+                    <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+                      {value.name}
+                    </p>
                   )}
                 </div>
                 
-                {!value.hideTitle && (
-                  <div className="p-2 bg-gray-800/90">
-                    <p className="text-white text-sm font-medium truncate">
-                      {value.name}
-                    </p>
-                  </div>
-                )}
-                
                 {selectedValues[option.id] === value.id && (
-                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                    <div className="bg-blue-500 text-white p-1 rounded-full">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
                   </div>
                 )}
 
                 {/* Conditional Logic Indicator */}
                 {value.conditionalLogic?.enabled && (
                   <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
-                    <Zap className="w-3 h-3" />
+                    <Zap className="w-2 h-2" />
                   </div>
                 )}
               </button>
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className="flex flex-wrap gap-3">
+          <div className={`${isRowDirection ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2'}`}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border-2 relative ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${isRowDirection ? 'flex-shrink-0 whitespace-nowrap' : ''} ${
                   selectedValues[option.id] === value.id
                     ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'
@@ -447,7 +439,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               >
                 {option.manipulationType === 'material' && value.color && (
                   <div 
-                    className="w-4 h-4 rounded-full border-2 border-white/20 shadow-inner"
+                    className="w-3 h-3 rounded-full border border-white/20 shadow-inner"
                     style={{ backgroundColor: value.color }}
                   />
                 )}
@@ -455,7 +447,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                 
                 {/* Conditional Logic Indicator */}
                 {value.conditionalLogic?.enabled && (
-                  <div className="absolute -top-1 -right-1 bg-orange-600 text-white p-1 rounded-full">
+                  <div className="absolute -top-1 -right-1 bg-orange-600 text-white p-0.5 rounded-full">
                     <Zap className="w-2 h-2" />
                   </div>
                 )}
@@ -466,7 +458,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           <select
             value={selectedValues[option.id] || ''}
             onChange={(e) => handleValueChange(option.id, e.target.value)}
-            className="w-full bg-gray-700 border-2 border-gray-600 rounded-xl px-4 py-3 text-white font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+            className="w-full bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-3 text-white font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
           >
             {visibleValues.map((value: any) => (
               <option key={value.id} value={value.id}>
@@ -475,7 +467,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </select>
         )}
-      </motion.div>
+      </div>
     );
   };
 
@@ -572,7 +564,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <span className="text-sm font-medium">Smart Logic Active</span>
             </div>
             <p className="text-xs text-purple-200/80 mt-1">
-              {visibleOptions.length} of {configuratorData.options.filter(opt => !opt.isGroup).length} options visible
+              {visibleOptions.length} of {configuratorData.options.length} options visible
             </p>
           </div>
         )}
@@ -591,25 +583,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
       </div>
 
-      {/* Options Panel - 50% screen height */}
-      <div className="bg-gray-900 border-t border-gray-700 flex flex-col" style={{ height: '50vh' }}>
-        <div className="p-4 border-b border-gray-700 flex-shrink-0 bg-gray-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-semibold text-lg">Configuration Options</h3>
-              <p className="text-gray-400 text-sm">Customize your 3D model with advanced conditional logic</p>
-            </div>
-            {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-              <div className="flex items-center space-x-2 text-purple-300 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
-                <Zap className="w-4 h-4" />
-                <span className="text-sm font-medium">Smart Options</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
+      {/* Options Panel - 50% screen height with clean design */}
+      <div className="bg-gray-900 flex flex-col" style={{ height: '50vh' }}>
         <div className="flex-1 overflow-auto p-6">
-          {visibleOptions.length === 0 && groupedOptions.length === 0 ? (
+          {visibleOptions.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <motion.div
@@ -628,19 +605,16 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Render grouped options */}
-              {groupedOptions.map((option) => {
-                if (option.isGroup) {
-                  const childOptions = ConditionalLogicEngine.getChildOptions(option.id, configuratorData.options)
-                    .filter(child => ConditionalLogicEngine.shouldShowOption(child, selectedValues, configuratorData.options));
-                  
-                  if (childOptions.length === 0) return null;
-                  
-                  return renderOptionGroup(option, childOptions);
-                } else {
-                  return renderOption(option);
-                }
-              })}
+              {visibleOptions.map((option) => (
+                <motion.div
+                  key={option.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  {renderOption(option)}
+                </motion.div>
+              ))}
             </div>
           )}
         </div>

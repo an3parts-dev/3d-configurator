@@ -24,9 +24,10 @@ import {
   Clock,
   AlertTriangle,
   Image as ImageIcon,
-  Users,
-  FolderPlus,
-  ArrowUpRight
+  Palette,
+  Monitor,
+  Rows,
+  Columns
 } from 'lucide-react';
 import ThreeJSPreview from '../components/ThreeJSPreview';
 import ComponentSelector from '../components/ComponentSelector';
@@ -135,7 +136,9 @@ const ConfiguratorBuilder = () => {
       conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
       imageSettings: optionData.displayType === 'images' ? {
         size: 'medium',
-        aspectRatio: '1:1'
+        aspectRatio: '1:1',
+        showBorder: false,
+        borderRadius: 8
       } : undefined,
       values: []
     };
@@ -146,26 +149,6 @@ const ConfiguratorBuilder = () => {
         : config
     ));
     setShowNewOptionModal(false);
-  };
-
-  const addNewGroup = (name: string) => {
-    const newGroup: ConfiguratorOption = {
-      id: `group_${Date.now()}`,
-      name,
-      displayType: 'list',
-      manipulationType: 'visibility',
-      targetComponents: [],
-      isGroup: true,
-      children: [],
-      conditionalLogic: ConditionalLogicEngine.createDefaultConditionalLogic(),
-      values: []
-    };
-
-    setConfigurators(prev => prev.map(config => 
-      config.id === activeConfiguratorId 
-        ? { ...config, options: [...config.options, newGroup] }
-        : config
-    ));
   };
 
   const updateOption = (optionId: string, updates: Partial<ConfiguratorOption>) => {
@@ -189,14 +172,13 @@ const ConfiguratorBuilder = () => {
       `Option: "${option.name}"`,
       `${option.values.length} option values`,
       `${option.targetComponents.length} target components`,
-      ...(option.conditionalLogic?.enabled ? ['Conditional logic rules'] : []),
-      ...(option.isGroup ? [`Group with ${option.children?.length || 0} child options`] : [])
+      ...(option.conditionalLogic?.enabled ? ['Conditional logic rules'] : [])
     ];
 
     setConfirmDialog({
       isOpen: true,
-      title: option.isGroup ? 'Delete Option Group' : 'Delete Configuration Option',
-      message: `Are you sure you want to delete ${option.isGroup ? 'the group' : 'the option'} "${option.name}"? This will permanently remove all associated values and settings.`,
+      title: 'Delete Configuration Option',
+      message: `Are you sure you want to delete the option "${option.name}"? This will permanently remove all associated values and settings.`,
       details,
       type: 'danger',
       onConfirm: () => {
@@ -205,7 +187,6 @@ const ConfiguratorBuilder = () => {
             ? {
                 ...config,
                 options: config.options.filter(opt => opt.id !== optionId)
-                  .map(opt => opt.parentId === optionId ? { ...opt, parentId: undefined } : opt)
               }
             : config
         ));
@@ -220,36 +201,19 @@ const ConfiguratorBuilder = () => {
     setConfigurators(prev => prev.map(config => {
       if (config.id !== activeConfiguratorId) return config;
       
-      // Only work with root options (no parentId)
-      const rootOptions = config.options.filter(opt => !opt.parentId);
-      const childOptions = config.options.filter(opt => opt.parentId);
+      const options = [...config.options];
       
-      if (dragIndex >= rootOptions.length || hoverIndex >= rootOptions.length) return config;
+      if (dragIndex >= options.length || hoverIndex >= options.length) return config;
       
-      const newRootOptions = [...rootOptions];
-      const draggedOption = newRootOptions[dragIndex];
-      
-      newRootOptions.splice(dragIndex, 1);
-      newRootOptions.splice(hoverIndex, 0, draggedOption);
+      const draggedOption = options[dragIndex];
+      options.splice(dragIndex, 1);
+      options.splice(hoverIndex, 0, draggedOption);
       
       return { 
         ...config, 
-        options: [...newRootOptions, ...childOptions]
+        options
       };
     }));
-  }, [activeConfiguratorId]);
-
-  const moveToGroup = useCallback((optionId: string, groupId: string | null) => {
-    setConfigurators(prev => prev.map(config => 
-      config.id === activeConfiguratorId 
-        ? {
-            ...config,
-            options: config.options.map(option => 
-              option.id === optionId ? { ...option, parentId: groupId || undefined } : option
-            )
-          }
-        : config
-    ));
   }, [activeConfiguratorId]);
 
   const addValueToOption = (optionId: string) => {
@@ -407,15 +371,6 @@ const ConfiguratorBuilder = () => {
     });
   };
 
-  // Get root options (no parent) and their children
-  const getRootOptionsWithChildren = () => {
-    const rootOptions = activeConfigurator.options.filter(opt => !opt.parentId);
-    return rootOptions.map(option => ({
-      ...option,
-      childOptions: activeConfigurator.options.filter(child => child.parentId === option.id)
-    }));
-  };
-
   if (persistenceLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-900">
@@ -531,39 +486,26 @@ const ConfiguratorBuilder = () => {
               </div>
             </div>
 
-            {/* Add New Option/Group */}
+            {/* Add New Option */}
             <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-medium flex items-center">
                   <Settings className="w-5 h-5 mr-2" />
                   Configuration Options
                 </h3>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {
-                      const groupName = prompt('Enter group name:');
-                      if (groupName) addNewGroup(groupName);
-                    }}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
-                    title="Add Option Group"
-                  >
-                    <FolderPlus className="w-4 h-4" />
-                    <span>Group</span>
-                  </button>
-                  <button
-                    onClick={() => setShowNewOptionModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Option</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowNewOptionModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Option</span>
+                </button>
               </div>
             </div>
 
-            {/* Options List - Show root options with their children */}
+            {/* Options List */}
             <div className="space-y-4">
-              {getRootOptionsWithChildren().map((option, index) => (
+              {activeConfigurator.options.map((option, index) => (
                 <DragDropOption
                   key={option.id}
                   option={option}
@@ -572,9 +514,6 @@ const ConfiguratorBuilder = () => {
                   onEdit={openOptionEditModal}
                   onDelete={deleteOption}
                   onEditConditionalLogic={openConditionalLogicModal}
-                  onMoveToGroup={moveToGroup}
-                  allOptions={activeConfigurator.options}
-                  childOptions={option.childOptions}
                 />
               ))}
 
@@ -582,18 +521,9 @@ const ConfiguratorBuilder = () => {
                 <div className="text-center py-8 text-gray-500">
                   <Settings className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No configuration options yet</p>
-                  <p className="text-sm">Click "Add Option" or "Add Group" to create your first configuration</p>
+                  <p className="text-sm">Click "Add Option" to create your first configuration</p>
                 </div>
               )}
-            </div>
-
-            {/* Drop Zone for Removing from Groups */}
-            <div className="bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-xl p-8 text-center">
-              <div className="text-gray-500">
-                <ArrowUpRight className="w-8 h-8 mx-auto mb-2" />
-                <p className="font-medium">Drop Zone</p>
-                <p className="text-sm">Drag options here to remove them from groups</p>
-              </div>
             </div>
           </div>
         </div>
@@ -626,13 +556,11 @@ const ConfiguratorBuilder = () => {
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const parentId = formData.get('parentId') as string;
               addNewOption({
                 name: formData.get('name') as string,
                 displayType: formData.get('displayType') as 'list' | 'buttons' | 'images',
                 manipulationType: formData.get('manipulationType') as 'visibility' | 'material',
-                targetComponents: [],
-                parentId: parentId || undefined
+                targetComponents: []
               });
             }}>
               <div className="space-y-4">
@@ -645,18 +573,6 @@ const ConfiguratorBuilder = () => {
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     placeholder="e.g., Fitting A"
                   />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Parent Group (Optional)</label>
-                  <select
-                    name="parentId"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                  >
-                    <option value="">No Parent (Root Level)</option>
-                    {activeConfigurator.options.filter(opt => opt.isGroup).map(group => (
-                      <option key={group.id} value={group.id}>{group.name}</option>
-                    ))}
-                  </select>
                 </div>
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">Manipulation Type</label>
@@ -714,13 +630,11 @@ const ConfiguratorBuilder = () => {
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-700 flex items-center justify-between bg-gray-750 rounded-t-xl">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${editingOption.isGroup ? 'bg-purple-600' : 'bg-blue-600'}`}>
-                  {editingOption.isGroup ? <Users className="w-5 h-5 text-white" /> : <Edit className="w-5 h-5 text-white" />}
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Edit className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-xl">
-                    {editingOption.isGroup ? 'Edit Group' : 'Edit Option'}
-                  </h3>
+                  <h3 className="text-white font-semibold text-xl">Edit Option</h3>
                   <p className="text-gray-400 text-sm">{editingOption.name}</p>
                 </div>
               </div>
@@ -735,235 +649,373 @@ const ConfiguratorBuilder = () => {
             {/* Modal Content */}
             <div className="flex-1 overflow-auto p-6">
               <div className="space-y-8">
-                {/* Basic Settings */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2 font-medium">
-                      {editingOption.isGroup ? 'Group Name' : 'Option Name'}
-                    </label>
-                    <input
-                      type="text"
-                      value={editingOption.name}
-                      onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder={editingOption.isGroup ? 'Group name' : 'Option name'}
-                    />
-                  </div>
-                  {!editingOption.isGroup && (
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
-                      <select
-                        value={editingOption.displayType}
-                        onChange={(e) => {
-                          const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
-                          setEditingOption(prev => prev ? { 
-                            ...prev, 
-                            displayType: newDisplayType,
-                            imageSettings: newDisplayType === 'images' ? {
-                              size: 'medium',
-                              aspectRatio: '1:1'
-                            } : undefined
-                          } : null);
-                        }}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="buttons">Buttons</option>
-                        <option value="list">List</option>
-                        <option value="images">Images</option>
-                      </select>
+                {/* Consolidated Option Settings */}
+                <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                  <h4 className="text-white font-semibold text-lg flex items-center mb-6">
+                    <Settings className="w-5 h-5 mr-2 text-blue-400" />
+                    Option Settings
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Left Column - Basic Settings */}
+                    <div className="space-y-6">
+                      {/* Basic Information */}
+                      <div className="space-y-4">
+                        <h5 className="text-gray-300 font-medium flex items-center">
+                          <Edit className="w-4 h-4 mr-2" />
+                          Basic Information
+                        </h5>
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Option Name</label>
+                          <input
+                            type="text"
+                            value={editingOption.name}
+                            onChange={(e) => setEditingOption(prev => prev ? { ...prev, name: e.target.value } : null)}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Option name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-2 font-medium">Description (Optional)</label>
+                          <textarea
+                            value={editingOption.description || ''}
+                            onChange={(e) => setEditingOption(prev => prev ? { ...prev, description: e.target.value } : null)}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Brief description of this option"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Display Settings */}
+                      <div className="space-y-4">
+                        <h5 className="text-gray-300 font-medium flex items-center">
+                          <Monitor className="w-4 h-4 mr-2" />
+                          Display Settings
+                        </h5>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-2 font-medium">Display Type</label>
+                            <select
+                              value={editingOption.displayType}
+                              onChange={(e) => {
+                                const newDisplayType = e.target.value as 'list' | 'buttons' | 'images';
+                                setEditingOption(prev => prev ? { 
+                                  ...prev, 
+                                  displayType: newDisplayType,
+                                  imageSettings: newDisplayType === 'images' ? {
+                                    size: 'medium',
+                                    aspectRatio: '1:1',
+                                    showBorder: false,
+                                    borderRadius: 8
+                                  } : undefined
+                                } : null);
+                              }}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                              <option value="buttons">Buttons</option>
+                              <option value="list">List</option>
+                              <option value="images">Images</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-2 font-medium">Direction</label>
+                            <select
+                              value={editingOption.displayDirection || 'column'}
+                              onChange={(e) => setEditingOption(prev => prev ? { 
+                                ...prev, 
+                                displayDirection: e.target.value as 'column' | 'row'
+                              } : null)}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                              <option value="column">Column</option>
+                              <option value="row">Row</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Default Behavior for Visibility Options */}
+                      {editingOption.manipulationType === 'visibility' && (
+                        <div className="space-y-4">
+                          <h5 className="text-gray-300 font-medium flex items-center">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Default Behavior
+                          </h5>
+                          <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-600">
+                            <div>
+                              <p className="text-white font-medium">Component Visibility</p>
+                              <p className="text-gray-400 text-sm">How should components behave by default?</p>
+                            </div>
+                            <button
+                              onClick={() => setEditingOption(prev => prev ? { 
+                                ...prev, 
+                                defaultBehavior: prev.defaultBehavior === 'hide' ? 'show' : 'hide' 
+                              } : null)}
+                              className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
+                                editingOption.defaultBehavior === 'hide'
+                                  ? 'bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30'
+                                  : 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
+                              }`}
+                            >
+                              {editingOption.defaultBehavior === 'hide' ? (
+                                <>
+                                  <EyeOff className="w-4 h-4" />
+                                  <span className="font-medium">Hide Default</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="w-4 h-4" />
+                                  <span className="font-medium">Show Default</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {/* Right Column - Image Settings (if applicable) */}
+                    {editingOption.displayType === 'images' && (
+                      <div className="space-y-6">
+                        <h5 className="text-gray-300 font-medium flex items-center">
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Image Settings
+                        </h5>
+                        
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-2 font-medium">Image Size</label>
+                              <select
+                                value={editingOption.imageSettings?.size || 'medium'}
+                                onChange={(e) => setEditingOption(prev => prev ? {
+                                  ...prev,
+                                  imageSettings: {
+                                    ...prev.imageSettings,
+                                    size: e.target.value as 'x-small' | 'small' | 'medium' | 'large' | 'x-large',
+                                    aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                    showBorder: prev.imageSettings?.showBorder || false,
+                                    borderRadius: prev.imageSettings?.borderRadius || 8
+                                  }
+                                } : null)}
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              >
+                                <option value="x-small">X-Small</option>
+                                <option value="small">Small</option>
+                                <option value="medium">Medium</option>
+                                <option value="large">Large</option>
+                                <option value="x-large">X-Large</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
+                              <select
+                                value={editingOption.imageSettings?.aspectRatio || '1:1'}
+                                onChange={(e) => setEditingOption(prev => prev ? {
+                                  ...prev,
+                                  imageSettings: {
+                                    ...prev.imageSettings,
+                                    size: prev.imageSettings?.size || 'medium',
+                                    aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full',
+                                    showBorder: prev.imageSettings?.showBorder || false,
+                                    borderRadius: prev.imageSettings?.borderRadius || 8
+                                  }
+                                } : null)}
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              >
+                                <option value="1:1">Square (1:1)</option>
+                                <option value="4:3">Standard (4:3)</option>
+                                <option value="16:9">Widescreen (16:9)</option>
+                                <option value="3:2">Photo (3:2)</option>
+                                <option value="2:3">Portrait (2:3)</option>
+                                <option value="full">Full Size</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Border Settings */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <label className="text-gray-400 text-sm font-medium">Image Border</label>
+                              <button
+                                onClick={() => setEditingOption(prev => prev ? {
+                                  ...prev,
+                                  imageSettings: {
+                                    ...prev.imageSettings,
+                                    size: prev.imageSettings?.size || 'medium',
+                                    aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                    showBorder: !prev.imageSettings?.showBorder,
+                                    borderRadius: prev.imageSettings?.borderRadius || 8
+                                  }
+                                } : null)}
+                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                                  editingOption.imageSettings?.showBorder
+                                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                    : 'bg-gray-600/20 text-gray-400 border border-gray-600/30'
+                                }`}
+                              >
+                                {editingOption.imageSettings?.showBorder ? 'Enabled' : 'Disabled'}
+                              </button>
+                            </div>
+                            
+                            {editingOption.imageSettings?.showBorder && (
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-gray-400 text-sm font-medium">Border Radius</label>
+                                  <span className="text-blue-400 text-sm font-medium">
+                                    {editingOption.imageSettings?.borderRadius || 8}px
+                                  </span>
+                                </div>
+                                <div className="relative">
+                                  <input
+                                    type="range"
+                                    min="0"
+                                    max="20"
+                                    value={editingOption.imageSettings?.borderRadius || 8}
+                                    onChange={(e) => setEditingOption(prev => prev ? {
+                                      ...prev,
+                                      imageSettings: {
+                                        ...prev.imageSettings,
+                                        size: prev.imageSettings?.size || 'medium',
+                                        aspectRatio: prev.imageSettings?.aspectRatio || '1:1',
+                                        showBorder: prev.imageSettings?.showBorder || false,
+                                        borderRadius: parseInt(e.target.value)
+                                      }
+                                    } : null)}
+                                    className="slider w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                                    style={{
+                                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((editingOption.imageSettings?.borderRadius || 8) / 20) * 100}%, #4b5563 ${((editingOption.imageSettings?.borderRadius || 8) / 20) * 100}%, #4b5563 100%)`
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Preview */}
+                          <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+                            <p className="text-gray-400 text-sm mb-3 font-medium">Preview</p>
+                            <div className="flex justify-center">
+                              <div className="bg-gray-900 p-4 rounded-lg">
+                                <div 
+                                  className={`
+                                    bg-gray-700 flex items-center justify-center
+                                    ${editingOption.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
+                                      editingOption.imageSettings?.size === 'small' ? 'w-16 h-16' :
+                                      editingOption.imageSettings?.size === 'medium' ? 'w-20 h-20' :
+                                      editingOption.imageSettings?.size === 'large' ? 'w-24 h-24' :
+                                      editingOption.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
+                                      'w-20 h-20'
+                                    }
+                                    ${editingOption.imageSettings?.aspectRatio === '1:1' ? 'aspect-square' :
+                                      editingOption.imageSettings?.aspectRatio === '4:3' ? 'aspect-[4/3]' :
+                                      editingOption.imageSettings?.aspectRatio === '16:9' ? 'aspect-video' :
+                                      editingOption.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
+                                      editingOption.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
+                                      editingOption.imageSettings?.aspectRatio === 'full' ? '' :
+                                      'aspect-square'
+                                    }
+                                    ${editingOption.imageSettings?.showBorder ? 'border-2 border-gray-600' : ''}
+                                  `}
+                                  style={{
+                                    borderRadius: editingOption.imageSettings?.showBorder 
+                                      ? `${editingOption.imageSettings?.borderRadius || 8}px` 
+                                      : '8px'
+                                  }}
+                                >
+                                  <ImageIcon className="w-6 h-6 text-gray-500" />
+                                </div>
+                                <p className="text-white text-xs text-center mt-2 font-medium">
+                                  Sample Image
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Image Settings for Images Display Type */}
-                {!editingOption.isGroup && editingOption.displayType === 'images' && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <h4 className="text-white font-semibold text-lg flex items-center mb-4">
-                      <ImageIcon className="w-5 h-5 mr-2 text-blue-400" />
-                      Image Settings
-                    </h4>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Image Size</label>
-                        <select
-                          value={editingOption.imageSettings?.size || 'medium'}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            imageSettings: {
-                              ...prev.imageSettings,
-                              size: e.target.value as 'small' | 'medium' | 'large',
-                              aspectRatio: prev.imageSettings?.aspectRatio || '1:1'
-                            }
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                          <option value="small">Small</option>
-                          <option value="medium">Medium</option>
-                          <option value="large">Large</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-2 font-medium">Aspect Ratio</label>
-                        <select
-                          value={editingOption.imageSettings?.aspectRatio || '1:1'}
-                          onChange={(e) => setEditingOption(prev => prev ? {
-                            ...prev,
-                            imageSettings: {
-                              ...prev.imageSettings,
-                              size: prev.imageSettings?.size || 'medium',
-                              aspectRatio: e.target.value as '1:1' | '4:3' | '16:9' | '3:2' | '2:3'
-                            }
-                          } : null)}
-                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                          <option value="1:1">Square (1:1)</option>
-                          <option value="4:3">Standard (4:3)</option>
-                          <option value="16:9">Widescreen (16:9)</option>
-                          <option value="3:2">Photo (3:2)</option>
-                          <option value="2:3">Portrait (2:3)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Component Selector */}
+                <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                  <ComponentSelector
+                    availableComponents={availableComponents}
+                    selectedComponents={editingOption.targetComponents}
+                    onSelectionChange={(components) => setEditingOption(prev => prev ? { ...prev, targetComponents: components } : null)}
+                    placeholder="Select components to manipulate..."
+                    label="Target Components"
+                    alwaysModal={true}
+                  />
+                </div>
 
-                {/* Default Behavior for Visibility Options */}
-                {!editingOption.isGroup && editingOption.manipulationType === 'visibility' && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="text-white font-semibold text-lg flex items-center">
-                          <Settings className="w-5 h-5 mr-2 text-blue-400" />
-                          Default Behavior
-                        </h4>
-                        <p className="text-gray-400 text-sm">How should components behave by default?</p>
-                      </div>
-                      <button
-                        onClick={() => setEditingOption(prev => prev ? { 
-                          ...prev, 
-                          defaultBehavior: prev.defaultBehavior === 'hide' ? 'show' : 'hide' 
-                        } : null)}
-                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
-                          editingOption.defaultBehavior === 'hide'
-                            ? 'bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30'
-                            : 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
-                        }`}
-                      >
-                        {editingOption.defaultBehavior === 'hide' ? (
-                          <>
-                            <EyeOff className="w-4 h-4" />
-                            <span className="font-medium">Hide by Default</span>
-                            <ToggleLeft className="w-6 h-6" />
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-4 h-4" />
-                            <span className="font-medium">Show by Default</span>
-                            <ToggleRight className="w-6 h-6" />
-                          </>
-                        )}
-                      </button>
+                {/* Option Values */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-semibold text-lg">Option Values</h4>
+                      <p className="text-gray-400 text-sm">Configure the different states for this option</p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-                      <p className="text-gray-300 text-sm">
-                        {editingOption.defaultBehavior === 'hide' ? (
-                          <>
-                            <strong>Hide by Default:</strong> All target components will be hidden initially. 
-                            For each option value, you'll specify which components to <em>show</em>.
-                          </>
-                        ) : (
-                          <>
-                            <strong>Show by Default:</strong> All target components will be visible initially. 
-                            For each option value, you'll specify which components to <em>hide</em>.
-                          </>
-                        )}
-                      </p>
-                    </div>
+                    <button 
+                      onClick={() => {
+                        if (!editingOption) return;
+                        const newValue = {
+                          id: `value_${Date.now()}`,
+                          name: 'New Option',
+                          ...(editingOption.manipulationType === 'material' && { color: '#000000' }),
+                          ...(editingOption.displayType === 'images' && { image: undefined, hideTitle: false }),
+                          ...(editingOption.manipulationType === 'visibility' && { 
+                            visibleComponents: [],
+                            hiddenComponents: []
+                          }),
+                          conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
+                        };
+                        setEditingOption(prev => prev ? { ...prev, values: [...prev.values, newValue] } : null);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 font-medium transition-colors shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Value</span>
+                    </button>
                   </div>
-                )}
-
-                {/* Component Selector for non-groups */}
-                {!editingOption.isGroup && (
-                  <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
-                    <ComponentSelector
-                      availableComponents={availableComponents}
-                      selectedComponents={editingOption.targetComponents}
-                      onSelectionChange={(components) => setEditingOption(prev => prev ? { ...prev, targetComponents: components } : null)}
-                      placeholder="Select components to manipulate..."
-                      label="Target Components"
-                      alwaysModal={true}
-                    />
-                  </div>
-                )}
-
-                {/* Option Values for non-groups */}
-                {!editingOption.isGroup && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-white font-semibold text-lg">Option Values</h4>
-                        <p className="text-gray-400 text-sm">Configure the different states for this option</p>
-                      </div>
-                      <button 
-                        onClick={() => {
+                  
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    {editingOption.values.map((value, index) => (
+                      <DragDropOptionValue
+                        key={value.id}
+                        value={value}
+                        index={index}
+                        manipulationType={editingOption.manipulationType}
+                        displayType={editingOption.displayType}
+                        availableComponents={availableComponents}
+                        targetComponents={editingOption.targetComponents}
+                        defaultBehavior={editingOption.defaultBehavior}
+                        imageSettings={editingOption.imageSettings}
+                        allOptions={activeConfigurator.options}
+                        onMove={(dragIndex, hoverIndex) => {
                           if (!editingOption) return;
-                          const newValue = {
-                            id: `value_${Date.now()}`,
-                            name: 'New Option',
-                            ...(editingOption.manipulationType === 'material' && { color: '#000000' }),
-                            ...(editingOption.displayType === 'images' && { image: undefined, hideTitle: false }),
-                            ...(editingOption.manipulationType === 'visibility' && { 
-                              visibleComponents: [],
-                              hiddenComponents: []
-                            }),
-                            conditionalLogic: ConditionalLogicEngine.createDefaultValueConditionalLogic()
-                          };
-                          setEditingOption(prev => prev ? { ...prev, values: [...prev.values, newValue] } : null);
+                          const values = [...editingOption.values];
+                          const draggedValue = values[dragIndex];
+                          values.splice(dragIndex, 1);
+                          values.splice(hoverIndex, 0, draggedValue);
+                          setEditingOption(prev => prev ? { ...prev, values } : null);
                         }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 font-medium transition-colors shadow-sm"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Value</span>
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                      {editingOption.values.map((value, index) => (
-                        <DragDropOptionValue
-                          key={value.id}
-                          value={value}
-                          index={index}
-                          manipulationType={editingOption.manipulationType}
-                          displayType={editingOption.displayType}
-                          availableComponents={availableComponents}
-                          targetComponents={editingOption.targetComponents}
-                          defaultBehavior={editingOption.defaultBehavior}
-                          imageSettings={editingOption.imageSettings}
-                          allOptions={activeConfigurator.options}
-                          onMove={(dragIndex, hoverIndex) => {
-                            if (!editingOption) return;
-                            const values = [...editingOption.values];
-                            const draggedValue = values[dragIndex];
-                            values.splice(dragIndex, 1);
-                            values.splice(hoverIndex, 0, draggedValue);
-                            setEditingOption(prev => prev ? { ...prev, values } : null);
-                          }}
-                          onUpdate={(valueId, updates) => {
-                            const updatedValues = editingOption.values.map(v => 
-                              v.id === valueId ? { ...v, ...updates } : v
-                            );
-                            setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
-                          }}
-                          onDelete={(valueId) => {
-                            const updatedValues = editingOption.values.filter(v => v.id !== valueId);
-                            setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
-                          }}
-                          canDelete={editingOption.values.length > 1}
-                        />
-                      ))}
-                    </div>
+                        onUpdate={(valueId, updates) => {
+                          const updatedValues = editingOption.values.map(v => 
+                            v.id === valueId ? { ...v, ...updates } : v
+                          );
+                          setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
+                        }}
+                        onDelete={(valueId) => {
+                          const updatedValues = editingOption.values.filter(v => v.id !== valueId);
+                          setEditingOption(prev => prev ? { ...prev, values: updatedValues } : null);
+                        }}
+                        canDelete={editingOption.values.length > 1}
+                      />
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
