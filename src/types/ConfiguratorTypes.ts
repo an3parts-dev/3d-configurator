@@ -32,24 +32,23 @@ export interface ConfiguratorOptionValue {
 }
 
 export interface ImageSettings {
-  size: 'x-small' | 'small' | 'medium' | 'large' | 'x-large';
-  aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3' | 'full';
-  showBorder: boolean;
-  borderRadius: number;
+  size: 'small' | 'medium' | 'large';
+  aspectRatio: '1:1' | '4:3' | '16:9' | '3:2' | '2:3';
 }
 
 export interface ConfiguratorOption {
   id: string;
   name: string;
-  description?: string;
   displayType: 'list' | 'buttons' | 'images';
-  displayDirection?: 'column' | 'row';
   manipulationType: 'visibility' | 'material';
   targetComponents: string[];
   defaultBehavior?: 'show' | 'hide';
   conditionalLogic?: ConditionalLogic;
   imageSettings?: ImageSettings;
   values: ConfiguratorOptionValue[];
+  parentId?: string; // For grouping
+  isGroup?: boolean;
+  children?: string[]; // Child option IDs
 }
 
 export interface ConfiguratorData {
@@ -62,9 +61,9 @@ export interface ConfiguratorData {
 
 export interface ModelComponent {
   name: string;
-  mesh: any; // Babylon.js AbstractMesh
+  mesh: any;
   visible: boolean;
-  material?: any; // Babylon.js Material
+  material?: any;
   originalVisible?: boolean;
   originalMaterial?: any;
 }

@@ -102,7 +102,7 @@ export class ConditionalLogicEngine {
     currentOptionId: string,
     allOptions: ConfiguratorOption[]
   ): ConfiguratorOption[] {
-    return allOptions.filter(option => option.id !== currentOptionId);
+    return allOptions.filter(option => option.id !== currentOptionId && !option.isGroup);
   }
 
   /**
@@ -202,15 +202,24 @@ export class ConditionalLogicEngine {
   }
 
   /**
-   * Gets visible options based on conditional logic
+   * Gets visible options based on conditional logic (including groups)
    */
   static getVisibleOptions(
     allOptions: ConfiguratorOption[],
     selectedValues: Record<string, string>
   ): ConfiguratorOption[] {
-    return allOptions.filter(option => 
+    const visibleOptions = allOptions.filter(option => 
       this.shouldShowOption(option, selectedValues, allOptions)
     );
+
+    // For groups, also check if any children are visible
+    return visibleOptions.filter(option => {
+      if (!option.isGroup) return true;
+      
+      // Show group if any child is visible
+      const childOptions = allOptions.filter(opt => opt.parentId === option.id);
+      return childOptions.some(child => this.shouldShowOption(child, selectedValues, allOptions));
+    });
   }
 
   /**
@@ -251,5 +260,27 @@ export class ConditionalLogicEngine {
     }
 
     return false;
+  }
+
+  /**
+   * Gets grouped options structure
+   */
+  static getGroupedOptions(allOptions: ConfiguratorOption[]): ConfiguratorOption[] {
+    // Get root options (no parent) and groups
+    const rootOptions = allOptions.filter(opt => !opt.parentId);
+    
+    // Sort so groups come first, then regular options
+    return rootOptions.sort((a, b) => {
+      if (a.isGroup && !b.isGroup) return -1;
+      if (!a.isGroup && b.isGroup) return 1;
+      return 0;
+    });
+  }
+
+  /**
+   * Gets child options for a group
+   */
+  static getChildOptions(groupId: string, allOptions: ConfiguratorOption[]): ConfiguratorOption[] {
+    return allOptions.filter(opt => opt.parentId === groupId);
   }
 }
