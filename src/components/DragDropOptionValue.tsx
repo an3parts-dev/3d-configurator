@@ -73,17 +73,13 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
       if (dragIndex === hoverIndex) return;
 
-      // Get the bounding rectangle of the hovered element
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      
-      // Get the mouse position
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
       
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Immediate switching - switch places when touching
       if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
         onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
@@ -99,10 +95,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     }),
   });
 
-  // Combine drag and drop refs
   const dragDropRef = drop(ref);
 
-  // Filter available components to only show EXACT matches with target components
   const filteredComponents = availableComponents.filter(component => {
     const componentName = component.name.toLowerCase();
     return targetComponents.some(target => {
@@ -113,63 +107,81 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
   const hasConditionalLogic = value.conditionalLogic?.enabled;
 
-  const getImageSizeClass = () => {
-    if (!imageSettings) return 'h-24';
+  // Generate precise upload box styles based on image settings
+  const getUploadBoxStyles = () => {
+    if (!imageSettings) {
+      return {
+        containerStyle: { width: '96px', height: '96px' },
+        imageObjectFitClass: 'object-cover',
+        borderRadius: '8px'
+      };
+    }
+    
+    let baseSizePx = 80;
     
     switch (imageSettings.size) {
-      case 'x-small': return 'h-12';
-      case 'small': return 'h-16';
-      case 'medium': return 'h-24';
-      case 'large': return 'h-32';
-      case 'x-large': return 'h-40';
-      default: return 'h-24';
+      case 'x-small': baseSizePx = 48; break;
+      case 'small': baseSizePx = 64; break;
+      case 'medium': baseSizePx = 80; break;
+      case 'large': baseSizePx = 96; break;
+      case 'x-large': baseSizePx = 128; break;
     }
-  };
 
-  const getAspectRatioClass = () => {
-    if (!imageSettings) return 'aspect-square';
-    
+    let containerStyle: React.CSSProperties = {};
+    let imageObjectFitClass = 'object-cover';
+
+    // Handle aspect ratios with precise container sizing
     switch (imageSettings.aspectRatio) {
-      case 'square': return 'aspect-square';
-      case 'round': return 'aspect-square'; // Round uses square dimensions but with border-radius
-      case '3:2': return 'aspect-[3/2]';
-      case '2:3': return 'aspect-[2/3]';
-      case 'auto': return ''; // No aspect ratio constraint for auto
-      default: return 'aspect-square';
+      case 'square':
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-cover';
+        break;
+      case 'round':
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-cover';
+        break;
+      case '3:2':
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${Math.round(baseSizePx * 2 / 3)}px`
+        };
+        imageObjectFitClass = 'object-cover';
+        break;
+      case '2:3':
+        containerStyle = {
+          width: `${Math.round(baseSizePx * 2 / 3)}px`,
+          height: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-cover';
+        break;
+      case 'auto':
+        containerStyle = {
+          width: 'auto',
+          height: 'auto',
+          maxWidth: `${baseSizePx}px`,
+          maxHeight: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-contain';
+        break;
     }
-  };
 
-  const getUploadBoxClass = () => {
-    const sizeClass = getImageSizeClass();
-    
-    // Always square when no image is uploaded
-    if (!value.image) {
-      return `${sizeClass} aspect-square`;
-    }
-    
-    // Use current aspect ratio when image is uploaded
-    const aspectClass = getAspectRatioClass();
-    
-    if (imageSettings?.aspectRatio === 'auto') {
-      return `${sizeClass} w-auto max-w-48`; // Auto size with max width constraint
-    }
-    
-    return `${sizeClass} ${aspectClass}`;
-  };
-
-  const getBorderStyles = () => {
-    if (!imageSettings?.cornerStyle) return {};
-    
+    // Handle corner styles
     let borderRadius = '0px';
     switch (imageSettings.cornerStyle) {
-      case 'squared':
-        borderRadius = '0px';
+      case 'squared': 
+        borderRadius = '0px'; 
         break;
-      case 'soft':
-        borderRadius = '4px';
+      case 'soft': 
+        borderRadius = '4px'; 
         break;
-      case 'softer':
-        borderRadius = '8px';
+      case 'softer': 
+        borderRadius = '8px'; 
         break;
     }
 
@@ -177,11 +189,17 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
     if (imageSettings.aspectRatio === 'round') {
       borderRadius = '50%';
     }
-    
+
+    containerStyle.borderRadius = borderRadius;
+
     return {
+      containerStyle,
+      imageObjectFitClass,
       borderRadius
     };
   };
+
+  const { containerStyle, imageObjectFitClass, borderRadius } = getUploadBoxStyles();
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('image/')) {
@@ -263,16 +281,16 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   
                   <div
                     onClick={handleImageClick}
-                    className={`${getUploadBoxClass()} border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800`}
-                    style={value.image ? getBorderStyles() : { borderRadius: '8px' }}
+                    className="border-2 border-dashed border-gray-600 cursor-pointer hover:border-gray-500 transition-colors overflow-hidden relative group bg-gray-800"
+                    style={containerStyle}
                   >
                     {value.image ? (
                       <>
                         <img
                           src={value.image}
                           alt={value.name}
-                          className={`w-full h-full ${imageSettings?.aspectRatio === 'auto' ? 'object-contain' : 'object-cover'}`}
-                          style={getBorderStyles()}
+                          className={`w-full h-full ${imageObjectFitClass}`}
+                          style={{ borderRadius }}
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <div className="flex space-x-1">

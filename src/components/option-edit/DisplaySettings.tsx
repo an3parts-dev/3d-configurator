@@ -5,7 +5,7 @@ import { ConfiguratorOption, ImageSettings } from '../../types/ConfiguratorTypes
 interface DisplaySettingsProps {
   formData: Omit<ConfiguratorOption, 'id' | 'values'>;
   setFormData: React.Dispatch<React.SetStateAction<Omit<ConfiguratorOption, 'id' | 'values'>>>;
-  option?: ConfiguratorOption | null; // Add option prop to access uploaded images
+  option?: ConfiguratorOption | null;
 }
 
 const DisplaySettings: React.FC<DisplaySettingsProps> = ({
@@ -29,48 +29,65 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     return null;
   };
 
-  // Generate preview image based on current settings
-  const getPreviewImageStyles = () => {
+  // Generate precise preview styles based on current settings
+  const getPreviewStyles = () => {
     const settings = formData.imageSettings!;
     
-    let baseSize = 80;
+    let baseSizePx = 80;
     
     switch (settings.size) {
-      case 'x-small': baseSize = 48; break;
-      case 'small': baseSize = 64; break;
-      case 'medium': baseSize = 80; break;
-      case 'large': baseSize = 96; break;
-      case 'x-large': baseSize = 128; break;
+      case 'x-small': baseSizePx = 48; break;
+      case 'small': baseSizePx = 64; break;
+      case 'medium': baseSizePx = 80; break;
+      case 'large': baseSizePx = 96; break;
+      case 'x-large': baseSizePx = 128; break;
     }
 
-    let width = baseSize;
-    let height = baseSize;
+    let containerStyle: React.CSSProperties = {};
+    let imageObjectFitClass = 'object-cover';
 
-    // Handle aspect ratios
+    // Handle aspect ratios with precise container sizing
     switch (settings.aspectRatio) {
       case 'square':
-        width = baseSize;
-        height = baseSize;
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-cover';
         break;
       case 'round':
-        width = baseSize;
-        height = baseSize;
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-cover';
         break;
       case '3:2':
-        width = baseSize;
-        height = Math.round(baseSize * 2 / 3);
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${Math.round(baseSizePx * 2 / 3)}px`
+        };
+        imageObjectFitClass = 'object-cover';
         break;
       case '2:3':
-        width = Math.round(baseSize * 2 / 3);
-        height = baseSize;
+        containerStyle = {
+          width: `${Math.round(baseSizePx * 2 / 3)}px`,
+          height: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-cover';
         break;
       case 'auto':
-        // For auto, maintain the base size but allow natural image proportions
-        width = baseSize;
-        height = 'auto';
+        containerStyle = {
+          width: 'auto',
+          height: 'auto',
+          maxWidth: `${baseSizePx}px`,
+          maxHeight: `${baseSizePx}px`
+        };
+        imageObjectFitClass = 'object-contain';
         break;
     }
 
+    // Handle corner styles
     let borderRadius = '0px';
     switch (settings.cornerStyle) {
       case 'squared': 
@@ -89,16 +106,16 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
       borderRadius = '50%';
     }
 
+    containerStyle.borderRadius = borderRadius;
+
     return {
-      width: typeof width === 'number' ? `${width}px` : width,
-      height: typeof height === 'number' ? `${height}px` : height,
-      borderRadius,
-      maxWidth: '120px',
-      maxHeight: '120px'
+      containerStyle,
+      imageObjectFitClass,
+      borderRadius
     };
   };
 
-  const previewStyles = getPreviewImageStyles();
+  const { containerStyle, imageObjectFitClass, borderRadius } = getPreviewStyles();
   const isRoundAspectRatio = formData.imageSettings?.aspectRatio === 'round';
   const isAutoAspectRatio = formData.imageSettings?.aspectRatio === 'auto';
   const previewImage = getPreviewImage();
@@ -259,37 +276,23 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                 {previewImage ? (
                   <div
                     className="overflow-hidden flex items-center justify-center bg-gray-700"
-                    style={{
-                      width: previewStyles.width,
-                      height: isAutoAspectRatio ? 'auto' : previewStyles.height,
-                      borderRadius: previewStyles.borderRadius,
-                      maxWidth: previewStyles.maxWidth,
-                      maxHeight: previewStyles.maxHeight,
-                      minHeight: isAutoAspectRatio ? '48px' : previewStyles.height
-                    }}
+                    style={containerStyle}
                   >
                     <img
                       src={previewImage}
                       alt="Preview"
-                      className={`${
-                        isAutoAspectRatio 
-                          ? 'object-contain max-w-full max-h-full' 
-                          : 'object-cover w-full h-full'
+                      className={`${imageObjectFitClass} ${
+                        isAutoAspectRatio ? 'w-full h-full' : 'w-full h-full'
                       }`}
-                      style={{
-                        borderRadius: previewStyles.borderRadius
-                      }}
+                      style={{ borderRadius }}
                     />
                   </div>
                 ) : (
                   <div
                     className="bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
                     style={{
-                      width: previewStyles.width,
-                      height: isAutoAspectRatio ? '80px' : previewStyles.height,
-                      borderRadius: previewStyles.borderRadius,
-                      maxWidth: previewStyles.maxWidth,
-                      maxHeight: previewStyles.maxHeight
+                      ...containerStyle,
+                      minHeight: isAutoAspectRatio ? '48px' : containerStyle.height
                     }}
                   >
                     <ImageIcon className="w-6 h-6 text-white opacity-80" />

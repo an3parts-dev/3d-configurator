@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
 import { Zap, Image as ImageIcon, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import * as THREE from 'three';
-import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
+import { ConfiguratorData, ModelComponent, ImageSettings } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 
 interface ThreeJSPreviewProps {
@@ -318,19 +318,80 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  const getBorderStyles = (imageSettings?: any) => {
-    if (!imageSettings?.cornerStyle) return {};
+  // Helper function to get option image styles
+  const getOptionImageStyles = (imageSettings?: ImageSettings) => {
+    if (!imageSettings) {
+      return {
+        containerStyle: { width: '80px', height: '80px' },
+        imageClass: 'object-cover'
+      };
+    }
+
+    let baseSizePx = 80;
     
+    switch (imageSettings.size) {
+      case 'x-small': baseSizePx = 48; break;
+      case 'small': baseSizePx = 64; break;
+      case 'medium': baseSizePx = 80; break;
+      case 'large': baseSizePx = 96; break;
+      case 'x-large': baseSizePx = 128; break;
+    }
+
+    let containerStyle: React.CSSProperties = {};
+    let imageClass = 'object-cover';
+
+    // Handle aspect ratios with precise container sizing
+    switch (imageSettings.aspectRatio) {
+      case 'square':
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${baseSizePx}px`
+        };
+        imageClass = 'object-cover';
+        break;
+      case 'round':
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${baseSizePx}px`
+        };
+        imageClass = 'object-cover';
+        break;
+      case '3:2':
+        containerStyle = {
+          width: `${baseSizePx}px`,
+          height: `${Math.round(baseSizePx * 2 / 3)}px`
+        };
+        imageClass = 'object-cover';
+        break;
+      case '2:3':
+        containerStyle = {
+          width: `${Math.round(baseSizePx * 2 / 3)}px`,
+          height: `${baseSizePx}px`
+        };
+        imageClass = 'object-cover';
+        break;
+      case 'auto':
+        containerStyle = {
+          width: 'auto',
+          height: 'auto',
+          maxWidth: `${baseSizePx}px`,
+          maxHeight: `${baseSizePx}px`
+        };
+        imageClass = 'object-contain';
+        break;
+    }
+
+    // Handle corner styles
     let borderRadius = '0px';
     switch (imageSettings.cornerStyle) {
-      case 'squared':
-        borderRadius = '0px';
+      case 'squared': 
+        borderRadius = '0px'; 
         break;
-      case 'soft':
-        borderRadius = '4px';
+      case 'soft': 
+        borderRadius = '4px'; 
         break;
-      case 'softer':
-        borderRadius = '8px';
+      case 'softer': 
+        borderRadius = '8px'; 
         break;
     }
 
@@ -338,9 +399,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     if (imageSettings.aspectRatio === 'round') {
       borderRadius = '50%';
     }
-    
+
+    containerStyle.borderRadius = borderRadius;
+
     return {
-      borderRadius
+      containerStyle,
+      imageClass
     };
   };
 
@@ -393,83 +457,67 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         
         {option.displayType === 'images' ? (
           <div className={`${isRowDirection ? 'flex gap-4 overflow-x-auto pb-2' : 'flex flex-wrap gap-4'}`}>
-            {visibleValues.map((value: any) => (
-              <button
-                key={value.id}
-                onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
-                  selectedValues[option.id] === value.id
-                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'hover:scale-102'
-                }`}
-              >
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="flex items-center justify-center overflow-hidden">
-                    {value.image ? (
-                      <img
-                        src={value.image}
-                        alt={value.name}
-                        className={`${
-                          option.imageSettings?.aspectRatio === 'auto' 
-                            ? 'object-contain' 
-                            : 'object-cover'
-                        } ${
-                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
-                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
-                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
-                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
-                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
-                          'w-20 h-20'
-                        } ${
-                          option.imageSettings?.aspectRatio === 'square' ? 'aspect-square' :
-                          option.imageSettings?.aspectRatio === 'round' ? 'aspect-square' :
-                          option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
-                          option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
-                          option.imageSettings?.aspectRatio === 'auto' ? '' :
-                          'aspect-square'
-                        }`}
-                        style={getBorderStyles(option.imageSettings)}
-                      />
-                    ) : (
-                      <div 
-                        className={`bg-gray-700 flex items-center justify-center ${
-                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
-                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
-                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
-                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
-                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
-                          'w-20 h-20'
-                        }`}
-                        style={getBorderStyles(option.imageSettings)}
-                      >
-                        <ImageIcon className="w-6 h-6 text-gray-500" />
-                      </div>
+            {visibleValues.map((value: any) => {
+              const { containerStyle, imageClass } = getOptionImageStyles(option.imageSettings);
+              
+              return (
+                <button
+                  key={value.id}
+                  onClick={() => handleValueChange(option.id, value.id)}
+                  className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
+                    selectedValues[option.id] === value.id
+                      ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
+                      : 'hover:scale-102'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="flex items-center justify-center overflow-hidden">
+                      {value.image ? (
+                        <div
+                          className="overflow-hidden flex items-center justify-center bg-gray-700"
+                          style={containerStyle}
+                        >
+                          <img
+                            src={value.image}
+                            alt={value.name}
+                            className={`w-full h-full ${imageClass}`}
+                            style={{ borderRadius: containerStyle.borderRadius }}
+                          />
+                        </div>
+                      ) : (
+                        <div 
+                          className="bg-gray-700 flex items-center justify-center"
+                          style={containerStyle}
+                        >
+                          <ImageIcon className="w-6 h-6 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {!value.hideTitle && (
+                      <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+                        {value.name}
+                      </p>
                     )}
                   </div>
                   
-                  {!value.hideTitle && (
-                    <p className="text-white text-xs font-medium text-center max-w-20 truncate">
-                      {value.name}
-                    </p>
+                  {selectedValues[option.id] === value.id && (
+                    <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   )}
-                </div>
-                
-                {selectedValues[option.id] === value.id && (
-                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
 
-                {/* Conditional Logic Indicator */}
-                {value.conditionalLogic?.enabled && (
-                  <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
-                    <Zap className="w-2 h-2" />
-                  </div>
-                )}
-              </button>
-            ))}
+                  {/* Conditional Logic Indicator */}
+                  {value.conditionalLogic?.enabled && (
+                    <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
+                      <Zap className="w-2 h-2" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         ) : option.displayType === 'buttons' ? (
           <div className={`${isRowDirection ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2'}`}>
