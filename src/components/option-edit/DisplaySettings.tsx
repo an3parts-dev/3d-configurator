@@ -368,43 +368,45 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         </div>
       </div>
 
-      {/* Display Direction */}
+      {/* Layout Direction - Modern Segmented Control */}
       {(formData.displayType === 'buttons' || formData.displayType === 'images') && (
         <div>
           <label className="block text-gray-400 text-sm mb-4 font-medium">
             Layout Direction
           </label>
-          <div className="grid grid-cols-2 gap-6">
+          
+          {/* Segmented Control */}
+          <div className="bg-gray-700 p-1 rounded-lg inline-flex">
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'row' }))}
-              className={`p-6 rounded-xl border-2 transition-all ${
+              className={`px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
                 formData.displayDirection === 'row'
-                  ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                  : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
               }`}
             >
-              <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Row</div>
-                <div className="text-sm opacity-80">Horizontal arrangement</div>
-              </div>
+              Row
             </button>
-            
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'column' }))}
-              className={`p-6 rounded-xl border-2 transition-all ${
+              className={`px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
                 formData.displayDirection === 'column'
-                  ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                  : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
               }`}
             >
-              <div className="text-center">
-                <div className="font-semibold text-lg mb-2">Vertical Row</div>
-                <div className="text-sm opacity-80">Vertical arrangement</div>
-              </div>
+              Column
             </button>
           </div>
+          
+          <p className="text-gray-500 text-xs mt-2">
+            {formData.displayDirection === 'row' 
+              ? 'Options will be arranged horizontally' 
+              : 'Options will be arranged vertically'
+            }
+          </p>
         </div>
       )}
 
