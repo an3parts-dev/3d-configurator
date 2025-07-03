@@ -126,12 +126,11 @@ const ConfiguratorBuilder: React.FC = () => {
       if (optionIndex === -1) return prev;
       
       const option = newOptions[optionIndex];
-      const wasInGroup = !!option.groupId;
       
       // Update group assignment
       option.groupId = targetGroupId;
       
-      // If moving to a group, ensure the group is expanded and position at end
+      // If moving to a group, ensure the group is expanded
       if (targetGroupId) {
         const groupIndex = newOptions.findIndex(opt => opt.id === targetGroupId && opt.isGroup);
         if (groupIndex !== -1 && newOptions[groupIndex].groupData && !newOptions[groupIndex].groupData!.isExpanded) {
@@ -143,41 +142,33 @@ const ConfiguratorBuilder: React.FC = () => {
             }
           };
         }
-        
-        // Move the option to the end of the group's items
-        const groupedItems = newOptions.filter(opt => !opt.isGroup && opt.groupId === targetGroupId);
-        const lastGroupedItemIndex = groupedItems.length > 0 
-          ? newOptions.findIndex(opt => opt.id === groupedItems[groupedItems.length - 1].id)
-          : groupIndex;
-        
-        // Remove from current position
-        newOptions.splice(optionIndex, 1);
-        
-        // Insert after the last grouped item (or after group header if no items)
-        const insertIndex = optionIndex < lastGroupedItemIndex ? lastGroupedItemIndex : lastGroupedItemIndex + 1;
-        newOptions.splice(insertIndex, 0, option);
-      } else if (wasInGroup) {
-        // Moving out of group - place at root level at the end
-        newOptions.splice(optionIndex, 1);
-        newOptions.push(option);
       }
       
       return { ...prev, options: newOptions };
     });
   }, []);
 
-  // Enhanced move function for precise positioning within groups AND for groups themselves
-  const moveOption = useCallback((dragIndex: number, hoverIndex: number) => {
+  // New function for precise positioning
+  const insertAtPosition = useCallback((draggedItemId: string, targetIndex: number, targetGroupId?: string) => {
     setConfiguratorData(prev => {
       const newOptions = [...prev.options];
-      const draggedOption = newOptions[dragIndex];
+      const draggedItemIndex = newOptions.findIndex(opt => opt.id === draggedItemId);
+      
+      if (draggedItemIndex === -1) return prev;
+      
+      const draggedItem = newOptions[draggedItemIndex];
       
       // Remove from current position
-      newOptions.splice(dragIndex, 1);
+      newOptions.splice(draggedItemIndex, 1);
+      
+      // Update group assignment if specified
+      if (targetGroupId !== undefined) {
+        draggedItem.groupId = targetGroupId;
+      }
       
       // Insert at new position
-      const adjustedIndex = dragIndex < hoverIndex ? hoverIndex - 1 : hoverIndex;
-      newOptions.splice(adjustedIndex, 0, draggedOption);
+      const adjustedIndex = draggedItemIndex < targetIndex ? targetIndex - 1 : targetIndex;
+      newOptions.splice(adjustedIndex, 0, draggedItem);
       
       return { ...prev, options: newOptions };
     });
@@ -211,6 +202,16 @@ const ConfiguratorBuilder: React.FC = () => {
       ...prev,
       options: prev.options.filter(option => option.id !== optionId)
     }));
+  }, []);
+
+  const moveOption = useCallback((dragIndex: number, hoverIndex: number) => {
+    setConfiguratorData(prev => {
+      const newOptions = [...prev.options];
+      const draggedOption = newOptions[dragIndex];
+      newOptions.splice(dragIndex, 1);
+      newOptions.splice(hoverIndex, 0, draggedOption);
+      return { ...prev, options: newOptions };
+    });
   }, []);
 
   // Value management functions
