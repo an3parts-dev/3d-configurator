@@ -1,21 +1,31 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import ConfiguratorBuilder from './pages/ConfiguratorBuilder';
 
 function App() {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   return (
-    <DndProvider backend={HTML5Backend}>
-      <Router>
-        <div className="min-h-screen bg-gray-900">
-          <Routes>
-            <Route path="/" element={<ConfiguratorBuilder />} />
-            <Route path="/configurator/:id?" element={<ConfiguratorBuilder />} />
-          </Routes>
-        </div>
-      </Router>
-    </DndProvider>
+    <Router>
+      <div className="min-h-screen bg-gray-900">
+        <Routes>
+          <Route path="/" element={<ConfiguratorBuilder />} />
+          <Route path="/configurator/:id?" element={<ConfiguratorBuilder />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { GripVertical, Trash2, Zap, Image as ImageIcon, Upload, X, Droplets } from 'lucide-react';
 import ComponentSelector from './ComponentSelector';
@@ -44,59 +45,30 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   onDelete,
   canDelete
 }) => {
-  const ref = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [showConditionalLogicModal, setShowConditionalLogicModal] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
 
-  const [{ isDraggingState }, drag] = useDrag({
-    type: 'optionValue',
-    item: () => {
-      setIsDragging(true);
-      return { id: value.id, index };
-    },
-    collect: (monitor) => ({
-      isDraggingState: monitor.isDragging(),
-    }),
-    end: () => {
-      setIsDragging(false);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({
+    id: value.id,
+    data: {
+      type: 'optionValue',
+      value,
+      index
     }
   });
 
-  const [{ isOver }, drop] = useDrop({
-    accept: 'optionValue',
-    hover: (item: { id: string; index: number }, monitor) => {
-      if (!ref.current) return;
-      
-      const dragIndex = item.index;
-      const hoverIndex = index;
-
-      if (dragIndex === hoverIndex) return;
-
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) return;
-      
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
-        onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
-      }
-      
-      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
-        onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
-  });
-
-  const dragDropRef = drop(ref);
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const filteredComponents = availableComponents.filter(component => {
     const componentName = component.name.toLowerCase();
@@ -249,13 +221,13 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
   return (
     <>
-      <div ref={dragDropRef}>
+      <div ref={setNodeRef} style={style}>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ 
-            opacity: isDraggingState ? 0.6 : 1, 
+            opacity: isDragging ? 0.6 : 1, 
             y: 0,
-            scale: isDraggingState ? 1.02 : isOver ? 1.01 : 1,
+            scale: isDragging ? 1.02 : 1,
           }}
           transition={{ 
             type: "spring", 
@@ -265,10 +237,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             scale: { duration: 0.15 }
           }}
           className={`p-6 bg-gray-700 rounded-xl space-y-6 transition-all duration-150 border relative ${
-            isDraggingState
+            isDragging
               ? 'border-blue-500 shadow-2xl shadow-blue-500/30 z-50'
-              : isOver
-              ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
               : 'border-gray-600 hover:border-gray-500 shadow-sm'
           }`}
         >
@@ -285,7 +255,8 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               {/* Drag Handle */}
               <div 
-                ref={drag}
+                {...attributes}
+                {...listeners}
                 className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-600 transition-colors"
               >
                 <GripVertical className="w-5 h-5 text-gray-400" />

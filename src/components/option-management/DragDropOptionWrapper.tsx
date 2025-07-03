@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import OptionCard from './OptionCard';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
 
@@ -17,119 +18,34 @@ interface DragDropOptionWrapperProps {
 }
 
 const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
-  const ref = useRef<HTMLDivElement>(null);
-
-  const [{ isDragging }, drag, dragPreview] = useDrag({
-    type: 'option',
-    item: () => ({ 
-      id: props.option.id, 
-      index: props.index, 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver
+  } = useSortable({
+    id: props.option.id,
+    data: {
       type: 'option',
+      option: props.option,
       isGroup: props.option.isGroup,
       currentGroupId: props.option.groupId,
       name: props.option.name
-    }),
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
+    }
   });
 
-  const [{ isOver, canDrop }, drop] = useDrop({
-    accept: 'option',
-    hover: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
-      if (!ref.current) return;
-      
-      const dragIndex = item.index;
-      const hoverIndex = props.index;
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
-      if (dragIndex === hoverIndex) return;
-
-      // Don't allow dropping a group into itself or its children
-      if (item.isGroup && props.option.groupId === item.id) return;
-
-      // CRITICAL FIX: Don't trigger reordering when hovering over a group header
-      // if the dragged item is not a group (this prevents the flicker)
-      if (props.option.isGroup && !item.isGroup) {
-        return; // Exit early to prevent reordering
-      }
-
-      // CRITICAL FIX: Don't trigger reordering when hovering over a standalone option
-      // if the dragged item is coming from a group (this is likely a group removal operation)
-      // BUT ALLOW reordering within the same group or between grouped items
-      if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && !props.option.groupId) {
-        return; // Exit early to prevent reordering
-      }
-
-      // NEW: Allow reordering within groups - if both items are in the same group or both are grouped
-      const bothInSameGroup = item.currentGroupId && props.option.groupId && item.currentGroupId === props.option.groupId;
-      const bothAreGrouped = props.isGrouped && item.currentGroupId;
-      const draggedItemIsBeingAddedToGroup = !item.currentGroupId && props.isGrouped;
-
-      // Allow reordering if:
-      // 1. Both items are in the same group
-      // 2. Both items are grouped (even if in different groups)
-      // 3. An ungrouped item is being dragged into a group
-      // 4. Both items are standalone (not grouped)
-      const shouldAllowReordering = bothInSameGroup || 
-                                   bothAreGrouped || 
-                                   draggedItemIsBeingAddedToGroup ||
-                                   (!item.currentGroupId && !props.option.groupId && !props.isGrouped);
-
-      if (!shouldAllowReordering) {
-        return; // Exit early to prevent unwanted reordering
-      }
-
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) return;
-      
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      // Only proceed with reordering for same-level items
-      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
-        props.onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
-      }
-      
-      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
-        props.onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
-      }
-    },
-    drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
-      // Only handle drops that weren't handled by child components
-      if (!monitor.didDrop()) {
-        // Handle group assignment - only for group headers and standalone options
-        if (props.option.isGroup && !item.isGroup && props.onMoveToGroup) {
-          // Moving an option into a group (dropping on group header)
-          props.onMoveToGroup(item.id, props.option.id);
-        } else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && props.onMoveToGroup) {
-          // Moving an option out of a group (dropping on standalone option)
-          props.onMoveToGroup(item.id, null);
-        }
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
-    }),
-  });
-
-  // Create invisible drag preview for smooth dragging
-  React.useEffect(() => {
-    const emptyImg = new Image();
-    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
-  }, [dragPreview]);
-
-  const dragDropRef = drag(drop(ref));
-
-  // Determine drop zone styling - only for group headers and standalone options
+  // Determine drop zone styling
   const getDropZoneStyle = () => {
-    if (!isOver || !canDrop) return '';
+    if (!isOver) return '';
     
-    // Only show drop indicators for group headers and standalone options
     if (props.option.isGroup) {
       return 'ring-2 ring-purple-400 ring-opacity-50 bg-purple-500/10';
     } else if (!props.isGrouped) {
@@ -140,15 +56,19 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
   };
 
   return (
-    <div ref={dragDropRef} className={`relative ${getDropZoneStyle()}`}>
+    <div ref={setNodeRef} style={style} className={`relative ${getDropZoneStyle()}`}>
       <OptionCard
         {...props}
         isDragging={isDragging}
-        isOver={isOver && canDrop}
+        isOver={isOver}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+        }}
       />
       
       {/* Drop zone indicator for group headers */}
-      {isOver && canDrop && props.option.isGroup && (
+      {isOver && props.option.isGroup && (
         <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center z-10">
           <div className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
             Drop to add to group
@@ -157,7 +77,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       )}
       
       {/* Drop zone indicator for removing from group */}
-      {isOver && canDrop && !props.option.isGroup && !props.isGrouped && (
+      {isOver && !props.option.isGroup && !props.isGrouped && (
         <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-blue-500/5 flex items-center justify-center z-10">
           <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
             Drop to remove from group
