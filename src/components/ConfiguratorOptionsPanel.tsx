@@ -6,6 +6,7 @@ import {
   Eye,
   FolderPlus
 } from 'lucide-react';
+import DashboardHeader from './layout/DashboardHeader';
 import { OptionsList } from './option-management';
 import { 
   ConfiguratorData, 
@@ -29,6 +30,7 @@ interface ConfiguratorOptionsPanelProps {
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
   onToggleGroup: (groupId: string) => void;
   onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
+  onNavigateHome: () => void;
 }
 
 const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
@@ -45,13 +47,20 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
   onDeleteOption,
   onEditConditionalLogic,
   onToggleGroup,
-  onMoveToGroup
+  onMoveToGroup,
+  onNavigateHome
 }) => {
   return (
     <div className={`bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
       isPreviewMode ? 'w-0 overflow-hidden' : 'w-full sm:w-1/2'
     }`}>
       <div className="h-full flex flex-col">
+        {/* Dashboard Header */}
+        <DashboardHeader
+          projectName={configuratorData.name}
+          onNavigateHome={onNavigateHome}
+        />
+
         {/* Fixed Header Section - Mobile Optimized */}
         <div className="flex-shrink-0 bg-gray-750 border-b border-gray-700">
           {/* Main Header */}
@@ -59,9 +68,6 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="min-w-0 flex-1">
                 <h1 className="text-white font-bold text-lg sm:text-xl truncate">3D Configurator Builder</h1>
-                <p className="text-gray-400 text-xs sm:text-sm mt-1 hidden sm:block">
-                  Design interactive 3D product configurators
-                </p>
               </div>
               <button
                 onClick={onTogglePreviewMode}

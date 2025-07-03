@@ -16,13 +16,31 @@ import {
 } from '../types/ConfiguratorTypes';
 import { useConfiguratorPersistence } from '../hooks/useConfiguratorPersistence';
 
-const ConfiguratorBuilder: React.FC = () => {
+interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  model: string;
+  optionsCount: number;
+  lastModified: Date;
+  thumbnail?: string;
+}
+
+interface ConfiguratorBuilderProps {
+  project?: Project | null;
+  onNavigateHome: () => void;
+}
+
+const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
+  project,
+  onNavigateHome
+}) => {
   // State management
   const [configuratorData, setConfiguratorData] = useState<ConfiguratorData>({
-    id: 'default',
-    name: 'New Configurator',
-    description: 'A new 3D configurator',
-    model: 'https://cdn.shopify.com/3d/models/o/a7af059c00ea3c69/angle-3d-generated.glb',
+    id: project?.id || 'default',
+    name: project?.name || 'New Configurator',
+    description: project?.description || 'A new 3D configurator',
+    model: project?.model || 'https://cdn.shopify.com/3d/models/o/a7af059c00ea3c69/angle-3d-generated.glb',
     options: []
   });
 
@@ -49,14 +67,23 @@ const ConfiguratorBuilder: React.FC = () => {
 
   // Load data on mount
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && project) {
+      // If we have a project, use its data
+      setConfiguratorData({
+        id: project.id,
+        name: project.name,
+        description: project.description || '',
+        model: project.model,
+        options: []
+      });
+    } else if (!isLoading) {
       const stored = loadFromStorage();
       if (stored && stored.configurators.length > 0) {
         const activeConfig = stored.configurators.find(c => c.id === stored.activeId) || stored.configurators[0];
         setConfiguratorData(activeConfig);
       }
     }
-  }, [isLoading, loadFromStorage]);
+  }, [isLoading, project, loadFromStorage]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -143,32 +170,6 @@ const ConfiguratorBuilder: React.FC = () => {
           };
         }
       }
-      
-      return { ...prev, options: newOptions };
-    });
-  }, []);
-
-  // New function for precise positioning
-  const insertAtPosition = useCallback((draggedItemId: string, targetIndex: number, targetGroupId?: string) => {
-    setConfiguratorData(prev => {
-      const newOptions = [...prev.options];
-      const draggedItemIndex = newOptions.findIndex(opt => opt.id === draggedItemId);
-      
-      if (draggedItemIndex === -1) return prev;
-      
-      const draggedItem = newOptions[draggedItemIndex];
-      
-      // Remove from current position
-      newOptions.splice(draggedItemIndex, 1);
-      
-      // Update group assignment if specified
-      if (targetGroupId !== undefined) {
-        draggedItem.groupId = targetGroupId;
-      }
-      
-      // Insert at new position
-      const adjustedIndex = draggedItemIndex < targetIndex ? targetIndex - 1 : targetIndex;
-      newOptions.splice(adjustedIndex, 0, draggedItem);
       
       return { ...prev, options: newOptions };
     });
@@ -381,6 +382,7 @@ const ConfiguratorBuilder: React.FC = () => {
           onEditConditionalLogic={handleConditionalLogic}
           onToggleGroup={toggleGroupExpansion}
           onMoveToGroup={moveToGroup}
+          onNavigateHome={onNavigateHome}
         />
 
         {/* Right Panel - 3D Preview */}
