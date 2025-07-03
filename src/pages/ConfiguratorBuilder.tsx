@@ -22,7 +22,7 @@ const ConfiguratorBuilder: React.FC = () => {
     id: 'default',
     name: 'New Configurator',
     description: 'A new 3D configurator',
-    model: '/models/sample.glb',
+    model: '', // Start with empty model path to avoid loading errors
     options: []
   });
 
