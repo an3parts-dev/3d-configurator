@@ -11,7 +11,8 @@ import {
   Users,
   Layers,
   List,
-  Grid3X3
+  Grid3X3,
+  MoreVertical
 } from 'lucide-react';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
 
@@ -61,7 +62,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
           opacity: { duration: 0.15 },
           scale: { duration: 0.15 }
         }}
-        className={`bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-5 rounded-xl border transition-all duration-150 relative ${
+        className={`bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-4 sm:p-5 rounded-xl border transition-all duration-150 relative ${
           isDragging 
             ? 'border-purple-500 shadow-2xl shadow-purple-500/30 cursor-grabbing z-50' 
             : isOver
@@ -72,42 +73,58 @@ const OptionCard: React.FC<OptionCardProps> = ({
           cursor: isDragging ? 'grabbing' : 'grab',
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-purple-700/30 transition-colors">
-              <GripVertical className="w-5 h-5 text-purple-400" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
-                  <FolderOpen className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h4 className="text-white font-semibold text-lg">{option.groupData.name}</h4>
-                    <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
-                      GROUP
-                    </span>
-                    <button
-                      onClick={() => onToggleGroup?.(option.groupData!.id)}
-                      className="text-purple-400 hover:text-purple-300 p-1 rounded hover:bg-purple-500/10 transition-colors"
-                    >
-                      {option.groupData.isExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
+        {/* Mobile-First Layout */}
+        <div className="space-y-3 sm:space-y-0">
+          {/* Header Row - Mobile Stacked, Desktop Inline */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3 flex-1 min-w-0">
+              <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-purple-700/30 transition-colors flex-shrink-0 mt-1">
+                <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap">
+                  <div className="p-1.5 sm:p-2 bg-purple-600/20 rounded-lg border border-purple-500/30 flex-shrink-0">
+                    <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                   </div>
-                  {option.groupData.description && (
-                    <p className="text-purple-200/80 text-sm mt-1">{option.groupData.description}</p>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      <h4 className="text-white font-semibold text-base sm:text-lg truncate">{option.groupData.name}</h4>
+                      <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30 flex-shrink-0">
+                        GROUP
+                      </span>
+                    </div>
+                    {option.groupData.description && (
+                      <p className="text-purple-200/80 text-sm mt-1 line-clamp-2">{option.groupData.description}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
+            
+            {/* Mobile Actions - Vertical Stack */}
+            <div className="flex sm:hidden flex-col items-end space-y-2 flex-shrink-0">
+              <button
+                onClick={() => onToggleGroup?.(option.groupData!.id)}
+                className="text-purple-400 hover:text-purple-300 p-2 rounded hover:bg-purple-500/10 transition-colors"
+              >
+                {option.groupData.isExpanded ? (
+                  <ChevronDown className="w-5 h-5" />
+                ) : (
+                  <ChevronRight className="w-5 h-5" />
+                )}
+              </button>
+              <div className="text-right">
+                <span className="text-purple-300 text-sm font-medium flex items-center space-x-1">
+                  <Users className="w-4 h-4" />
+                  <span>{groupedOptions.length}</span>
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
+
+          {/* Desktop Actions Row */}
+          <div className="hidden sm:flex items-center justify-between">
+            <div className="text-left">
               <span className="text-purple-300 text-sm font-medium flex items-center space-x-1">
                 <Users className="w-4 h-4" />
                 <span>{groupedOptions.length} options</span>
@@ -115,20 +132,48 @@ const OptionCard: React.FC<OptionCardProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <button
+                onClick={() => onToggleGroup?.(option.groupData!.id)}
+                className="text-purple-400 hover:text-purple-300 p-2 rounded hover:bg-purple-500/10 transition-colors"
+              >
+                {option.groupData.isExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+              <button
                 onClick={() => onEdit(option)}
                 className="text-purple-400 hover:text-purple-300 p-2 rounded-lg hover:bg-purple-500/10 transition-colors"
                 title="Edit Group"
               >
-                <Edit className="w-5 h-5" />
+                <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <button
                 onClick={() => onDelete(option.id)}
                 className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
                 title="Delete Group"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
+          </div>
+
+          {/* Mobile Action Buttons */}
+          <div className="flex sm:hidden space-x-2">
+            <button
+              onClick={() => onEdit(option)}
+              className="flex-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+            >
+              <Edit className="w-4 h-4" />
+              <span>Edit</span>
+            </button>
+            <button
+              onClick={() => onDelete(option.id)}
+              className="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
+            </button>
           </div>
         </div>
       </motion.div>
@@ -151,9 +196,9 @@ const OptionCard: React.FC<OptionCardProps> = ({
         opacity: { duration: 0.15 },
         scale: { duration: 0.15 }
       }}
-      className={`p-5 rounded-xl border transition-all duration-150 relative ${
+      className={`p-4 sm:p-5 rounded-xl border transition-all duration-150 relative ${
         isGrouped 
-          ? 'bg-gray-800/50 ml-8 border-l-4 border-l-blue-500/50' 
+          ? 'bg-gray-800/50 ml-4 sm:ml-8 border-l-4 border-l-blue-500/50' 
           : 'bg-gray-800'
       } ${
         isDragging 
@@ -173,78 +218,123 @@ const OptionCard: React.FC<OptionCardProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors">
-            <GripVertical className="w-5 h-5 text-gray-500" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center space-x-2">
-              <Layers className="w-5 h-5 text-blue-400" />
-              <h4 className="text-white font-semibold text-lg">{option.name}</h4>
-              {hasConditionalLogic && (
-                <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
-                  Conditional Logic
-                </span>
-              )}
+      {/* Mobile-First Layout */}
+      <div className="space-y-3 sm:space-y-0">
+        {/* Header Row */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-3 flex-1 min-w-0">
+            <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors flex-shrink-0 mt-1">
+              <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
             </div>
-            <div className="flex items-center space-x-3 mt-1">
-              <p className="text-gray-400 text-sm flex items-center space-x-2">
-                <Layers className="w-4 h-4" />
-                <span className="capitalize font-medium">{option.manipulationType}</span>
-              </p>
-              <span className="text-gray-600">•</span>
-              <p className="text-gray-400 text-sm flex items-center space-x-2">
-                {option.displayType === 'list' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
-                <span className="capitalize font-medium">{option.displayType}</span>
-              </p>
-              {option.defaultBehavior && (
-                <>
-                  <span className="text-gray-600">•</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    option.defaultBehavior === 'hide' 
-                      ? 'bg-red-500/20 text-red-300' 
-                      : 'bg-green-500/20 text-green-300'
-                  }`}>
-                    {option.defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2 flex-wrap">
+                <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
+                <h4 className="text-white font-semibold text-base sm:text-lg truncate">{option.name}</h4>
+                {hasConditionalLogic && (
+                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30 flex-shrink-0">
+                    Logic
                   </span>
-                </>
-              )}
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Mobile Stats */}
+          <div className="flex sm:hidden flex-col items-end text-right flex-shrink-0">
+            <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
+            <span className="text-gray-500 text-xs">{option.targetComponents.length} targets</span>
+          </div>
+        </div>
+
+        {/* Option Details - Mobile Stacked */}
+        <div className="space-y-2 sm:space-y-1">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <div className="flex items-center space-x-1 text-gray-400">
+              <Layers className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="capitalize font-medium">{option.manipulationType}</span>
+            </div>
+            <span className="text-gray-600 hidden sm:inline">•</span>
+            <div className="flex items-center space-x-1 text-gray-400">
+              {option.displayType === 'list' ? <List className="w-3 h-3 sm:w-4 sm:h-4" /> : <Grid3X3 className="w-3 h-3 sm:w-4 sm:h-4" />}
+              <span className="capitalize font-medium">{option.displayType}</span>
+            </div>
+            {option.defaultBehavior && (
+              <>
+                <span className="text-gray-600 hidden sm:inline">•</span>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  option.defaultBehavior === 'hide' 
+                    ? 'bg-red-500/20 text-red-300' 
+                    : 'bg-green-500/20 text-green-300'
+                }`}>
+                  {option.defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Desktop Stats Row */}
+          <div className="hidden sm:flex items-center justify-between">
+            <div className="text-left">
+              <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
+              <span className="text-gray-500 text-xs ml-2">{option.targetComponents.length} targets</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => onEditConditionalLogic(option)}
+                className={`p-2 rounded-lg transition-colors ${
+                  hasConditionalLogic
+                    ? 'text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20'
+                    : 'text-gray-400 hover:text-purple-400 hover:bg-purple-500/10'
+                }`}
+                title="Edit Conditional Logic"
+              >
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={() => onEdit(option)}
+                className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
+                title="Edit Option"
+              >
+                <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={() => onDelete(option.id)}
+                className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                title="Delete Option"
+              >
+                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
             </div>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="text-right">
-            <span className="text-gray-400 text-sm font-medium">{option.values.length} values</span>
-            <p className="text-gray-500 text-xs">{option.targetComponents.length} targets</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onEditConditionalLogic(option)}
-              className={`p-2 rounded-lg transition-colors ${
-                hasConditionalLogic
-                  ? 'text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20'
-                  : 'text-gray-400 hover:text-purple-400 hover:bg-purple-500/10'
-              }`}
-              title="Edit Conditional Logic"
-            >
-              <Zap className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => onEdit(option)}
-              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
-              title="Edit Option"
-            >
-              <Edit className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => onDelete(option.id)}
-              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
-              title="Delete Option"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
+
+        {/* Mobile Action Buttons */}
+        <div className="flex sm:hidden space-x-2">
+          <button
+            onClick={() => onEditConditionalLogic(option)}
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
+              hasConditionalLogic
+                ? 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'
+                : 'bg-gray-600/20 hover:bg-purple-600/20 text-gray-400 hover:text-purple-400'
+            }`}
+          >
+            <Zap className="w-4 h-4" />
+            <span>Logic</span>
+          </button>
+          <button
+            onClick={() => onEdit(option)}
+            className="flex-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+          >
+            <Edit className="w-4 h-4" />
+            <span>Edit</span>
+          </button>
+          <button
+            onClick={() => onDelete(option.id)}
+            className="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Delete</span>
+          </button>
         </div>
       </div>
     </motion.div>
