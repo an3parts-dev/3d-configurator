@@ -28,7 +28,6 @@ interface OptionCardProps {
   groupedOptions?: ConfiguratorOption[];
   isDragging?: boolean;
   isOver?: boolean;
-  dragHandleProps?: any;
 }
 
 const OptionCard: React.FC<OptionCardProps> = ({
@@ -42,8 +41,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
   isGrouped = false,
   groupedOptions = [],
   isDragging = false,
-  isOver = false,
-  dragHandleProps = {}
+  isOver = false
 }) => {
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
@@ -71,16 +69,16 @@ const OptionCard: React.FC<OptionCardProps> = ({
             ? 'border-purple-400 shadow-lg shadow-purple-400/20 bg-purple-500/5'
             : 'border-purple-700/50 hover:border-purple-600/50 shadow-sm'
         }`}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
       >
         {/* Mobile-First Layout */}
         <div className="space-y-3 sm:space-y-0">
           {/* Header Row - Mobile Stacked, Desktop Inline */}
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-3 flex-1 min-w-0">
-              <div 
-                {...dragHandleProps}
-                className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-purple-700/30 transition-colors flex-shrink-0 mt-1"
-              >
+              <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-purple-700/30 transition-colors flex-shrink-0 mt-1">
                 <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -209,6 +207,9 @@ const OptionCard: React.FC<OptionCardProps> = ({
           ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
           : 'border-gray-700 hover:border-gray-600 shadow-sm'
       }`}
+      style={{
+        cursor: isDragging ? 'grabbing' : 'grab',
+      }}
     >
       {/* Conditional Logic Indicator */}
       {hasConditionalLogic && (
@@ -222,10 +223,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
         {/* Header Row */}
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3 flex-1 min-w-0">
-            <div 
-              {...dragHandleProps}
-              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors flex-shrink-0 mt-1"
-            >
+            <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-700 transition-colors flex-shrink-0 mt-1">
               <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
             </div>
             <div className="flex-1 min-w-0">

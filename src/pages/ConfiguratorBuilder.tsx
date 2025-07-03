@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import ConfiguratorOptionsPanel from '../components/ConfiguratorOptionsPanel';
 import Configurator3DView from '../components/Configurator3DView';
 import OptionEditModal from '../components/OptionEditModal';
@@ -23,7 +22,7 @@ const ConfiguratorBuilder: React.FC = () => {
     id: 'default',
     name: 'New Configurator',
     description: 'A new 3D configurator',
-    model: 'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
+    model: 'https://cdn.shopify.com/3d/models/o/a7af059c00ea3c69/angle-3d-generated.glb',
     options: []
   });
 
@@ -37,7 +36,6 @@ const ConfiguratorBuilder: React.FC = () => {
   const [conditionalLogicOption, setConditionalLogicOption] = useState<ConfiguratorOption | null>(null);
   const [deletingOptionId, setDeletingOptionId] = useState<string | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
 
   // Persistence hook
   const {
@@ -48,18 +46,6 @@ const ConfiguratorBuilder: React.FC = () => {
     exportConfigurations,
     importConfigurations
   } = useConfiguratorPersistence();
-
-  // dnd-kit sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   // Load data on mount
   useEffect(() => {
@@ -82,112 +68,6 @@ const ConfiguratorBuilder: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [configuratorData, isLoading, saveToStorage]);
-
-  // dnd-kit event handlers
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  }, []);
-
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    const { active, over } = event;
-    
-    if (!over || active.id === over.id) return;
-
-    const activeOption = configuratorData.options.find(opt => opt.id === active.id);
-    const overData = over.data.current;
-    
-    if (!activeOption || !overData) return;
-
-    // Handle ungrouping when dropped on ungroup zone
-    if (overData.type === 'ungroup-zone' && activeOption.groupId) {
-      setConfiguratorData(prev => ({
-        ...prev,
-        options: prev.options.map(option => 
-          option.id === activeOption.id 
-            ? { ...option, groupId: undefined }
-            : option
-        )
-      }));
-      return;
-    }
-
-    // Handle group assignment - only change groupId, don't reorder
-    if (overData.type === 'group-drop-zone' && !activeOption.isGroup) {
-      const targetGroupId = overData.groupId;
-      
-      if (activeOption.groupId !== targetGroupId) {
-        setConfiguratorData(prev => ({
-          ...prev,
-          options: prev.options.map(option => 
-            option.id === activeOption.id 
-              ? { ...option, groupId: targetGroupId }
-              : option
-          )
-        }));
-      }
-      return;
-    }
-
-    // Handle moving to ungrouped area
-    if (overData.type === 'ungrouped-zone' && activeOption.groupId) {
-      setConfiguratorData(prev => ({
-        ...prev,
-        options: prev.options.map(option => 
-          option.id === activeOption.id 
-            ? { ...option, groupId: undefined }
-            : option
-        )
-      }));
-      return;
-    }
-  }, [configuratorData.options]);
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    setActiveId(null);
-    
-    if (!over || active.id === over.id) return;
-
-    const activeOption = configuratorData.options.find(opt => opt.id === active.id);
-    const overOption = configuratorData.options.find(opt => opt.id === over.id);
-    
-    if (!activeOption || !overOption) return;
-
-    // Determine if reordering should happen based on context
-    const shouldReorder = () => {
-      // Both are group headers
-      if (activeOption.isGroup && overOption.isGroup) {
-        return true;
-      }
-      
-      // Both are ungrouped options
-      if (!activeOption.isGroup && !overOption.isGroup && 
-          !activeOption.groupId && !overOption.groupId) {
-        return true;
-      }
-      
-      // Both are in the same group
-      if (!activeOption.isGroup && !overOption.isGroup && 
-          activeOption.groupId && activeOption.groupId === overOption.groupId) {
-        return true;
-      }
-      
-      return false;
-    };
-
-    if (shouldReorder()) {
-      const oldIndex = configuratorData.options.findIndex(opt => opt.id === active.id);
-      const newIndex = configuratorData.options.findIndex(opt => opt.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        setConfiguratorData(prev => ({
-          ...prev,
-          options: arrayMove(prev.options, oldIndex, newIndex)
-        }));
-      }
-    }
-  }, [configuratorData.options]);
 
   // Group management functions
   const createGroup = useCallback((groupData: ConfiguratorOptionGroup) => {
@@ -279,10 +159,14 @@ const ConfiguratorBuilder: React.FC = () => {
     }));
   }, []);
 
-  // Legacy move function for compatibility (now handled by dnd-kit)
   const moveOption = useCallback((dragIndex: number, hoverIndex: number) => {
-    // This is now handled by dnd-kit's handleDragEnd
-    console.log('Legacy moveOption called - now handled by dnd-kit');
+    setConfiguratorData(prev => {
+      const newOptions = [...prev.options];
+      const draggedOption = newOptions[dragIndex];
+      newOptions.splice(dragIndex, 1);
+      newOptions.splice(hoverIndex, 0, draggedOption);
+      return { ...prev, options: newOptions };
+    });
   }, []);
 
   // Value management functions
@@ -320,7 +204,11 @@ const ConfiguratorBuilder: React.FC = () => {
     const option = configuratorData.options.find(opt => opt.id === optionId);
     if (!option) return;
 
-    const newValues = arrayMove(option.values, dragIndex, hoverIndex);
+    const newValues = [...option.values];
+    const draggedValue = newValues[dragIndex];
+    newValues.splice(dragIndex, 1);
+    newValues.splice(hoverIndex, 0, draggedValue);
+
     updateOption(optionId, { values: newValues });
   }, [configuratorData.options, updateOption]);
 
@@ -428,17 +316,8 @@ const ConfiguratorBuilder: React.FC = () => {
     );
   }
 
-  const activeOption = activeId ? configuratorData.options.find(opt => opt.id === activeId) : null;
-
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      modifiers={[restrictToVerticalAxis]}
-    >
+    <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-gray-900 flex">
         {/* Left Panel - Configuration */}
         <ConfiguratorOptionsPanel
@@ -465,18 +344,6 @@ const ConfiguratorBuilder: React.FC = () => {
           isPreviewMode={isPreviewMode}
           onComponentsLoaded={setModelComponents}
         />
-
-        {/* Drag Overlay */}
-        <DragOverlay>
-          {activeOption ? (
-            <div className="bg-gray-800 p-4 rounded-xl border border-blue-500 shadow-2xl opacity-90">
-              <div className="text-white font-semibold">{activeOption.name}</div>
-              <div className="text-gray-400 text-sm">
-                {activeOption.isGroup ? 'Group' : `${activeOption.values.length} values`}
-              </div>
-            </div>
-          ) : null}
-        </DragOverlay>
 
         {/* Modals */}
         <OptionEditModal
@@ -531,7 +398,7 @@ const ConfiguratorBuilder: React.FC = () => {
           type="danger"
         />
       </div>
-    </DndContext>
+    </DndProvider>
   );
 };
 
