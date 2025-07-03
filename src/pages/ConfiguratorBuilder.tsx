@@ -215,48 +215,84 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
     });
   }, []);
 
-  // Value management functions
+  // Value management functions - ENHANCED WITH BETTER STATE MANAGEMENT
   const addOptionValue = useCallback((optionId: string) => {
+    console.log('🔧 ConfiguratorBuilder: Adding value to option', optionId);
+    
     const newValue: ConfiguratorOptionValue = {
       id: `value_${Date.now()}`,
       name: 'New Value'
     };
 
-    updateOption(optionId, {
-      values: [...(configuratorData.options.find(opt => opt.id === optionId)?.values || []), newValue]
+    setConfiguratorData(prev => {
+      const newOptions = prev.options.map(option => {
+        if (option.id === optionId) {
+          console.log('✅ Found option, adding value. Current values:', option.values.length);
+          return {
+            ...option,
+            values: [...option.values, newValue]
+          };
+        }
+        return option;
+      });
+
+      console.log('🔄 Updated configurator data');
+      return { ...prev, options: newOptions };
     });
-  }, [configuratorData.options, updateOption]);
+  }, []);
 
   const updateOptionValue = useCallback((optionId: string, valueId: string, updates: Partial<ConfiguratorOptionValue>) => {
-    const option = configuratorData.options.find(opt => opt.id === optionId);
-    if (!option) return;
+    console.log('🔧 ConfiguratorBuilder: Updating value', valueId, 'in option', optionId);
+    
+    setConfiguratorData(prev => {
+      const newOptions = prev.options.map(option => {
+        if (option.id === optionId) {
+          const updatedValues = option.values.map(value => 
+            value.id === valueId ? { ...value, ...updates } : value
+          );
+          return { ...option, values: updatedValues };
+        }
+        return option;
+      });
 
-    const updatedValues = option.values.map(value => 
-      value.id === valueId ? { ...value, ...updates } : value
-    );
-
-    updateOption(optionId, { values: updatedValues });
-  }, [configuratorData.options, updateOption]);
+      return { ...prev, options: newOptions };
+    });
+  }, []);
 
   const deleteOptionValue = useCallback((optionId: string, valueId: string) => {
-    const option = configuratorData.options.find(opt => opt.id === optionId);
-    if (!option) return;
+    console.log('🔧 ConfiguratorBuilder: Deleting value', valueId, 'from option', optionId);
+    
+    setConfiguratorData(prev => {
+      const newOptions = prev.options.map(option => {
+        if (option.id === optionId) {
+          const updatedValues = option.values.filter(value => value.id !== valueId);
+          return { ...option, values: updatedValues };
+        }
+        return option;
+      });
 
-    const updatedValues = option.values.filter(value => value.id !== valueId);
-    updateOption(optionId, { values: updatedValues });
-  }, [configuratorData.options, updateOption]);
+      return { ...prev, options: newOptions };
+    });
+  }, []);
 
   const moveOptionValue = useCallback((optionId: string, dragIndex: number, hoverIndex: number) => {
-    const option = configuratorData.options.find(opt => opt.id === optionId);
-    if (!option) return;
+    console.log('🔧 ConfiguratorBuilder: Moving value in option', optionId, 'from', dragIndex, 'to', hoverIndex);
+    
+    setConfiguratorData(prev => {
+      const newOptions = prev.options.map(option => {
+        if (option.id === optionId) {
+          const newValues = [...option.values];
+          const draggedValue = newValues[dragIndex];
+          newValues.splice(dragIndex, 1);
+          newValues.splice(hoverIndex, 0, draggedValue);
+          return { ...option, values: newValues };
+        }
+        return option;
+      });
 
-    const newValues = [...option.values];
-    const draggedValue = newValues[dragIndex];
-    newValues.splice(dragIndex, 1);
-    newValues.splice(hoverIndex, 0, draggedValue);
-
-    updateOption(optionId, { values: newValues });
-  }, [configuratorData.options, updateOption]);
+      return { ...prev, options: newOptions };
+    });
+  }, []);
 
   // Modal handlers
   const handleEditOption = useCallback((option: ConfiguratorOption) => {
@@ -264,6 +300,7 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
       setEditingGroup(option.groupData);
       setShowGroupModal(true);
     } else {
+      console.log('📝 Opening edit modal for option:', option.id, 'with', option.values.length, 'values');
       setEditingOption(option);
       setShowOptionModal(true);
     }
