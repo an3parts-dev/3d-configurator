@@ -351,6 +351,247 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     };
   };
 
+  // Helper function to render image with title positioning - FIXED for row layout
+  const renderImageWithTitle = (value: any, option: any, index: number, isSelected: boolean = false) => {
+    const imageSettings = option.imageSettings;
+    const hideTitle = value.hideTitle || imageSettings?.hideTitle || false;
+    const titlePosition = imageSettings?.titlePosition || 'below';
+    const direction = option.displayDirection || 'row';
+
+    // Generate precise image styles based on settings
+    const getImageStyles = () => {
+      if (!imageSettings) {
+        return {
+          containerStyle: { width: '80px', height: '80px' },
+          imageObjectFitClass: 'object-cover',
+          borderRadius: '8px'
+        };
+      }
+      
+      let baseSizePx = 80;
+      
+      switch (imageSettings.size) {
+        case 'x-small': baseSizePx = 48; break;
+        case 'small': baseSizePx = 64; break;
+        case 'medium': baseSizePx = 80; break;
+        case 'large': baseSizePx = 96; break;
+        case 'x-large': baseSizePx = 128; break;
+      }
+
+      let containerStyle: React.CSSProperties = {};
+      let imageObjectFitClass = 'object-cover';
+
+      // Handle aspect ratios with precise container sizing
+      switch (imageSettings.aspectRatio) {
+        case 'square':
+          containerStyle = {
+            width: `${baseSizePx}px`,
+            height: `${baseSizePx}px`
+          };
+          imageObjectFitClass = 'object-cover';
+          break;
+        case 'round':
+          containerStyle = {
+            width: `${baseSizePx}px`,
+            height: `${baseSizePx}px`
+          };
+          imageObjectFitClass = 'object-cover';
+          break;
+        case '3:2':
+          containerStyle = {
+            width: `${baseSizePx}px`,
+            height: `${Math.round(baseSizePx * 2 / 3)}px`
+          };
+          imageObjectFitClass = 'object-cover';
+          break;
+        case '2:3':
+          containerStyle = {
+            width: `${Math.round(baseSizePx * 2 / 3)}px`,
+            height: `${baseSizePx}px`
+          };
+          imageObjectFitClass = 'object-cover';
+          break;
+        case 'auto':
+          containerStyle = {
+            width: 'auto',
+            height: 'auto',
+            maxWidth: `${baseSizePx}px`,
+            maxHeight: `${baseSizePx}px`
+          };
+          imageObjectFitClass = 'object-contain';
+          break;
+      }
+
+      // Handle corner styles
+      let borderRadius = '0px';
+      switch (imageSettings.cornerStyle) {
+        case 'squared': 
+          borderRadius = '0px'; 
+          break;
+        case 'soft': 
+          borderRadius = '4px'; 
+          break;
+        case 'softer': 
+          borderRadius = '8px'; 
+          break;
+      }
+
+      // Force round shape for round aspect ratio
+      if (imageSettings.aspectRatio === 'round') {
+        borderRadius = '50%';
+      }
+
+      containerStyle.borderRadius = borderRadius;
+
+      return {
+        containerStyle,
+        imageObjectFitClass,
+        borderRadius
+      };
+    };
+
+    const { containerStyle, imageObjectFitClass, borderRadius } = getImageStyles();
+
+    const imageElement = (
+      <div 
+        className="flex items-center justify-center overflow-hidden"
+        style={containerStyle}
+      >
+        {value.image ? (
+          <img
+            src={value.image}
+            alt={value.name}
+            className={`w-full h-full ${imageObjectFitClass}`}
+            style={{ borderRadius }}
+          />
+        ) : (
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ 
+              borderRadius,
+              background: `linear-gradient(135deg, ${value.color || '#3B82F6'}88, ${value.color || '#3B82F6'})`
+            }}
+          >
+            <ImageIcon className="w-6 h-6 text-white opacity-80" />
+          </div>
+        )}
+      </div>
+    );
+
+    const titleElement = !hideTitle ? (
+      <p className="text-white text-xs font-medium text-center">
+        {value.name}
+      </p>
+    ) : null;
+
+    // FIXED: Use proper layout based on direction and title position
+    if (direction === 'row') {
+      // For row layout, always use flex-col for individual items
+      switch (titlePosition) {
+        case 'above':
+          return (
+            <div className="flex flex-col items-center space-y-1 flex-shrink-0">
+              {titleElement}
+              {imageElement}
+            </div>
+          );
+        case 'below':
+          return (
+            <div className="flex flex-col items-center space-y-1 flex-shrink-0">
+              {imageElement}
+              {titleElement}
+            </div>
+          );
+        case 'left':
+          return (
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {titleElement}
+              {imageElement}
+            </div>
+          );
+        case 'right':
+          return (
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {imageElement}
+              {titleElement}
+            </div>
+          );
+        case 'center':
+          return (
+            <div className="relative flex-shrink-0">
+              {imageElement}
+              {titleElement && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
+                    {value.name}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        default:
+          return (
+            <div className="flex flex-col items-center space-y-1 flex-shrink-0">
+              {imageElement}
+              {titleElement}
+            </div>
+          );
+      }
+    } else {
+      // For column and grid layouts, use the original logic
+      switch (titlePosition) {
+        case 'above':
+          return (
+            <div className="flex flex-col items-center space-y-1">
+              {titleElement}
+              {imageElement}
+            </div>
+          );
+        case 'below':
+          return (
+            <div className="flex flex-col items-center space-y-1">
+              {imageElement}
+              {titleElement}
+            </div>
+          );
+        case 'left':
+          return (
+            <div className="flex items-center space-x-2">
+              {titleElement}
+              {imageElement}
+            </div>
+          );
+        case 'right':
+          return (
+            <div className="flex items-center space-x-2">
+              {imageElement}
+              {titleElement}
+            </div>
+          );
+        case 'center':
+          return (
+            <div className="relative">
+              {imageElement}
+              {titleElement && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
+                    {value.name}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        default:
+          return (
+            <div className="flex flex-col items-center space-y-1">
+              {imageElement}
+              {titleElement}
+            </div>
+          );
+      }
+    }
+  };
+
   const renderOption = (option: any) => {
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
@@ -413,50 +654,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     : 'hover:scale-102'
                 }`}
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <div 
-                    className={`
-                      flex items-center justify-center overflow-hidden
-                      ${value.image ? '' : 'bg-gray-700 w-16 h-16 rounded-lg'}
-                    `}
-                    style={value.image ? getBorderStyles(option.imageSettings) : {}}
-                  >
-                    {value.image ? (
-                      <img
-                        src={value.image}
-                        alt={value.name}
-                        className={`${
-                          option.imageSettings?.aspectRatio === 'auto' 
-                            ? 'object-contain max-w-32 max-h-32' 
-                            : 'object-cover'
-                        } ${
-                          option.imageSettings?.size === 'x-small' ? 'w-12 h-12' :
-                          option.imageSettings?.size === 'small' ? 'w-16 h-16' :
-                          option.imageSettings?.size === 'medium' ? 'w-20 h-20' :
-                          option.imageSettings?.size === 'large' ? 'w-24 h-24' :
-                          option.imageSettings?.size === 'x-large' ? 'w-32 h-32' :
-                          'w-20 h-20'
-                        } ${
-                          option.imageSettings?.aspectRatio === 'square' ? 'aspect-square' :
-                          option.imageSettings?.aspectRatio === 'round' ? 'aspect-square rounded-full' :
-                          option.imageSettings?.aspectRatio === '3:2' ? 'aspect-[3/2]' :
-                          option.imageSettings?.aspectRatio === '2:3' ? 'aspect-[2/3]' :
-                          option.imageSettings?.aspectRatio === 'auto' ? '' :
-                          'aspect-square'
-                        }`}
-                        style={getBorderStyles(option.imageSettings)}
-                      />
-                    ) : (
-                      <ImageIcon className="w-6 h-6 text-gray-500" />
-                    )}
-                  </div>
-                  
-                  {!value.hideTitle && !option.imageSettings?.hideTitle && (
-                    <p className="text-white text-xs font-medium text-center">
-                      {value.name}
-                    </p>
-                  )}
-                </div>
+                {renderImageWithTitle(value, option, 0, selectedValues[option.id] === value.id)}
                 
                 {selectedValues[option.id] === value.id && (
                   <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">

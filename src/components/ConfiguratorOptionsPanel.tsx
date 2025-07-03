@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   Plus, 
   Download, 
@@ -33,7 +32,6 @@ interface ConfiguratorOptionsPanelProps {
 
 const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
   configuratorData,
-  modelComponents,
   lastSaved,
   isPreviewMode,
   onTogglePreviewMode,
