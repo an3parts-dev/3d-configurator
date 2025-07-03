@@ -83,9 +83,9 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 groupedOptions={groupedOptions}
               />
               
-              {/* Group content area with its own drop zone */}
+              {/* Group content area - only show if expanded AND has options */}
               <AnimatePresence>
-                {option.groupData?.isExpanded && (
+                {option.groupData?.isExpanded && groupedOptions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
@@ -193,30 +193,24 @@ const GroupContentDropZone: React.FC<{
         </div>
       )}
 
-      {groupedOptions.length === 0 ? (
-        <div className="text-center py-4 text-gray-500">
-          <p className="text-sm">No options in this group</p>
-          <p className="text-xs mt-1">Drag options here to add them</p>
-        </div>
-      ) : (
-        groupedOptions.map((groupedOption: ConfiguratorOption) => {
-          const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
-          return (
-            <DragDropOptionWrapper
-              key={groupedOption.id}
-              option={groupedOption}
-              index={groupedOptionIndex}
-              onMove={onMove}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onEditConditionalLogic={onEditConditionalLogic}
-              onMoveToGroup={onMoveToGroup}
-              isGrouped={true}
-              parentGroupId={groupId}
-            />
-          );
-        })
-      )}
+      {/* Only render options if they exist - no empty state message */}
+      {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+        const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+        return (
+          <DragDropOptionWrapper
+            key={groupedOption.id}
+            option={groupedOption}
+            index={groupedOptionIndex}
+            onMove={onMove}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onEditConditionalLogic={onEditConditionalLogic}
+            onMoveToGroup={onMoveToGroup}
+            isGrouped={true}
+            parentGroupId={groupId}
+          />
+        );
+      })}
     </div>
   );
 };
