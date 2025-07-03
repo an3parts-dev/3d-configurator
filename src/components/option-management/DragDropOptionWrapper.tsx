@@ -55,8 +55,28 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
       // CRITICAL FIX: Don't trigger reordering when hovering over a standalone option
       // if the dragged item is coming from a group (this is likely a group removal operation)
-      if (!props.option.isGroup && !props.isGrouped && item.currentGroupId) {
+      // BUT ALLOW reordering within the same group or between grouped items
+      if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && !props.option.groupId) {
         return; // Exit early to prevent reordering
+      }
+
+      // NEW: Allow reordering within groups - if both items are in the same group or both are grouped
+      const bothInSameGroup = item.currentGroupId && props.option.groupId && item.currentGroupId === props.option.groupId;
+      const bothAreGrouped = props.isGrouped && item.currentGroupId;
+      const draggedItemIsBeingAddedToGroup = !item.currentGroupId && props.isGrouped;
+
+      // Allow reordering if:
+      // 1. Both items are in the same group
+      // 2. Both items are grouped (even if in different groups)
+      // 3. An ungrouped item is being dragged into a group
+      // 4. Both items are standalone (not grouped)
+      const shouldAllowReordering = bothInSameGroup || 
+                                   bothAreGrouped || 
+                                   draggedItemIsBeingAddedToGroup ||
+                                   (!item.currentGroupId && !props.option.groupId && !props.isGrouped);
+
+      if (!shouldAllowReordering) {
+        return; // Exit early to prevent unwanted reordering
       }
 
       const hoverBoundingRect = ref.current.getBoundingClientRect();
