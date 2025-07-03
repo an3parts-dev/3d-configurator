@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
 import { Zap, Image as ImageIcon, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import * as THREE from 'three';
-import { ConfiguratorData, ModelComponent, ImageSettings } from '../types/ConfiguratorTypes';
+import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 
 interface ThreeJSPreviewProps {
@@ -327,6 +327,30 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     };
   };
 
+  // Helper function to get layout classes based on display direction and settings
+  const getLayoutClasses = (option: any) => {
+    const direction = option.displayDirection || 'row';
+    
+    if (direction === 'grid') {
+      const gridSettings = option.gridSettings || { columns: 3, gap: 'medium' };
+      const gapClass = gridSettings.gap === 'small' ? 'gap-2' : gridSettings.gap === 'large' ? 'gap-6' : 'gap-4';
+      
+      if (gridSettings.autoFit) {
+        return `grid ${gapClass}`;
+      } else {
+        return `grid grid-cols-1 md:grid-cols-${gridSettings.columnsTablet || 2} lg:grid-cols-${gridSettings.columns || 3} ${gapClass}`;
+      }
+    } else if (direction === 'row') {
+      return 'flex gap-4 overflow-x-auto pb-2';
+    } else {
+      // Column layout
+      const columnSettings = option.columnSettings || { alignment: 'left', spacing: 'normal' };
+      const alignmentClass = columnSettings.alignment === 'center' ? 'items-center' : columnSettings.alignment === 'right' ? 'items-end' : 'items-start';
+      const spacingClass = columnSettings.spacing === 'compact' ? 'gap-2' : columnSettings.spacing === 'relaxed' ? 'gap-6' : 'gap-4';
+      return `flex flex-col ${alignmentClass} ${spacingClass}`;
+    }
+  };
+
   const renderOption = (option: any) => {
     const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
       option,
@@ -335,21 +359,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
 
     if (visibleValues.length === 0) return null;
-
-    const isRowDirection = option.displayDirection === 'row';
-    const isColumnDirection = option.displayDirection === 'column';
-    const isGridDirection = option.displayDirection === 'grid';
-
-    // Helper function to get layout classes
-    const getLayoutClasses = () => {
-      if (isGridDirection) {
-        return 'grid grid-cols-2 md:grid-cols-3 gap-4';
-      } else if (isRowDirection) {
-        return 'flex gap-4 overflow-x-auto pb-2';
-      } else {
-        return 'flex flex-col gap-4';
-      }
-    };
 
     return (
       <div key={option.id} className="space-y-4">
@@ -393,12 +402,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
         
         {option.displayType === 'images' ? (
-          <div className={getLayoutClasses()}>
+          <div className={getLayoutClasses(option)}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 ${isRowDirection ? 'flex-shrink-0' : ''} ${
+                className={`relative group transition-all duration-200 ${
                   selectedValues[option.id] === value.id
                     ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'hover:scale-102'
@@ -467,12 +476,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             ))}
           </div>
         ) : option.displayType === 'buttons' ? (
-          <div className={getLayoutClasses()}>
+          <div className={getLayoutClasses(option)}>
             {visibleValues.map((value: any) => (
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${isRowDirection ? 'flex-shrink-0 whitespace-nowrap' : ''} ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${
                   selectedValues[option.id] === value.id
                     ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'

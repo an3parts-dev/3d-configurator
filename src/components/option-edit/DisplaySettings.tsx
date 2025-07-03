@@ -1,6 +1,6 @@
 import React from 'react';
-import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff, Grid2X2 } from 'lucide-react';
-import { ConfiguratorOption, ImageSettings } from '../../types/ConfiguratorTypes';
+import { List, Grid3X3, Image as ImageIcon, ChevronDown, Eye, EyeOff, Grid2X2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { ConfiguratorOption, ImageSettings, GridSettings, ColumnSettings } from '../../types/ConfiguratorTypes';
 
 interface DisplaySettingsProps {
   formData: Omit<ConfiguratorOption, 'id' | 'values'>;
@@ -17,6 +17,36 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
     setFormData(prev => ({
       ...prev,
       imageSettings: { ...prev.imageSettings!, ...updates }
+    }));
+  };
+
+  const updateGridSettings = (updates: Partial<GridSettings>) => {
+    setFormData(prev => ({
+      ...prev,
+      gridSettings: { 
+        ...prev.gridSettings || {
+          columns: 3,
+          columnsTablet: 2,
+          columnsMobile: 1,
+          gap: 'medium',
+          autoFit: false,
+          minItemWidth: 120
+        }, 
+        ...updates 
+      }
+    }));
+  };
+
+  const updateColumnSettings = (updates: Partial<ColumnSettings>) => {
+    setFormData(prev => ({
+      ...prev,
+      columnSettings: { 
+        ...prev.columnSettings || {
+          alignment: 'left',
+          spacing: 'normal'
+        }, 
+        ...updates 
+      }
     }));
   };
 
@@ -252,21 +282,25 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   const renderButtonsPreview = (direction: 'row' | 'column' | 'grid') => {
     const getLayoutClasses = () => {
-      switch (direction) {
-        case 'row':
-          return 'flex flex-row gap-2 flex-wrap max-w-md';
-        case 'column':
-          return 'flex flex-col gap-2 max-w-xs';
-        case 'grid':
-          return 'grid grid-cols-2 gap-2 max-w-sm';
-        default:
-          return 'flex flex-row gap-2 flex-wrap max-w-md';
+      if (direction === 'grid') {
+        const gridSettings = formData.gridSettings || { columns: 3, gap: 'medium' };
+        const gapClass = gridSettings.gap === 'small' ? 'gap-2' : gridSettings.gap === 'large' ? 'gap-6' : 'gap-4';
+        return `grid grid-cols-${Math.min(gridSettings.columns, 3)} ${gapClass} max-w-sm`;
+      } else if (direction === 'row') {
+        return 'flex flex-row gap-2 flex-wrap max-w-md';
+      } else {
+        const columnSettings = formData.columnSettings || { alignment: 'left', spacing: 'normal' };
+        const alignmentClass = columnSettings.alignment === 'center' ? 'items-center' : columnSettings.alignment === 'right' ? 'items-end' : 'items-start';
+        const spacingClass = columnSettings.spacing === 'compact' ? 'gap-1' : columnSettings.spacing === 'relaxed' ? 'gap-4' : 'gap-2';
+        return `flex flex-col ${alignmentClass} ${spacingClass} max-w-xs`;
       }
     };
 
+    const itemCount = direction === 'grid' ? 4 : direction === 'row' ? 4 : 3;
+
     return (
       <div className={getLayoutClasses()}>
-        {sampleValues.slice(0, direction === 'grid' ? 4 : direction === 'row' ? 4 : 3).map((value, index) => (
+        {sampleValues.slice(0, itemCount).map((value, index) => (
           <button
             key={value.id}
             className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border-2 cursor-pointer ${
@@ -290,21 +324,25 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   const renderImagesPreview = (direction: 'row' | 'column' | 'grid') => {
     const getLayoutClasses = () => {
-      switch (direction) {
-        case 'row':
-          return 'flex flex-row gap-4 flex-wrap max-w-lg';
-        case 'column':
-          return 'flex flex-col gap-4 max-w-xs';
-        case 'grid':
-          return 'grid grid-cols-2 gap-4 max-w-md';
-        default:
-          return 'flex flex-row gap-4 flex-wrap max-w-lg';
+      if (direction === 'grid') {
+        const gridSettings = formData.gridSettings || { columns: 3, gap: 'medium' };
+        const gapClass = gridSettings.gap === 'small' ? 'gap-2' : gridSettings.gap === 'large' ? 'gap-6' : 'gap-4';
+        return `grid grid-cols-${Math.min(gridSettings.columns, 3)} ${gapClass} max-w-md`;
+      } else if (direction === 'row') {
+        return 'flex flex-row gap-4 flex-wrap max-w-lg';
+      } else {
+        const columnSettings = formData.columnSettings || { alignment: 'left', spacing: 'normal' };
+        const alignmentClass = columnSettings.alignment === 'center' ? 'items-center' : columnSettings.alignment === 'right' ? 'items-end' : 'items-start';
+        const spacingClass = columnSettings.spacing === 'compact' ? 'gap-2' : columnSettings.spacing === 'relaxed' ? 'gap-6' : 'gap-4';
+        return `flex flex-col ${alignmentClass} ${spacingClass} max-w-xs`;
       }
     };
 
+    const itemCount = direction === 'grid' ? 4 : direction === 'row' ? 4 : 3;
+
     return (
       <div className={getLayoutClasses()}>
-        {sampleValues.slice(0, direction === 'grid' ? 4 : direction === 'row' ? 4 : 3).map((value, index) => (
+        {sampleValues.slice(0, itemCount).map((value, index) => (
           <button
             key={value.id}
             className={`relative group transition-all duration-200 cursor-pointer ${
@@ -330,7 +368,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   return (
     <div className="p-6 space-y-8">
-      {/* Live Preview Section - Simplified */}
+      {/* Live Preview Section */}
       <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
         <h4 className="text-white font-semibold text-lg mb-4 flex items-center">
           <Eye className="w-5 h-5 mr-2 text-blue-400" />
@@ -473,6 +511,220 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                 <div className="text-sm opacity-80">Grid arrangement</div>
               </div>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grid Settings */}
+      {(formData.displayType === 'buttons' || formData.displayType === 'images') && formData.displayDirection === 'grid' && (
+        <div className="bg-gray-750 p-6 rounded-xl border border-gray-600 space-y-6">
+          <h4 className="text-white font-semibold text-lg flex items-center">
+            <Grid2X2 className="w-5 h-5 mr-2 text-blue-400" />
+            Grid Settings
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Columns Configuration */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Desktop Columns</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="6"
+                  value={formData.gridSettings?.columns || 3}
+                  onChange={(e) => updateGridSettings({ columns: parseInt(e.target.value) })}
+                  className="w-full slider"
+                />
+                <div className="text-center text-gray-300 text-sm mt-1">
+                  {formData.gridSettings?.columns || 3} columns
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Tablet Columns</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="4"
+                  value={formData.gridSettings?.columnsTablet || 2}
+                  onChange={(e) => updateGridSettings({ columnsTablet: parseInt(e.target.value) })}
+                  className="w-full slider"
+                />
+                <div className="text-center text-gray-300 text-sm mt-1">
+                  {formData.gridSettings?.columnsTablet || 2} columns
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Mobile Columns</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  value={formData.gridSettings?.columnsMobile || 1}
+                  onChange={(e) => updateGridSettings({ columnsMobile: parseInt(e.target.value) })}
+                  className="w-full slider"
+                />
+                <div className="text-center text-gray-300 text-sm mt-1">
+                  {formData.gridSettings?.columnsMobile || 1} columns
+                </div>
+              </div>
+            </div>
+
+            {/* Gap and Auto-fit */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-400 text-sm mb-3 font-medium">Gap Size</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['small', 'medium', 'large'].map((gap) => (
+                    <button
+                      key={gap}
+                      type="button"
+                      onClick={() => updateGridSettings({ gap: gap as any })}
+                      className={`p-3 rounded-lg border-2 transition-all capitalize ${
+                        (formData.gridSettings?.gap || 'medium') === gap
+                          ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                          : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      {gap}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg border border-gray-600">
+                <div>
+                  <label className="text-gray-400 text-sm font-medium">Auto-fit Items</label>
+                  <p className="text-gray-500 text-xs mt-1">Automatically adjust columns based on item width</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateGridSettings({ autoFit: !formData.gridSettings?.autoFit })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    formData.gridSettings?.autoFit ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      formData.gridSettings?.autoFit ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {formData.gridSettings?.autoFit && (
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Minimum Item Width (px)</label>
+                  <input
+                    type="range"
+                    min="80"
+                    max="300"
+                    step="10"
+                    value={formData.gridSettings?.minItemWidth || 120}
+                    onChange={(e) => updateGridSettings({ minItemWidth: parseInt(e.target.value) })}
+                    className="w-full slider"
+                  />
+                  <div className="text-center text-gray-300 text-sm mt-1">
+                    {formData.gridSettings?.minItemWidth || 120}px
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Column Settings */}
+      {(formData.displayType === 'buttons' || formData.displayType === 'images') && formData.displayDirection === 'column' && (
+        <div className="bg-gray-750 p-6 rounded-xl border border-gray-600 space-y-6">
+          <h4 className="text-white font-semibold text-lg flex items-center">
+            <AlignLeft className="w-5 h-5 mr-2 text-blue-400" />
+            Column Settings
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Alignment */}
+            <div>
+              <label className="block text-gray-400 text-sm mb-3 font-medium">Alignment</label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => updateColumnSettings({ alignment: 'left' })}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    (formData.columnSettings?.alignment || 'left') === 'left'
+                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="text-center">
+                    <AlignLeft className="w-6 h-6 mx-auto mb-2" />
+                    <div className="font-semibold text-sm">Left</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateColumnSettings({ alignment: 'center' })}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    (formData.columnSettings?.alignment || 'left') === 'center'
+                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="text-center">
+                    <AlignCenter className="w-6 h-6 mx-auto mb-2" />
+                    <div className="font-semibold text-sm">Center</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateColumnSettings({ alignment: 'right' })}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    (formData.columnSettings?.alignment || 'left') === 'right'
+                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="text-center">
+                    <AlignRight className="w-6 h-6 mx-auto mb-2" />
+                    <div className="font-semibold text-sm">Right</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Spacing */}
+            <div>
+              <label className="block text-gray-400 text-sm mb-3 font-medium">Spacing</label>
+              <div className="grid grid-cols-3 gap-3">
+                {['compact', 'normal', 'relaxed'].map((spacing) => (
+                  <button
+                    key={spacing}
+                    type="button"
+                    onClick={() => updateColumnSettings({ spacing: spacing as any })}
+                    className={`p-4 rounded-lg border-2 transition-all capitalize ${
+                      (formData.columnSettings?.spacing || 'normal') === spacing
+                        ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                        : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="flex flex-col items-center space-y-1 mb-2">
+                        <div className="w-6 h-1 bg-current rounded"></div>
+                        <div className={`w-6 h-1 bg-current rounded ${
+                          spacing === 'compact' ? 'mt-0.5' : spacing === 'relaxed' ? 'mt-2' : 'mt-1'
+                        }`}></div>
+                        <div className={`w-6 h-1 bg-current rounded ${
+                          spacing === 'compact' ? 'mt-0.5' : spacing === 'relaxed' ? 'mt-2' : 'mt-1'
+                        }`}></div>
+                      </div>
+                      <div className="font-semibold text-sm">{spacing}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

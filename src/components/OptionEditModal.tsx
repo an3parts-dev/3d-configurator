@@ -13,7 +13,9 @@ import {
   ConfiguratorOption, 
   ConfiguratorOptionValue, 
   ImageSettings,
-  ConfiguratorOptionGroup
+  ConfiguratorOptionGroup,
+  GridSettings,
+  ColumnSettings
 } from '../types/ConfiguratorTypes';
 
 interface ModelComponent {
@@ -64,6 +66,18 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
       cornerStyle: 'softer',
       hideTitle: false,
       titlePosition: 'below'
+    },
+    gridSettings: {
+      columns: 3,
+      columnsTablet: 2,
+      columnsMobile: 1,
+      gap: 'medium',
+      autoFit: false,
+      minItemWidth: 120
+    },
+    columnSettings: {
+      alignment: 'left',
+      spacing: 'normal'
     }
   });
 
@@ -99,6 +113,18 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             hideTitle: false,
             titlePosition: 'below'
           },
+          gridSettings: option.gridSettings || {
+            columns: 3,
+            columnsTablet: 2,
+            columnsMobile: 1,
+            gap: 'medium',
+            autoFit: false,
+            minItemWidth: 120
+          },
+          columnSettings: option.columnSettings || {
+            alignment: 'left',
+            spacing: 'normal'
+          },
           groupId: option.groupId
         });
         setLocalValues([...option.values]);
@@ -117,6 +143,18 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             cornerStyle: 'softer',
             hideTitle: false,
             titlePosition: 'below'
+          },
+          gridSettings: {
+            columns: 3,
+            columnsTablet: 2,
+            columnsMobile: 1,
+            gap: 'medium',
+            autoFit: false,
+            minItemWidth: 120
+          },
+          columnSettings: {
+            alignment: 'left',
+            spacing: 'normal'
           }
         });
         setLocalValues([]);
