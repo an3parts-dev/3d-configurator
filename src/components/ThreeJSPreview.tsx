@@ -359,9 +359,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 3D Canvas - Responsive height */}
+      {/* 3D Canvas - Responsive height with white background */}
       <div className="relative h-[40vh] sm:h-[45vh] lg:h-[50vh]">
-        <Canvas shadows>
+        <Canvas shadows gl={{ alpha: false }} style={{ background: 'white' }}>
+          <color attach="background" args={['white']} />
           <PerspectiveCamera 
             makeDefault 
             position={[5, 3, 5]} 
