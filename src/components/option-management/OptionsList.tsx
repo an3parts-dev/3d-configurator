@@ -39,14 +39,14 @@ const GroupContentDropZone: React.FC<{
   return (
     <div 
       ref={drop}
-      className={`relative transition-all duration-200 ${
+      className={`relative transition-all duration-200 min-h-[80px] ${
         isOver && canDrop 
           ? 'bg-purple-500/10 border-2 border-dashed border-purple-400 rounded-xl' 
           : ''
       }`}
     >
       {/* Content area */}
-      <div className="relative z-0">
+      <div className="relative z-0 space-y-4">
         {children}
       </div>
     </div>
@@ -108,24 +108,22 @@ const OptionsList: React.FC<OptionsListProps> = ({
                       groupId={option.id}
                       onMoveToGroup={onMoveToGroup}
                     >
-                      <div className="space-y-4 min-h-[80px] p-4 rounded-xl">
-                        {groupedOptions.map((groupedOption: ConfiguratorOption) => {
-                          const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
-                          return (
-                            <DragDropOptionWrapper
-                              key={groupedOption.id}
-                              option={groupedOption}
-                              index={groupedOptionIndex}
-                              onMove={onMove}
-                              onEdit={onEdit}
-                              onDelete={onDelete}
-                              onEditConditionalLogic={onEditConditionalLogic}
-                              onMoveToGroup={onMoveToGroup}
-                              isGrouped={true}
-                            />
-                          );
-                        })}
-                      </div>
+                      {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+                        const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+                        return (
+                          <DragDropOptionWrapper
+                            key={groupedOption.id}
+                            option={groupedOption}
+                            index={groupedOptionIndex}
+                            onMove={onMove}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            onEditConditionalLogic={onEditConditionalLogic}
+                            onMoveToGroup={onMoveToGroup}
+                            isGrouped={true}
+                          />
+                        );
+                      })}
                     </GroupContentDropZone>
                   </motion.div>
                 )}
