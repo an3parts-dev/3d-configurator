@@ -117,12 +117,74 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
     }),
   });
 
-  // Create invisible drag preview
+  // Create a proper drag preview that follows the cursor
   React.useEffect(() => {
-    const emptyImg = new Image();
-    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-    dragPreview(emptyImg, { anchorX: 0, anchorY: 0 });
-  }, [dragPreview]);
+    // Create a custom drag preview element
+    const createDragPreview = () => {
+      const preview = document.createElement('div');
+      preview.style.cssText = `
+        position: fixed;
+        top: -1000px;
+        left: -1000px;
+        z-index: 1000;
+        pointer-events: none;
+        background: rgba(31, 41, 55, 0.95);
+        border: 1px solid rgba(59, 130, 246, 0.5);
+        border-radius: 8px;
+        padding: 12px;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(8px);
+        max-width: 250px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      `;
+      
+      // Add content based on option type
+      if (props.option.isGroup) {
+        preview.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 16px; height: 16px; background: rgba(147, 51, 234, 0.3); border: 1px solid rgba(147, 51, 234, 0.5); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+              📁
+            </div>
+            <span>${props.option.name}</span>
+            <span style="background: rgba(147, 51, 234, 0.2); color: rgba(196, 181, 253, 1); padding: 2px 6px; border-radius: 12px; font-size: 10px; border: 1px solid rgba(147, 51, 234, 0.3);">GROUP</span>
+          </div>
+        `;
+      } else {
+        preview.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 16px; height: 16px; background: rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+              ⚙️
+            </div>
+            <span>${props.option.name}</span>
+            ${props.option.conditionalLogic?.enabled ? '<span style="background: rgba(147, 51, 234, 0.2); color: rgba(196, 181, 253, 1); padding: 2px 6px; border-radius: 12px; font-size: 10px; border: 1px solid rgba(147, 51, 234, 0.3);">Logic</span>' : ''}
+          </div>
+        `;
+      }
+      
+      document.body.appendChild(preview);
+      return preview;
+    };
+
+    // Use the custom preview
+    const preview = createDragPreview();
+    dragPreview(preview, { 
+      anchorX: 0.5, 
+      anchorY: 0.5,
+      captureDraggingState: true
+    });
+
+    // Cleanup function
+    return () => {
+      if (document.body.contains(preview)) {
+        document.body.removeChild(preview);
+      }
+    };
+  }, [dragPreview, props.option.name, props.option.isGroup, props.option.conditionalLogic?.enabled]);
 
   const dragDropRef = drag(drop(ref));
 

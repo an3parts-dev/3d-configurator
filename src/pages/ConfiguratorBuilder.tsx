@@ -166,7 +166,7 @@ const ConfiguratorBuilder: React.FC = () => {
     });
   }, []);
 
-  // Enhanced move function for precise positioning within groups
+  // Enhanced move function for precise positioning within groups AND for groups themselves
   const moveOption = useCallback((dragIndex: number, hoverIndex: number) => {
     setConfiguratorData(prev => {
       const newOptions = [...prev.options];
