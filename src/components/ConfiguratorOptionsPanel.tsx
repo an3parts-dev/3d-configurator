@@ -76,23 +76,27 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
               </button>
             </div>
 
-            {/* Import/Export Buttons - Mobile Optimized */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={onExport}
-                className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-xs sm:text-sm flex-1 sm:flex-none justify-center"
-              >
-                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Export</span>
-              </button>
+            {/* Import/Export Buttons - Drag & Drop Style */}
+            <div className="flex gap-2">
+              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all flex-1">
+                <button
+                  onClick={onExport}
+                  className="w-full flex items-center justify-center space-x-2 text-green-400 hover:text-green-300 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="text-sm font-medium">Export</span>
+                </button>
+              </div>
 
-              <button
-                onClick={onImport}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-2 sm:px-3 py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-xs sm:text-sm flex-1 sm:flex-none justify-center"
-              >
-                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Import</span>
-              </button>
+              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all flex-1">
+                <button
+                  onClick={onImport}
+                  className="w-full flex items-center justify-center space-x-2 text-orange-400 hover:text-orange-300 transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm font-medium">Import</span>
+                </button>
+              </div>
             </div>
 
             {lastSaved && (
@@ -113,25 +117,29 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
               </div>
             </div>
             
-            {/* Action Buttons - Mobile Optimized */}
+            {/* Action Buttons - Drag & Drop Style */}
             <div className="flex gap-2">
-              <button
-                onClick={onCreateOption}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-xs sm:text-sm flex-1 justify-center"
-              >
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Add Option</span>
-                <span className="xs:hidden">Option</span>
-              </button>
+              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all flex-1">
+                <button
+                  onClick={onCreateOption}
+                  className="w-full flex items-center justify-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium hidden xs:inline">Add Option</span>
+                  <span className="text-sm font-medium xs:hidden">Option</span>
+                </button>
+              </div>
 
-              <button
-                onClick={onCreateGroup}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-2 sm:px-3 py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-xs sm:text-sm flex-1 justify-center"
-              >
-                <FolderPlus className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Add Group</span>
-                <span className="xs:hidden">Group</span>
-              </button>
+              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all flex-1">
+                <button
+                  onClick={onCreateGroup}
+                  className="w-full flex items-center justify-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  <FolderPlus className="w-4 h-4" />
+                  <span className="text-sm font-medium hidden xs:inline">Add Group</span>
+                  <span className="text-sm font-medium xs:hidden">Group</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
