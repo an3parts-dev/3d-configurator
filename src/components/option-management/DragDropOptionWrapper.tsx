@@ -27,7 +27,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       type: 'option',
       isGroup: props.option.isGroup,
       currentGroupId: props.option.groupId,
-      name: props.option.name // Add the option name to the drag item
+      name: props.option.name
     }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -47,6 +47,18 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       // Don't allow dropping a group into itself or its children
       if (item.isGroup && props.option.groupId === item.id) return;
 
+      // CRITICAL FIX: Don't trigger reordering when hovering over a group header
+      // if the dragged item is not a group (this prevents the flicker)
+      if (props.option.isGroup && !item.isGroup) {
+        return; // Exit early to prevent reordering
+      }
+
+      // CRITICAL FIX: Don't trigger reordering when hovering over a standalone option
+      // if the dragged item is coming from a group (this is likely a group removal operation)
+      if (!props.option.isGroup && !props.isGrouped && item.currentGroupId) {
+        return; // Exit early to prevent reordering
+      }
+
       const hoverBoundingRect = ref.current.getBoundingClientRect();
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
@@ -54,6 +66,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
+      // Only proceed with reordering for same-level items
       if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
         props.onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;

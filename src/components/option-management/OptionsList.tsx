@@ -25,7 +25,7 @@ const GroupContentDropZone: React.FC<{
 }> = ({ groupId, groupName, children, onMoveToGroup }) => {
   const [{ isOver, canDrop, draggedItem }, drop] = useDrop({
     accept: 'option',
-    drop: (item: { id: string; isGroup: boolean; currentGroupId?: string }, monitor) => {
+    drop: (item: { id: string; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
       // Only handle the drop if it wasn't handled by a child component
       if (!monitor.didDrop() && !item.isGroup && item.currentGroupId !== groupId) {
         onMoveToGroup(item.id, groupId);
@@ -41,8 +41,6 @@ const GroupContentDropZone: React.FC<{
   // Get the dragged option name for display
   const getDraggedOptionName = () => {
     if (draggedItem && !draggedItem.isGroup) {
-      // You might need to pass the options array to get the actual name
-      // For now, we'll use a generic message
       return draggedItem.name || 'option';
     }
     return 'option';
