@@ -84,15 +84,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   const [localValues, setLocalValues] = useState<ConfiguratorOptionValue[]>([]);
   const [showValidationFlash, setShowValidationFlash] = useState(false);
 
-  // Sync local values with option values - CRITICAL FIX
+  // Sync local values with option values
   useEffect(() => {
     if (option?.values) {
-      console.log('🔄 Syncing local values with option values:', option.values.length);
       setLocalValues([...option.values]);
     } else {
       setLocalValues([]);
     }
-  }, [option?.values, option?.id]); // Added option.id as dependency to ensure sync on option changes
+  }, [option?.values]);
 
   useEffect(() => {
     if (isOpen) {
@@ -189,25 +188,22 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   };
 
   const handleAddValue = () => {
+    const newValue: ConfiguratorOptionValue = {
+      id: `temp_value_${Date.now()}`,
+      name: 'New Value'
+    };
+
     if (option) {
       // If option exists, use the real add value function
-      console.log('➕ Adding value to existing option:', option.id);
       onAddValue(option.id);
-      // Note: localValues will be updated automatically via the useEffect above
     } else {
       // If option doesn't exist yet, add to local state only
-      const newValue: ConfiguratorOptionValue = {
-        id: `temp_value_${Date.now()}`,
-        name: 'New Value'
-      };
-      console.log('➕ Adding value to new option (local state)');
       setLocalValues(prev => [...prev, newValue]);
     }
   };
 
   const handleUpdateValue = (valueId: string, updates: Partial<ConfiguratorOptionValue>) => {
     if (option) {
-      console.log('🔄 Updating value in existing option:', valueId);
       onUpdateValue(option.id, valueId, updates);
     }
     // Always update local state immediately for UI responsiveness
@@ -218,7 +214,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
 
   const handleDeleteValue = (valueId: string) => {
     if (option) {
-      console.log('🗑️ Deleting value from existing option:', valueId);
       onDeleteValue(option.id, valueId);
     }
     // Always update local state immediately
@@ -227,7 +222,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
 
   const handleMoveValue = (dragIndex: number, hoverIndex: number) => {
     if (option) {
-      console.log('🔄 Moving value in existing option:', dragIndex, '->', hoverIndex);
       onMoveValue(option.id, dragIndex, hoverIndex);
     }
     // Always update local state immediately
