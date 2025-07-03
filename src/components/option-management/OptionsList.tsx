@@ -19,13 +19,12 @@ interface OptionsListProps {
 // Enhanced Group Content Drop Zone Component
 const GroupContentDropZone: React.FC<{
   groupId: string;
-  groupName: string;
   children: React.ReactNode;
   onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
-}> = ({ groupId, groupName, children, onMoveToGroup }) => {
-  const [{ isOver, canDrop, draggedItem }, drop] = useDrop({
+}> = ({ groupId, children, onMoveToGroup }) => {
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
-    drop: (item: { id: string; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
+    drop: (item: { id: string; isGroup: boolean; currentGroupId?: string }, monitor) => {
       // Only handle the drop if it wasn't handled by a child component
       if (!monitor.didDrop() && !item.isGroup && item.currentGroupId !== groupId) {
         onMoveToGroup(item.id, groupId);
@@ -34,17 +33,8 @@ const GroupContentDropZone: React.FC<{
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop() && !monitor.getItem()?.isGroup && monitor.getItem()?.currentGroupId !== groupId,
-      draggedItem: monitor.getItem(),
     }),
   });
-
-  // Get the dragged option name for display
-  const getDraggedOptionName = () => {
-    if (draggedItem && !draggedItem.isGroup) {
-      return draggedItem.name || 'option';
-    }
-    return 'option';
-  };
 
   return (
     <div 
@@ -55,15 +45,6 @@ const GroupContentDropZone: React.FC<{
           : ''
       }`}
     >
-      {/* Overlay drop indicator that covers the entire area */}
-      {isOver && canDrop && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-purple-500/10 rounded-xl z-10 border-2 border-dashed border-purple-400">
-          <div className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
-            Add {getDraggedOptionName()} to {groupName}
-          </div>
-        </div>
-      )}
-      
       {/* Content area */}
       <div className="relative z-0">
         {children}
@@ -125,33 +106,25 @@ const OptionsList: React.FC<OptionsListProps> = ({
                   >
                     <GroupContentDropZone
                       groupId={option.id}
-                      groupName={option.name}
                       onMoveToGroup={onMoveToGroup}
                     >
                       <div className="space-y-4 min-h-[80px] p-4 rounded-xl">
-                        {groupedOptions.length === 0 ? (
-                          <div className="text-center py-8 text-gray-400">
-                            <div className="text-sm font-medium mb-1">No options in this group</div>
-                            <div className="text-xs">Drag options here to add them to this group</div>
-                          </div>
-                        ) : (
-                          groupedOptions.map((groupedOption: ConfiguratorOption) => {
-                            const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
-                            return (
-                              <DragDropOptionWrapper
-                                key={groupedOption.id}
-                                option={groupedOption}
-                                index={groupedOptionIndex}
-                                onMove={onMove}
-                                onEdit={onEdit}
-                                onDelete={onDelete}
-                                onEditConditionalLogic={onEditConditionalLogic}
-                                onMoveToGroup={onMoveToGroup}
-                                isGrouped={true}
-                              />
-                            );
-                          })
-                        )}
+                        {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+                          const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+                          return (
+                            <DragDropOptionWrapper
+                              key={groupedOption.id}
+                              option={groupedOption}
+                              index={groupedOptionIndex}
+                              onMove={onMove}
+                              onEdit={onEdit}
+                              onDelete={onDelete}
+                              onEditConditionalLogic={onEditConditionalLogic}
+                              onMoveToGroup={onMoveToGroup}
+                              isGrouped={true}
+                            />
+                          );
+                        })}
                       </div>
                     </GroupContentDropZone>
                   </motion.div>
