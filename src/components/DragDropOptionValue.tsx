@@ -112,20 +112,20 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
   const getUploadBoxStyles = () => {
     if (!imageSettings) {
       return {
-        containerStyle: { width: '96px', height: '96px' },
+        containerStyle: { width: '80px', height: '80px' },
         imageObjectFitClass: 'object-cover',
         borderRadius: '8px'
       };
     }
     
-    let baseSizePx = 80;
+    let baseSizePx = 64; // Smaller default for mobile
     
     switch (imageSettings.size) {
-      case 'x-small': baseSizePx = 48; break;
-      case 'small': baseSizePx = 64; break;
-      case 'medium': baseSizePx = 80; break;
-      case 'large': baseSizePx = 96; break;
-      case 'x-large': baseSizePx = 128; break;
+      case 'x-small': baseSizePx = 40; break;
+      case 'small': baseSizePx = 48; break;
+      case 'medium': baseSizePx = 64; break;
+      case 'large': baseSizePx = 80; break;
+      case 'x-large': baseSizePx = 96; break;
     }
 
     let containerStyle: React.CSSProperties = {};
@@ -264,31 +264,31 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
             opacity: { duration: 0.15 },
             scale: { duration: 0.15 }
           }}
-          className={`p-6 bg-gray-700 rounded-xl space-y-6 transition-all duration-150 border relative ${
+          className={`p-4 sm:p-6 bg-white dark:bg-gray-700 rounded-xl space-y-4 sm:space-y-6 transition-all duration-150 border relative ${
             isDraggingState
               ? 'border-blue-500 shadow-2xl shadow-blue-500/30 z-50'
               : isOver
-              ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-500/5'
-              : 'border-gray-600 hover:border-gray-500 shadow-sm'
+              ? 'border-blue-400 shadow-lg shadow-blue-400/20 bg-blue-50/50 dark:bg-blue-500/5'
+              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 shadow-sm'
           }`}
         >
           {/* Conditional Logic Indicator */}
           {hasConditionalLogic && (
-            <div className="absolute -top-2 -right-2 bg-orange-600 text-white p-1.5 rounded-full shadow-lg border-2 border-gray-700">
+            <div className="absolute -top-2 -right-2 bg-orange-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white dark:border-gray-700">
               <Zap className="w-3 h-3" />
             </div>
           )}
 
-          {/* Header with controls */}
+          {/* Header with controls - Mobile optimized */}
           <div className="flex items-center justify-between">
             {/* Left side - Drag Handle, Image Upload (for images), and Value Name */}
-            <div className="flex items-center space-x-4 flex-1 min-w-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
               {/* Drag Handle */}
               <div 
                 ref={drag}
-                className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-600 transition-colors"
+                className="cursor-grab active:cursor-grabbing flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
               >
-                <GripVertical className="w-5 h-5 text-gray-400" />
+                <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
               </div>
 
               {/* Image Upload - Only for Images Display Type - Moved to left */}
@@ -322,38 +322,38 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                           <div className="flex space-x-1">
                             <button
                               onClick={handleImageClick}
-                              className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded transition-colors"
+                              className="bg-blue-600 hover:bg-blue-700 text-white p-1 sm:p-1.5 rounded transition-colors"
                             >
-                              <Upload className="w-3 h-3" />
+                              <Upload className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </button>
                             <button
                               onClick={handleRemoveImage}
-                              className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded transition-colors"
+                              className="bg-red-600 hover:bg-red-700 text-white p-1 sm:p-1.5 rounded transition-colors"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </button>
                           </div>
                         </div>
                       </>
                     ) : (
                       <div 
-                        className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-800"
+                        className="w-full h-full flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800"
                         style={{ borderRadius }}
                       >
-                        <ImageIcon className="w-6 h-6" />
+                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Value Name Input */}
-              <div className="flex-1 max-w-md">
+              {/* Value Name Input - Mobile optimized */}
+              <div className="flex-1 max-w-xs sm:max-w-md">
                 <input
                   type="text"
                   value={value.name}
                   onChange={(e) => onUpdate(value.id, { name: e.target.value })}
-                  className="w-full bg-gray-600 text-white text-sm font-medium focus:outline-none border border-gray-500 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                  className="w-full bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white text-sm sm:text-base font-medium focus:outline-none border border-gray-300 dark:border-gray-500 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
                   placeholder="Value name"
                 />
               </div>
@@ -361,7 +361,7 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
 
             {/* Center - Color picker for material manipulation */}
             {manipulationType === 'material' && (
-              <div className="flex items-center space-x-3 flex-shrink-0">
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                 <div className="relative">
                   {/* Hidden color input */}
                   <input
@@ -376,14 +376,14 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
                   <button
                     type="button"
                     onClick={handleColorPickerClick}
-                    className="w-12 h-12 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 flex items-center justify-center relative overflow-hidden border-2 border-gray-500 hover:border-gray-400"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 flex items-center justify-center relative overflow-hidden border-2 border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400"
                     style={{ 
                       backgroundColor: value.color || '#000000'
                     }}
                     title="Click to change color"
                   >
                     <Droplets 
-                      className="w-5 h-5 transition-colors duration-200" 
+                      className="w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200" 
                       style={{ 
                         color: getContrastColor(value.color || '#000000')
                       }}
@@ -393,35 +393,35 @@ const DragDropOptionValue: React.FC<DragDropOptionValueProps> = ({
               </div>
             )}
             
-            {/* Right side - Action Buttons */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
+            {/* Right side - Action Buttons - Mobile optimized */}
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
               <button
                 onClick={() => setShowConditionalLogicModal(true)}
                 className={`p-2 rounded-lg transition-colors ${
                   hasConditionalLogic
-                    ? 'text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20'
-                    : 'text-gray-400 hover:text-orange-400 hover:bg-orange-500/10'
+                    ? 'text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 bg-orange-100 dark:bg-orange-500/10 hover:bg-orange-200 dark:hover:bg-orange-500/20'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10'
                 }`}
                 title="Edit Value Conditional Logic"
               >
-                <Zap className="w-5 h-5" />
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               {canDelete && (
                 <button
                   onClick={() => onDelete(value.id)}
-                  className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                  className="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                   title="Delete this value"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Component Selection for Visibility */}
+          {/* Component Selection for Visibility - Mobile optimized */}
           {manipulationType === 'visibility' && (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {defaultBehavior === 'hide' ? (
                 <div className="space-y-2">
                   <ComponentSelector

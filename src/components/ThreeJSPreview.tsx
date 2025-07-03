@@ -432,9 +432,9 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         />
       </div>
 
-      {/* Sticky Options Panel - Mobile optimized */}
-      <div className="bg-gray-900 flex flex-col h-[60vh] sm:h-[55vh] lg:h-[50vh] sticky top-0 z-10">
-        <div className="flex-1 overflow-auto p-3 sm:p-6">
+      {/* Options Panel - Mobile optimized with better text sizing */}
+      <div className="bg-gray-900 dark:bg-gray-900 flex flex-col h-[60vh] sm:h-[55vh] lg:h-[50vh]">
+        <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
           {organizeOptionsForDisplay().length === 0 ? (
             <EmptyState
               icon={Layers}
@@ -447,7 +447,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               className="py-8 sm:py-12"
             />
           ) : (
-            <div className="space-y-6 sm:space-y-8">
+            <div className="space-y-4 sm:space-y-6 lg:space-y-8">
               {organizeOptionsForDisplay().map((item, index) => {
                 if (item.type === 'group') {
                   const { group, options } = item;
@@ -473,7 +473,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                       key={option.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-4"
+                      className="space-y-3 sm:space-y-4"
                     >
                       <OptionRenderer
                         option={option}

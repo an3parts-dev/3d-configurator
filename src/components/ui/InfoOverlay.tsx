@@ -24,11 +24,13 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({
   };
 
   return (
-    <div className={`absolute ${positionClasses[position]} bg-black/70 backdrop-blur-md rounded-xl px-3 sm:px-5 py-2 sm:py-4 border border-gray-600 ${className}`}>
-      <div className="flex items-center space-x-2 mb-1">
-        {Icon && <Icon className="w-4 h-4 text-blue-400" />}
-        <p className="text-white text-xs sm:text-sm font-semibold">{title}</p>
-      </div>
+    <div className={`absolute ${positionClasses[position]} bg-black/70 backdrop-blur-md rounded-lg sm:rounded-xl px-2 sm:px-3 lg:px-5 py-1.5 sm:py-2 lg:py-4 border border-gray-600 ${className}`}>
+      {title && (
+        <div className="flex items-center space-x-1 sm:space-x-2 mb-0.5 sm:mb-1">
+          {Icon && <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />}
+          <p className="text-white text-xs sm:text-sm font-semibold">{title}</p>
+        </div>
+      )}
       {children}
     </div>
   );

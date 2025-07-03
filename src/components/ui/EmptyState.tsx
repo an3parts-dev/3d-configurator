@@ -20,14 +20,14 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   className = ""
 }) => {
   return (
-    <div className={`text-center py-12 text-gray-500 ${className}`}>
-      <Icon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-      <p className="text-lg font-medium">{title}</p>
-      <p className="text-sm mt-2">{description}</p>
+    <div className={`text-center py-8 sm:py-12 text-gray-500 ${className}`}>
+      <Icon className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 opacity-50" />
+      <p className="text-base sm:text-lg font-medium">{title}</p>
+      <p className="text-sm sm:text-base mt-1 sm:mt-2">{description}</p>
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="mt-3 sm:mt-4 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
         >
           {action.label}
         </button>

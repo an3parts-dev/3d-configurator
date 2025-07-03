@@ -24,14 +24,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   };
 
   const sizeStyles = {
-    sm: 'text-xs px-2 py-1',
-    md: 'text-sm px-3 py-1.5'
+    sm: 'text-xs px-1.5 py-0.5',
+    md: 'text-sm px-2 sm:px-3 py-1 sm:py-1.5'
   };
 
   return (
     <span className={`inline-flex items-center space-x-1 rounded-full font-medium border ${typeStyles[type]} ${sizeStyles[size]}`}>
-      {Icon && <Icon className="w-3 h-3" />}
-      <span>{children}</span>
+      {Icon && <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+      <span className="truncate">{children}</span>
     </span>
   );
 };
