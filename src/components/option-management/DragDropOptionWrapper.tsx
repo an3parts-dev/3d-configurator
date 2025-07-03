@@ -65,9 +65,9 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
     },
     drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string }, monitor) => {
       if (!monitor.didDrop()) {
-        // Handle group assignment
+        // Handle group assignment - only for group headers and standalone options
         if (props.option.isGroup && !item.isGroup && props.onMoveToGroup) {
-          // Moving an option into a group
+          // Moving an option into a group (dropping on group header)
           props.onMoveToGroup(item.id, props.option.id);
         } else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && props.onMoveToGroup) {
           // Moving an option out of a group (dropping on standalone option)
@@ -90,7 +90,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const dragDropRef = drag(drop(ref));
 
-  // Determine drop zone styling
+  // Determine drop zone styling - only for group headers and standalone options
   const getDropZoneStyle = () => {
     if (!isOver || !canDrop) return '';
     
@@ -111,7 +111,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
         isOver={isOver && canDrop}
       />
       
-      {/* Drop zone indicator for groups */}
+      {/* Drop zone indicator for group headers */}
       {isOver && canDrop && props.option.isGroup && (
         <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center">
           <div className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
