@@ -35,27 +35,6 @@ const ModelInfoOverlays: React.FC<ModelInfoOverlaysProps> = ({
         </div>
       </InfoOverlay>
 
-      {/* Conditional Logic Status - Mobile optimized */}
-      {hasConditionalLogic && (
-        <InfoOverlay position="top-right" className="bg-purple-600/20 border-purple-500/30">
-          <div className="flex items-center space-x-1 sm:space-x-2 text-purple-300">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-            </motion.div>
-            <span className="text-xs sm:text-sm font-medium">
-              <span className="hidden sm:inline">Smart Logic Active</span>
-              <span className="sm:hidden">Logic</span>
-            </span>
-          </div>
-          <p className="text-xs text-purple-200/80 mt-1">
-            {visibleOptionsCount} of {configuratorData.options.filter(opt => !opt.isGroup).length} options visible
-          </p>
-        </InfoOverlay>
-      )}
-
       {/* Controls Info - Mobile optimized */}
       <InfoOverlay position="bottom-right" title="">
         <div className="text-xs sm:text-sm text-gray-300 space-y-1">
