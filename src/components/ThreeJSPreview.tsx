@@ -370,7 +370,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           <PerspectiveCamera 
             makeDefault 
             position={[5, 3, 5]} 
-            fov={50}
+            fov={35}
             near={0.1}
             far={100}
           />
