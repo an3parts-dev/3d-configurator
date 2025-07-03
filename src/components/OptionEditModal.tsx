@@ -84,14 +84,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   const [localValues, setLocalValues] = useState<ConfiguratorOptionValue[]>([]);
   const [showValidationFlash, setShowValidationFlash] = useState(false);
 
-  // Sync local values with option values
+  // Sync local values with option values when option changes
   useEffect(() => {
     if (option?.values) {
       setLocalValues([...option.values]);
     } else {
       setLocalValues([]);
     }
-  }, [option?.values]);
+  }, [option?.id, option?.values]); // Added option.id to dependencies
 
   useEffect(() => {
     if (isOpen) {
@@ -193,38 +193,39 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
       name: 'New Value'
     };
 
+    // ALWAYS update local state immediately for UI responsiveness
+    setLocalValues(prev => [...prev, newValue]);
+
+    // If option exists, also call the real add value function
     if (option) {
-      // If option exists, use the real add value function
       onAddValue(option.id);
-    } else {
-      // If option doesn't exist yet, add to local state only
-      setLocalValues(prev => [...prev, newValue]);
     }
   };
 
   const handleUpdateValue = (valueId: string, updates: Partial<ConfiguratorOptionValue>) => {
-    if (option) {
-      onUpdateValue(option.id, valueId, updates);
-    }
-    // Always update local state immediately for UI responsiveness
+    // ALWAYS update local state immediately for UI responsiveness
     setLocalValues(prev => prev.map(value => 
       value.id === valueId ? { ...value, ...updates } : value
     ));
+
+    // If option exists, also call the real update function
+    if (option) {
+      onUpdateValue(option.id, valueId, updates);
+    }
   };
 
   const handleDeleteValue = (valueId: string) => {
+    // ALWAYS update local state immediately
+    setLocalValues(prev => prev.filter(value => value.id !== valueId));
+
+    // If option exists, also call the real delete function
     if (option) {
       onDeleteValue(option.id, valueId);
     }
-    // Always update local state immediately
-    setLocalValues(prev => prev.filter(value => value.id !== valueId));
   };
 
   const handleMoveValue = (dragIndex: number, hoverIndex: number) => {
-    if (option) {
-      onMoveValue(option.id, dragIndex, hoverIndex);
-    }
-    // Always update local state immediately
+    // ALWAYS update local state immediately
     setLocalValues(prev => {
       const newValues = [...prev];
       const draggedValue = newValues[dragIndex];
@@ -232,6 +233,11 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
       newValues.splice(hoverIndex, 0, draggedValue);
       return newValues;
     });
+
+    // If option exists, also call the real move function
+    if (option) {
+      onMoveValue(option.id, dragIndex, hoverIndex);
+    }
   };
 
   // Memoize tab content to prevent unnecessary re-renders
