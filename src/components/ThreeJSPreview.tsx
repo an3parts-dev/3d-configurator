@@ -230,8 +230,8 @@ const GLBModel = ({
       model={modelForCamera}
       enableAutoRotation={true}
       rotationSpeed={0.15}
-      cameraDistance={1.8}
-      verticalOffset={0.2}
+      viewportCoverage={0.75}
+      verticalOffset={0.1}
     />
   );
 };
