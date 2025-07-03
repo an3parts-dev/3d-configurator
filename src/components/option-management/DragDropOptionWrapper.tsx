@@ -64,14 +64,6 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Only perform the move when the mouse has crossed half of the items height
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
-
       // Enhanced reordering logic for precise positioning
       const bothInSameContext = (
         // Both are in the same group
@@ -85,8 +77,23 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       );
 
       if (bothInSameContext) {
-        props.onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
+        // Immediate switching - trigger move as soon as items touch
+        // Use a smaller threshold for more responsive switching
+        const threshold = 0.1; // 10% from edges instead of 50% from middle
+        
+        if (dragIndex < hoverIndex) {
+          // Dragging downward - switch when touching the top 10% of target
+          if (hoverClientY > hoverMiddleY * threshold) {
+            props.onMove(dragIndex, hoverIndex);
+            item.index = hoverIndex;
+          }
+        } else {
+          // Dragging upward - switch when touching the bottom 10% of target  
+          if (hoverClientY < hoverMiddleY * (2 - threshold)) {
+            props.onMove(dragIndex, hoverIndex);
+            item.index = hoverIndex;
+          }
+        }
       }
     },
     drop: (item: { 
