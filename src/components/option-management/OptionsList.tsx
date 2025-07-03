@@ -29,7 +29,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
     return (
       <div className="relative">
         {/* Animated background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-2xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl" />
         
         {/* Floating particles effect */}
         <div className="absolute inset-0 overflow-hidden rounded-2xl">
@@ -71,7 +71,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
   return (
     <div className="relative">
       {/* Enhanced background with subtle patterns */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50 rounded-2xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)] rounded-2xl" />
       
       {/* Main content area */}
@@ -104,7 +104,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                       {/* Enhanced Group Header with glass morphism */}
                       <div className="relative group">
                         {/* Glow effect on hover */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                        <div className="absolute -inset-1 bg-gradient-to-r from-purple-200/20 via-blue-200/20 to-purple-200/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                         
                         <DragDropOptionWrapper
                           option={option}
@@ -135,7 +135,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                             className="ml-6 pl-6 relative"
                           >
                             {/* Enhanced connection line with gradient */}
-                            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-500/60 via-blue-500/40 to-transparent rounded-full" />
+                            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300/60 via-blue-300/40 to-transparent rounded-full" />
                             
                             {/* Connection dots */}
                             <div className="absolute left-[-2px] top-4 w-1 h-1 bg-purple-400 rounded-full" />
@@ -162,7 +162,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                                       className="relative group"
                                     >
                                       {/* Subtle glow for grouped items */}
-                                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-200/10 to-purple-200/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                                       
                                       <DragDropOptionWrapper
                                         option={groupedOption}
@@ -203,7 +203,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                       className="relative group"
                     >
                       {/* Enhanced glow effect */}
-                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-cyan-600/20 to-blue-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-200/20 via-cyan-200/20 to-blue-200/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                       
                       <DragDropOptionWrapper
                         option={option}
@@ -233,7 +233,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           className="absolute top-4 right-4 z-20"
         >
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-full shadow-lg">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full shadow-lg">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
         </motion.div>
