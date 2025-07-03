@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, RefreshCw } from 'lucide-react';
-import { OptimizedConfigurationInterface } from '../components/configuration';
+import ConfigurationInterface from '../components/ConfigurationInterface';
 import { ConfiguratorOption, ConfiguratorOptionGroup } from '../types/ConfiguratorTypes';
 
 const ConfigurationDemo: React.FC = () => {
@@ -155,18 +155,18 @@ const ConfigurationDemo: React.FC = () => {
   }, [options, groups]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex flex-col">
+    <div className="min-h-screen bg-gray-900 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
+      <div className="bg-gray-800 border-b border-gray-700 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button className="text-gray-500 hover:text-gray-700 transition-colors">
+            <button className="text-gray-400 hover:text-white transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-gray-900 font-bold text-xl">Optimized Configuration Interface</h1>
-              <p className="text-gray-600 text-sm">
-                Enhanced drag-and-drop with cleanup, ungrouped areas, and visual feedback
+              <h1 className="text-white font-bold text-xl">Configuration Interface Demo</h1>
+              <p className="text-gray-400 text-sm">
+                Drag and drop options between panels to organize your configurator
               </p>
             </div>
           </div>
@@ -174,14 +174,14 @@ const ConfigurationDemo: React.FC = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={handleReset}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Reset</span>
             </button>
             <button
               onClick={handleSave}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
             >
               <Save className="w-4 h-4" />
               <span>Save</span>
@@ -192,7 +192,7 @@ const ConfigurationDemo: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1">
-        <OptimizedConfigurationInterface
+        <ConfigurationInterface
           options={options}
           groups={groups}
           onOptionsChange={setOptions}
@@ -207,15 +207,15 @@ const ConfigurationDemo: React.FC = () => {
       </div>
 
       {/* Status Bar */}
-      <div className="bg-white border-t border-gray-200 p-3">
+      <div className="bg-gray-800 border-t border-gray-700 p-3">
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-6 text-gray-600">
-            <span>Options: {options.filter(opt => !opt.isGroup).length}</span>
+          <div className="flex items-center space-x-6 text-gray-400">
+            <span>Options: {options.length}</span>
             <span>Groups: {groups.length}</span>
-            <span>Ungrouped: {options.filter(opt => !opt.groupId && !opt.isGroup).length}</span>
+            <span>Ungrouped: {options.filter(opt => !opt.groupId).length}</span>
           </div>
           <div className="text-gray-500">
-            Optimized workspace with enhanced drag-and-drop features
+            Drag options between panels to organize your configuration
           </div>
         </div>
       </div>
