@@ -15,7 +15,7 @@ interface BasicSettingsProps {
   setFormData: React.Dispatch<React.SetStateAction<Omit<ConfiguratorOption, 'id' | 'values'>>>;
   modelComponents: ModelComponent[];
   availableGroups: ConfiguratorOption[];
-  onNavigateToTab?: (tab: string) => void; // New prop for tab navigation
+  onNavigateToValues?: () => void;
 }
 
 const BasicSettings: React.FC<BasicSettingsProps> = ({
@@ -23,7 +23,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
   setFormData,
   modelComponents,
   availableGroups,
-  onNavigateToTab
+  onNavigateToValues
 }) => {
   return (
     <div className="p-6 space-y-6">
@@ -127,10 +127,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
           onSelectionChange={(components) => setFormData(prev => ({ ...prev, targetComponents: components }))}
           placeholder="Select target components (optional)..."
           label="Target Components"
-          onConfigureTargets={() => {
-            // This callback will be handled by the parent modal to navigate to values tab
-            // where users can see the impact of not having target components
-          }}
+          onConfigureTargets={onNavigateToValues}
         />
         <p className="text-gray-500 text-xs mt-2">
           These components will be affected by this option's values. You can add these later.
