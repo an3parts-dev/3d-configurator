@@ -39,6 +39,20 @@ export interface ImageSettings {
   titlePosition: 'below' | 'above' | 'left' | 'right' | 'center';
 }
 
+export interface GridSettings {
+  columns: number;
+  columnsTablet: number;
+  columnsMobile: number;
+  gap: 'small' | 'medium' | 'large';
+  autoFit: boolean;
+  minItemWidth: number;
+}
+
+export interface ColumnSettings {
+  alignment: 'left' | 'center' | 'right';
+  spacing: 'compact' | 'normal' | 'relaxed';
+}
+
 export interface ConfiguratorOptionGroup {
   id: string;
   name: string;
@@ -57,6 +71,8 @@ export interface ConfiguratorOption {
   defaultBehavior?: 'show' | 'hide';
   conditionalLogic?: ConditionalLogic;
   imageSettings?: ImageSettings;
+  gridSettings?: GridSettings;
+  columnSettings?: ColumnSettings;
   values: ConfiguratorOptionValue[];
   groupId?: string; // Reference to group
   isGroup?: boolean; // Flag to identify if this is a group header
