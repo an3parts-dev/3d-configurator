@@ -21,6 +21,7 @@ interface OptionValuesProps {
   onUpdateValue: (valueId: string, updates: Partial<ConfiguratorOptionValue>) => void;
   onDeleteValue: (valueId: string) => void;
   onMoveValue: (dragIndex: number, hoverIndex: number) => void;
+  onShowComponentSelector?: (title: string, selectedComponents: string[], onSelectionChange: (components: string[]) => void) => void;
 }
 
 const OptionValues: React.FC<OptionValuesProps> = ({
@@ -32,7 +33,8 @@ const OptionValues: React.FC<OptionValuesProps> = ({
   onAddValue,
   onUpdateValue,
   onDeleteValue,
-  onMoveValue
+  onMoveValue,
+  onShowComponentSelector
 }) => {
   return (
     <div className="p-4 sm:p-6">
@@ -77,6 +79,7 @@ const OptionValues: React.FC<OptionValuesProps> = ({
               onUpdate={onUpdateValue}
               onDelete={onDeleteValue}
               canDelete={localValues.length > 1}
+              onShowComponentSelector={onShowComponentSelector}
             />
           ))}
         </div>

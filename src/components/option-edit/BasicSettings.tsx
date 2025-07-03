@@ -1,6 +1,5 @@
-import React from 'react';
-import { Eye, EyeOff, FolderOpen, Palette } from 'lucide-react';
-import ComponentSelector from '../ComponentSelector';
+import React, { useState } from 'react';
+import { Eye, EyeOff, FolderOpen, Palette, Maximize2 } from 'lucide-react';
 import { ConfiguratorOption, ConfiguratorOptionGroup } from '../../types/ConfiguratorTypes';
 
 interface ModelComponent {
@@ -15,14 +14,26 @@ interface BasicSettingsProps {
   setFormData: React.Dispatch<React.SetStateAction<Omit<ConfiguratorOption, 'id' | 'values'>>>;
   modelComponents: ModelComponent[];
   availableGroups: ConfiguratorOption[];
+  onShowComponentSelector?: (title: string, selectedComponents: string[], onSelectionChange: (components: string[]) => void) => void;
 }
 
 const BasicSettings: React.FC<BasicSettingsProps> = ({
   formData,
   setFormData,
   modelComponents,
-  availableGroups
+  availableGroups,
+  onShowComponentSelector
 }) => {
+  const handleTargetComponentsClick = () => {
+    if (onShowComponentSelector) {
+      onShowComponentSelector(
+        'Target Components',
+        formData.targetComponents,
+        (components) => setFormData(prev => ({ ...prev, targetComponents: components }))
+      );
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       {/* Basic Information */}
@@ -136,13 +147,42 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
 
       {/* Target Components */}
       <div>
-        <ComponentSelector
-          availableComponents={modelComponents}
-          selectedComponents={formData.targetComponents}
-          onSelectionChange={(components) => setFormData(prev => ({ ...prev, targetComponents: components }))}
-          placeholder="Select target components (optional)..."
-          label="Target Components"
-        />
+        <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2 font-medium">
+          Target Components
+        </label>
+        
+        <div 
+          onClick={handleTargetComponentsClick}
+          className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-650 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 flex items-center justify-between min-h-[48px] focus-within:ring-2 focus-within:ring-blue-500/50"
+        >
+          <div className="flex-1 min-w-0">
+            {formData.targetComponents.length === 0 ? (
+              <span className="text-gray-500 dark:text-gray-400">Select target components (optional)...</span>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {formData.targetComponents.slice(0, 4).map(componentName => (
+                  <span
+                    key={componentName}
+                    className="inline-flex items-center bg-blue-100 dark:bg-blue-600 text-blue-800 dark:text-white text-sm px-3 py-1 rounded-full font-medium shadow-sm"
+                  >
+                    <span className="truncate max-w-[140px]" title={componentName}>
+                      {componentName}
+                    </span>
+                  </span>
+                ))}
+                {formData.targetComponents.length > 4 && (
+                  <span className="text-gray-600 dark:text-gray-400 text-sm px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-full font-medium">
+                    +{formData.targetComponents.length - 4} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
+            <Maximize2 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          </div>
+        </div>
+        
         <p className="text-gray-600 dark:text-gray-400 text-xs mt-2">
           These components will be affected by this option's values. You can add these later.
         </p>

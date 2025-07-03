@@ -9,6 +9,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { BasicSettings, DisplaySettings, OptionValues } from './option-edit';
+import ComponentSelectorPanel from './ComponentSelectorPanel';
 import { 
   ConfiguratorOption, 
   ConfiguratorOptionValue, 
@@ -37,6 +38,8 @@ interface OptionEditPanelProps {
   onMoveValue: (optionId: string, dragIndex: number, hoverIndex: number) => void;
   availableGroups: ConfiguratorOption[];
 }
+
+type PanelView = 'main' | 'component-selector';
 
 const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
   option,
@@ -82,6 +85,12 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'basic' | 'display' | 'values'>('basic');
   const [localValues, setLocalValues] = useState<ConfiguratorOptionValue[]>([]);
   const [showValidationFlash, setShowValidationFlash] = useState(false);
+  const [currentPanel, setCurrentPanel] = useState<PanelView>('main');
+  const [componentSelectorConfig, setComponentSelectorConfig] = useState<{
+    title: string;
+    selectedComponents: string[];
+    onSelectionChange: (components: string[]) => void;
+  } | null>(null);
 
   // Sync local values with option values when option changes
   useEffect(() => {
@@ -158,6 +167,7 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
     }
     setActiveTab('basic');
     setShowValidationFlash(false);
+    setCurrentPanel('main');
   }, [option]);
 
   // Validation logic - only check for option name
@@ -237,6 +247,20 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
     }
   };
 
+  const handleShowComponentSelector = (title: string, selectedComponents: string[], onSelectionChange: (components: string[]) => void) => {
+    setComponentSelectorConfig({
+      title,
+      selectedComponents,
+      onSelectionChange
+    });
+    setCurrentPanel('component-selector');
+  };
+
+  const handleComponentSelectorCancel = () => {
+    setCurrentPanel('main');
+    setComponentSelectorConfig(null);
+  };
+
   // Memoize tab content to prevent unnecessary re-renders
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -247,6 +271,7 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
             setFormData={setFormData}
             modelComponents={modelComponents}
             availableGroups={availableGroups}
+            onShowComponentSelector={handleShowComponentSelector}
           />
         );
       case 'display':
@@ -269,6 +294,7 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
             onUpdateValue={handleUpdateValue}
             onDeleteValue={handleDeleteValue}
             onMoveValue={handleMoveValue}
+            onShowComponentSelector={handleShowComponentSelector}
           />
         );
       default:
@@ -277,6 +303,19 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
   }, [activeTab, formData, option, localValues, modelComponents, allOptions, availableGroups]);
 
   const isEditing = !!option;
+
+  if (currentPanel === 'component-selector' && componentSelectorConfig) {
+    return (
+      <ComponentSelectorPanel
+        availableComponents={modelComponents}
+        selectedComponents={componentSelectorConfig.selectedComponents}
+        onSelectionChange={componentSelectorConfig.onSelectionChange}
+        onCancel={handleComponentSelectorCancel}
+        title={componentSelectorConfig.title}
+        placeholder="Search components... (ignores _, -, spaces)"
+      />
+    );
+  }
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
