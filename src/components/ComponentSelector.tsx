@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check, X, Eye, Box, Maximize2 } from 'lucide-react';
 import * as THREE from 'three';
@@ -19,6 +19,127 @@ interface ComponentSelectorProps {
   alwaysModal?: boolean;
 }
 
+// Virtual list item component for performance
+const VirtualListItem = React.memo<{
+  component: ModelComponent;
+  isSelected: boolean;
+  isHighlighted: boolean;
+  onToggle: (componentName: string, event?: React.MouseEvent) => void;
+  onHighlight: (componentName: string, event: React.MouseEvent) => void;
+  style: React.CSSProperties;
+}>(({ component, isSelected, isHighlighted, onToggle, onHighlight, style }) => {
+  return (
+    <div
+      style={style}
+      className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
+        isSelected 
+          ? 'bg-blue-600/20 border-blue-500/40 shadow-sm' 
+          : 'hover:bg-gray-700/50 border-gray-600/50'
+      } ${isHighlighted ? 'ring-2 ring-green-400 ring-opacity-50' : ''}`}
+      onClick={(e) => onToggle(component.name, e)}
+    >
+      <div className="flex items-center space-x-4 flex-1 min-w-0">
+        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+          isSelected 
+            ? 'bg-blue-600 border-blue-600' 
+            : 'border-gray-500 hover:border-gray-400'
+        }`}>
+          {isSelected && <Check className="w-3 h-3 text-white" />}
+        </div>
+        
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <Box className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <span className="text-white font-medium truncate" title={component.name}>
+            {component.name}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3 flex-shrink-0">
+        <div 
+          className={`w-3 h-3 rounded-full ${
+            component.visible ? 'bg-green-400' : 'bg-red-400'
+          }`} 
+          title={component.visible ? 'Visible' : 'Hidden'} 
+        />
+        
+        <button
+          onClick={(e) => onHighlight(component.name, e)}
+          className="p-2 hover:bg-gray-600 rounded-lg text-gray-400 hover:text-yellow-400 transition-colors"
+          title="Highlight in 3D view"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+});
+
+VirtualListItem.displayName = 'VirtualListItem';
+
+// Simple virtual scrolling implementation
+const VirtualizedList: React.FC<{
+  items: ModelComponent[];
+  selectedComponents: string[];
+  highlightedComponents: string[];
+  onToggle: (componentName: string, event?: React.MouseEvent) => void;
+  onHighlight: (componentName: string, event: React.MouseEvent) => void;
+  height: number;
+}> = ({ items, selectedComponents, highlightedComponents, onToggle, onHighlight, height }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const itemHeight = 80; // Height of each item in pixels
+  const containerHeight = height;
+  const totalHeight = items.length * itemHeight;
+  
+  // Calculate visible range
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.min(
+    startIndex + Math.ceil(containerHeight / itemHeight) + 1,
+    items.length
+  );
+  
+  const visibleItems = items.slice(startIndex, endIndex);
+  
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="overflow-auto"
+      style={{ height: containerHeight }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        {visibleItems.map((item, index) => {
+          const actualIndex = startIndex + index;
+          return (
+            <VirtualListItem
+              key={item.name}
+              component={item}
+              isSelected={selectedComponents.includes(item.name)}
+              isHighlighted={highlightedComponents.includes(item.name)}
+              onToggle={onToggle}
+              onHighlight={onHighlight}
+              style={{
+                position: 'absolute',
+                top: actualIndex * itemHeight,
+                left: 0,
+                right: 0,
+                height: itemHeight - 8, // Account for gap
+                margin: '4px 0'
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   availableComponents,
   selectedComponents,
@@ -32,11 +153,18 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   const [showModal, setShowModal] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  const filteredComponents = availableComponents.filter(component =>
-    component.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Memoize filtered components for performance
+  const filteredComponents = useMemo(() => {
+    if (!searchTerm.trim()) return availableComponents;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return availableComponents.filter(component =>
+      component.name.toLowerCase().includes(searchLower)
+    );
+  }, [availableComponents, searchTerm]);
 
-  const toggleComponent = (componentName: string, event?: React.MouseEvent) => {
+  // Memoize callbacks to prevent unnecessary re-renders
+  const toggleComponent = useCallback((componentName: string, event?: React.MouseEvent) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -47,23 +175,23 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
       : [...selectedComponents, componentName];
     
     onSelectionChange(newSelection);
-  };
+  }, [selectedComponents, onSelectionChange]);
 
-  const selectAll = (event: React.MouseEvent) => {
+  const selectAll = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     const allFilteredNames = filteredComponents.map(c => c.name);
     const newSelection = [...new Set([...selectedComponents, ...allFilteredNames])];
     onSelectionChange(newSelection);
-  };
+  }, [filteredComponents, selectedComponents, onSelectionChange]);
 
-  const clearAll = (event: React.MouseEvent) => {
+  const clearAll = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     onSelectionChange([]);
-  };
+  }, [onSelectionChange]);
 
-  const highlightComponent = (componentName: string, event: React.MouseEvent) => {
+  const highlightComponent = useCallback((componentName: string, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     
@@ -86,19 +214,40 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
         setHighlightedComponents([]);
       }, 2000);
     }
-  };
+  }, [availableComponents]);
 
-  const handleTriggerClick = (event: React.MouseEvent) => {
+  const handleTriggerClick = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     setShowModal(true);
-  };
+  }, []);
 
-  const handleRemoveTag = (componentName: string, event: React.MouseEvent) => {
+  const handleRemoveTag = useCallback((componentName: string, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     toggleComponent(componentName);
-  };
+  }, [toggleComponent]);
+
+  // Debounced search to improve performance
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 150);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Use debounced search term for filtering
+  const debouncedFilteredComponents = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return availableComponents;
+    
+    const searchLower = debouncedSearchTerm.toLowerCase();
+    return availableComponents.filter(component =>
+      component.name.toLowerCase().includes(searchLower)
+    );
+  }, [availableComponents, debouncedSearchTerm]);
 
   const ComponentList = () => (
     <div className="h-full flex flex-col">
@@ -122,7 +271,7 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
               onClick={selectAll}
               className="text-blue-400 hover:text-blue-300 text-sm font-medium px-3 py-2 rounded-lg hover:bg-blue-500/10 transition-colors"
             >
-              Select All ({filteredComponents.length})
+              Select All ({debouncedFilteredComponents.length})
             </button>
             <button
               onClick={clearAll}
@@ -137,75 +286,29 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
         </div>
       </div>
 
-      {/* Components List */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Components List with Virtualization */}
+      <div className="flex-1 overflow-hidden p-4">
         {availableComponents.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Box className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">No components available</p>
             <p className="text-sm mt-2">Make sure target components are selected first</p>
           </div>
-        ) : filteredComponents.length === 0 ? (
+        ) : debouncedFilteredComponents.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">No components match your search</p>
             <p className="text-sm mt-2">Try a different search term</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2">
-            {filteredComponents.map((component) => {
-              const isSelected = selectedComponents.includes(component.name);
-              const isHighlighted = highlightedComponents.includes(component.name);
-              
-              return (
-                <motion.div
-                  key={component.name}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
-                    isSelected 
-                      ? 'bg-blue-600/20 border-blue-500/40 shadow-sm' 
-                      : 'hover:bg-gray-700/50 border-gray-600/50'
-                  } ${isHighlighted ? 'ring-2 ring-green-400 ring-opacity-50' : ''}`}
-                  onClick={(e) => toggleComponent(component.name, e)}
-                >
-                  <div className="flex items-center space-x-4 flex-1 min-w-0">
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-600 border-blue-600' 
-                        : 'border-gray-500 hover:border-gray-400'
-                    }`}>
-                      {isSelected && <Check className="w-3 h-3 text-white" />}
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <Box className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                      <span className="text-white font-medium truncate" title={component.name}>
-                        {component.name}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3 flex-shrink-0">
-                    <div 
-                      className={`w-3 h-3 rounded-full ${
-                        component.visible ? 'bg-green-400' : 'bg-red-400'
-                      }`} 
-                      title={component.visible ? 'Visible' : 'Hidden'} 
-                    />
-                    
-                    <button
-                      onClick={(e) => highlightComponent(component.name, e)}
-                      className="p-2 hover:bg-gray-600 rounded-lg text-gray-400 hover:text-yellow-400 transition-colors"
-                      title="Highlight in 3D view"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          <VirtualizedList
+            items={debouncedFilteredComponents}
+            selectedComponents={selectedComponents}
+            highlightedComponents={highlightedComponents}
+            onToggle={toggleComponent}
+            onHighlight={highlightComponent}
+            height={400} // Fixed height for virtualization
+          />
         )}
       </div>
 
@@ -213,7 +316,7 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
       <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex-shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-gray-400 text-sm font-medium">
-            Showing {filteredComponents.length} of {availableComponents.length} components
+            Showing {debouncedFilteredComponents.length} of {availableComponents.length} components
           </span>
           <button
             onClick={() => setShowModal(false)}
