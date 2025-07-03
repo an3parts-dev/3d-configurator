@@ -83,7 +83,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 groupedOptions={groupedOptions}
               />
               
-              {/* Group content area - show if expanded (even if empty for drop zones) */}
+              {/* Group content area - show if expanded */}
               <AnimatePresence>
                 {option.groupData?.isExpanded && (
                   <motion.div
@@ -133,7 +133,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
   );
 };
 
-// Enhanced component for group content with precise positioning
+// Enhanced component for group content with precise positioning using spacing
 const GroupContentDropZone: React.FC<{
   groupId: string;
   groupedOptions: ConfiguratorOption[];
@@ -153,21 +153,37 @@ const GroupContentDropZone: React.FC<{
   onMoveToGroup,
   options
 }) => {
-  return (
-    <div className="space-y-2">
-      {/* Top drop zone - for inserting at the beginning */}
-      <DropZone
-        position="top"
+  if (groupedOptions.length === 0) {
+    // Empty group - single large drop zone
+    return (
+      <EmptyGroupDropZone
         groupId={groupId}
         onMoveToGroup={onMoveToGroup}
-        isEmpty={groupedOptions.length === 0}
       />
+    );
+  }
 
-      {/* Render existing options with drop zones between them */}
+  return (
+    <div className="space-y-2">
+      {/* Render existing options with drop zones in the spacing between them */}
       {groupedOptions.map((groupedOption: ConfiguratorOption, groupIndex) => {
         const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
         return (
           <React.Fragment key={groupedOption.id}>
+            {/* Drop zone before first item */}
+            {groupIndex === 0 && (
+              <DropZone
+                position={0}
+                groupId={groupId}
+                onMoveToGroup={onMoveToGroup}
+                onInsertAtPosition={(draggedId) => {
+                  // Insert at beginning of group
+                  onMoveToGroup(draggedId, groupId);
+                  // TODO: Add precise positioning logic here
+                }}
+              />
+            )}
+            
             <DragDropOptionWrapper
               option={groupedOption}
               index={groupedOptionIndex}
@@ -180,40 +196,29 @@ const GroupContentDropZone: React.FC<{
               parentGroupId={groupId}
             />
             
-            {/* Drop zone after each option (except the last one) */}
-            {groupIndex < groupedOptions.length - 1 && (
-              <DropZone
-                position="between"
-                groupId={groupId}
-                onMoveToGroup={onMoveToGroup}
-                targetIndex={groupIndex + 1}
-              />
-            )}
+            {/* Drop zone after each option */}
+            <DropZone
+              position={groupIndex + 1}
+              groupId={groupId}
+              onMoveToGroup={onMoveToGroup}
+              onInsertAtPosition={(draggedId) => {
+                // Insert after this item
+                onMoveToGroup(draggedId, groupId);
+                // TODO: Add precise positioning logic here
+              }}
+            />
           </React.Fragment>
         );
       })}
-
-      {/* Bottom drop zone - for inserting at the end */}
-      {groupedOptions.length > 0 && (
-        <DropZone
-          position="bottom"
-          groupId={groupId}
-          onMoveToGroup={onMoveToGroup}
-          targetIndex={groupedOptions.length}
-        />
-      )}
     </div>
   );
 };
 
-// Precise drop zone component for positioning
-const DropZone: React.FC<{
-  position: 'top' | 'between' | 'bottom';
+// Empty group drop zone
+const EmptyGroupDropZone: React.FC<{
   groupId: string;
   onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
-  targetIndex?: number;
-  isEmpty?: boolean;
-}> = ({ position, groupId, onMoveToGroup, targetIndex = 0, isEmpty = false }) => {
+}> = ({ groupId, onMoveToGroup }) => {
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
     drop: (item: { 
@@ -224,12 +229,8 @@ const DropZone: React.FC<{
       parentGroupId?: string;
       name?: string 
     }, monitor) => {
-      // Only handle if not dropped on a specific element and item is not already in this group
       if (!monitor.didDrop() && !item.isGroup && item.currentGroupId !== groupId) {
-        // Add to this group at the specific position
         onMoveToGroup(item.id, groupId);
-        // Note: For now we're using the basic moveToGroup, but this could be enhanced
-        // to support precise positioning with a new callback
       }
     },
     collect: (monitor) => ({
@@ -238,58 +239,68 @@ const DropZone: React.FC<{
     }),
   });
 
-  // Different styling based on position and state
-  const getDropZoneClasses = () => {
-    const baseClasses = "transition-all duration-200";
-    
-    if (isEmpty) {
-      // Empty group - larger drop zone
-      return `${baseClasses} min-h-[80px] ${
-        isOver && canDrop 
-          ? 'bg-purple-500/10 border-2 border-dashed border-purple-400 rounded-lg' 
-          : 'border-2 border-dashed border-gray-600/30 rounded-lg hover:border-purple-400/50'
-      }`;
-    } else {
-      // Between items - smaller drop zone
-      return `${baseClasses} h-2 ${
-        isOver && canDrop 
-          ? 'bg-purple-500/20 border-t-2 border-purple-400' 
-          : 'hover:bg-purple-500/10 hover:border-t-2 hover:border-purple-400/50'
-      }`;
-    }
-  };
-
-  const getDropIndicator = () => {
-    if (isEmpty) {
-      return isOver && canDrop ? (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
-            Add to group
-          </div>
-        </div>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center opacity-50">
-          <div className="text-gray-500 text-sm">Drop here to add to group</div>
-        </div>
-      );
-    } else {
-      return isOver && canDrop ? (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="bg-purple-600 text-white px-3 py-1 rounded text-xs font-medium shadow-lg">
-            Insert here
-          </div>
-        </div>
-      ) : null;
-    }
-  };
-
   return (
     <div 
       ref={drop}
-      className={`relative ${getDropZoneClasses()}`}
+      className={`min-h-[60px] border-2 border-dashed rounded-lg transition-colors ${
+        isOver && canDrop 
+          ? 'border-purple-400 bg-purple-500/5' 
+          : 'border-gray-600/30 hover:border-purple-400/50'
+      }`}
     >
-      {getDropIndicator()}
+      <div className="flex items-center justify-center h-full">
+        <div className="text-gray-500 text-sm">
+          {isOver && canDrop ? 'Drop to add to group' : 'Drag options here'}
+        </div>
+      </div>
     </div>
+  );
+};
+
+// Invisible drop zone that uses the spacing between elements
+const DropZone: React.FC<{
+  position: number;
+  groupId: string;
+  onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
+  onInsertAtPosition: (draggedId: string) => void;
+}> = ({ position, groupId, onMoveToGroup, onInsertAtPosition }) => {
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: 'option',
+    drop: (item: { 
+      id: string; 
+      index: number; 
+      isGroup: boolean; 
+      currentGroupId?: string; 
+      parentGroupId?: string;
+      name?: string 
+    }, monitor) => {
+      if (!monitor.didDrop() && !item.isGroup) {
+        // If item is not in this group, add it to the group
+        if (item.currentGroupId !== groupId) {
+          onMoveToGroup(item.id, groupId);
+        }
+        // Call the position-specific handler
+        onInsertAtPosition(item.id);
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+
+  // Use the existing spacing (margin/padding) as the drop zone
+  // No visual changes, just an invisible drop target
+  return (
+    <div 
+      ref={drop}
+      className="h-2 -my-1" // Use negative margin to overlap with existing spacing
+      style={{ 
+        // Make it completely invisible but still functional
+        backgroundColor: 'transparent',
+        border: 'none'
+      }}
+    />
   );
 };
 
