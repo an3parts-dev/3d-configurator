@@ -363,7 +363,7 @@ const ConfiguratorBuilder: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-900 flex">
+      <div className="min-h-screen bg-gray-900 flex flex-col sm:flex-row">
         {/* Left Panel - Configuration */}
         <ConfiguratorOptionsPanel
           configuratorData={configuratorData}

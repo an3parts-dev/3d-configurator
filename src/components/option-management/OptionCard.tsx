@@ -44,7 +44,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
 }) => {
   const hasConditionalLogic = option.conditionalLogic?.enabled;
 
-  // Group rendering
+  // Group rendering - clean minimal design
   if (option.isGroup && option.groupData) {
     return (
       <motion.div
@@ -74,9 +74,6 @@ const OptionCard: React.FC<OptionCardProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">
                 <h4 className="text-white font-medium text-sm truncate">{option.groupData.name}</h4>
-                <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full font-medium border border-purple-500/30">
-                  GROUP
-                </span>
               </div>
               {option.groupData.description && (
                 <p className="text-purple-200/70 text-xs mt-1 truncate">{option.groupData.description}</p>
@@ -117,7 +114,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
     );
   }
 
-  // Regular option rendering
+  // Regular option rendering - clean minimal design
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -129,7 +126,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
       transition={{ duration: 0.2 }}
       className={`p-3 rounded-lg border transition-all relative ${
         isGrouped 
-          ? 'bg-gray-800/50 ml-4 border-l-4 border-l-blue-500/50' 
+          ? 'bg-gray-800/50 ml-2 border-l-4 border-l-blue-500/50' 
           : 'bg-gray-800'
       } ${
         isDragging 

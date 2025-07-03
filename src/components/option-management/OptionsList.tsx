@@ -60,7 +60,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
   return (
     <div 
       ref={emptySpaceDrop}
-      className="space-y-3 min-h-[400px] relative"
+      className="space-y-2 min-h-[400px] relative"
     >
       {options.map((option, index) => {
         if (option.isGroup && option.groupData) {
@@ -90,7 +90,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="ml-6 mt-2"
+                    className="ml-4 mt-2"
                   >
                     <GroupContentArea
                       groupId={option.id}
@@ -128,12 +128,12 @@ const OptionsList: React.FC<OptionsListProps> = ({
       })}
 
       {/* Bottom padding for better drop experience */}
-      <div className="h-16" />
+      <div className="h-8" />
     </div>
   );
 };
 
-// Simplified group content area without precise positioning
+// Simplified group content area - clean minimal design
 const GroupContentArea: React.FC<{
   groupId: string;
   groupedOptions: ConfiguratorOption[];
@@ -153,7 +153,7 @@ const GroupContentArea: React.FC<{
   onMoveToGroup,
   options
 }) => {
-  // Simple drop zone for empty groups
+  // Clean drop zone for empty groups - no text, just visual feedback
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
     drop: (item: { 
@@ -176,32 +176,20 @@ const GroupContentArea: React.FC<{
   });
 
   if (groupedOptions.length === 0) {
-    // Empty group - show drop zone
+    // Empty group - minimal drop zone
     return (
       <div 
         ref={drop}
-        className={`relative min-h-[60px] transition-all duration-200 ${
+        className={`relative min-h-[40px] transition-all duration-200 rounded-lg ${
           isOver && canDrop 
-            ? 'bg-purple-500/10 border-2 border-dashed border-purple-400 rounded-lg' 
-            : 'border-2 border-dashed border-gray-600/30 rounded-lg hover:border-purple-400/50'
+            ? 'bg-purple-500/10 border-2 border-dashed border-purple-400' 
+            : 'border-2 border-dashed border-gray-600/20 hover:border-purple-400/30'
         }`}
-      >
-        {isOver && canDrop ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
-              Add to group
-            </div>
-          </div>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center opacity-50">
-            <div className="text-gray-500 text-sm">Drop here to add to group</div>
-          </div>
-        )}
-      </div>
+      />
     );
   }
 
-  // Group has items - just render them
+  // Group has items - just render them cleanly
   return (
     <div className="space-y-2">
       {groupedOptions.map((groupedOption: ConfiguratorOption) => {

@@ -18,7 +18,7 @@ const Configurator3DView: React.FC<Configurator3DViewProps> = ({
 }) => {
   return (
     <div className={`transition-all duration-300 ${
-      isPreviewMode ? 'w-full' : 'w-1/2'
+      isPreviewMode ? 'w-full' : 'w-full sm:w-1/2'
     }`}>
       <ThreeJSPreview
         configuratorData={configuratorData}
