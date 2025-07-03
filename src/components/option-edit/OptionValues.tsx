@@ -58,10 +58,6 @@ const OptionValues: React.FC<OptionValuesProps> = ({
           icon={Plus}
           title="No values yet"
           description="Add your first value to get started"
-          action={{
-            label: "Add Value",
-            onClick: onAddValue
-          }}
         />
       ) : (
         <div className="space-y-4">
