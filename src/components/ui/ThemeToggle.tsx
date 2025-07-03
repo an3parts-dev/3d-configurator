@@ -15,52 +15,80 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
   const { theme, toggleTheme, isDark } = useTheme();
 
   const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-12 h-12'
+    sm: 'w-7 h-4',
+    md: 'w-9 h-5',
+    lg: 'w-11 h-6'
   };
 
   const iconSizes = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-5 h-5'
+    sm: 'w-2.5 h-2.5',
+    md: 'w-3 h-3',
+    lg: 'w-3.5 h-3.5'
   };
 
   return (
     <button
       onClick={toggleTheme}
       className={`
-        relative ${sizeClasses[size]} rounded-lg transition-all duration-200
-        bg-gray-200 dark:bg-gray-700 
-        hover:bg-gray-300 dark:hover:bg-gray-600
-        border border-gray-300 dark:border-gray-600
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+        relative ${sizeClasses[size]} rounded-full transition-all duration-300 ease-in-out
+        ${isDark 
+          ? 'bg-gray-700 border border-gray-600' 
+          : 'bg-gray-200 border border-gray-300'
+        }
+        hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-1
         ${className}
       `}
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
     >
+      {/* Toggle Track */}
       <motion.div
-        initial={false}
         animate={{
-          scale: isDark ? 0 : 1,
-          rotate: isDark ? 180 : 0,
+          x: isDark ? '50%' : '0%',
         }}
-        transition={{ duration: 0.2 }}
-        className={`absolute inset-0 flex items-center justify-center text-yellow-600 ${iconSizes[size]}`}
-      >
-        <Sun className="w-full h-full" />
-      </motion.div>
-      
-      <motion.div
-        initial={false}
-        animate={{
-          scale: isDark ? 1 : 0,
-          rotate: isDark ? 0 : -180,
+        transition={{ 
+          type: "spring", 
+          stiffness: 500, 
+          damping: 30,
+          duration: 0.3 
         }}
-        transition={{ duration: 0.2 }}
-        className={`absolute inset-0 flex items-center justify-center text-blue-400 ${iconSizes[size]}`}
+        className={`
+          absolute top-0.5 left-0.5 rounded-full transition-all duration-300
+          ${size === 'sm' ? 'w-3 h-3' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4'}
+          ${isDark 
+            ? 'bg-blue-500 shadow-sm' 
+            : 'bg-white shadow-md border border-gray-200'
+          }
+          flex items-center justify-center
+        `}
       >
-        <Moon className="w-full h-full" />
+        {/* Icon Container */}
+        <div className="relative">
+          {/* Sun Icon */}
+          <motion.div
+            animate={{
+              scale: isDark ? 0 : 1,
+              opacity: isDark ? 0 : 1,
+              rotate: isDark ? 90 : 0,
+            }}
+            transition={{ duration: 0.2 }}
+            className={`absolute inset-0 flex items-center justify-center ${iconSizes[size]}`}
+          >
+            <Sun className="w-full h-full text-yellow-500" />
+          </motion.div>
+          
+          {/* Moon Icon */}
+          <motion.div
+            animate={{
+              scale: isDark ? 1 : 0,
+              opacity: isDark ? 1 : 0,
+              rotate: isDark ? 0 : -90,
+            }}
+            transition={{ duration: 0.2 }}
+            className={`flex items-center justify-center ${iconSizes[size]}`}
+          >
+            <Moon className="w-full h-full text-white" />
+          </motion.div>
+        </div>
       </motion.div>
     </button>
   );

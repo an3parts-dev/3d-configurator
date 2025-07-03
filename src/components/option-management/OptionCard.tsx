@@ -9,7 +9,8 @@ import {
   ChevronDown,
   ChevronRight,
   Users,
-  Layers
+  Eye,
+  Palette
 } from 'lucide-react';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
 
@@ -144,31 +145,32 @@ const OptionCard: React.FC<OptionCardProps> = ({
           <div className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <GripVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />
           </div>
+          
+          {/* Icon based on manipulation type */}
           <div className="p-1.5 bg-blue-100 dark:bg-blue-600/20 rounded border border-blue-200 dark:border-blue-500/30">
-            <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            {option.manipulationType === 'material' ? (
+              <Palette className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            ) : (
+              <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            )}
           </div>
+          
           <div className="flex-1 min-w-0">
-            {/* Title and badges on same row */}
-            <div className="flex items-center space-x-2 mb-1">
+            {/* Title and value count on same row */}
+            <div className="flex items-center space-x-2">
               <h4 className="text-gray-900 dark:text-white font-medium text-sm truncate flex-1">{option.name}</h4>
+              
+              {/* Value count in blue badge */}
+              <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-full font-medium border border-blue-200 dark:border-blue-500/30 flex-shrink-0">
+                {option.values.length}
+              </span>
+              
+              {/* Conditional Logic badge */}
               {hasConditionalLogic && (
                 <span className="bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs px-1.5 py-0.5 rounded-full font-medium border border-orange-200 dark:border-orange-500/30 flex-shrink-0">
                   Logic
                 </span>
               )}
-            </div>
-            {/* Simplified metadata for mobile */}
-            <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-              <span className="capitalize bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">
-                {option.manipulationType}
-              </span>
-              <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
-                {option.values.length} values
-              </span>
-              {/* Hide display type on mobile to save space */}
-              <span className="hidden sm:inline-block capitalize bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">
-                {option.displayType}
-              </span>
             </div>
           </div>
         </div>
