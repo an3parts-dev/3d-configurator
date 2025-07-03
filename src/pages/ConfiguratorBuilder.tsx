@@ -22,7 +22,7 @@ const ConfiguratorBuilder: React.FC = () => {
     id: 'default',
     name: 'New Configurator',
     description: 'A new 3D configurator',
-    model: 'https://an3parts.com/cdn/shop/3d/models/o/c4d8a4d66933dbe5/brakeline-v2.glb?v=0',
+    model: 'https://cdn.shopify.com/3d/models/o/a7af059c00ea3c69/angle-3d-generated.glb',
     options: []
   });
 
