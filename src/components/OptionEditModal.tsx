@@ -247,17 +247,17 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         className="bg-gray-800 rounded-xl border border-gray-600 shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col"
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-700 bg-gray-750 rounded-t-xl">
-          <div className="flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-gray-700 bg-gray-750 rounded-t-xl">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-600 rounded-lg">
                 <Layers className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-xl">
+                <h3 className="text-white font-semibold text-lg sm:text-xl">
                   {isEditing ? 'Edit Option' : 'Create Option'}
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-400 text-xs sm:text-sm">
                   {isEditing ? 'Modify option settings and values' : 'Configure a new configurator option'}
                 </p>
               </div>
@@ -266,30 +266,55 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
               onClick={onClose}
               className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex space-x-1 mt-6 bg-gray-700 p-1 rounded-lg">
-            {[
-              { id: 'basic', label: 'Basic Settings', icon: Settings },
-              { id: 'display', label: 'Display & Style', icon: Eye },
-              { id: 'values', label: 'Option Values', icon: List }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-600'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="font-medium">{tab.label}</span>
-              </button>
-            ))}
+          {/* Mobile-Optimized Tabs */}
+          <div className="bg-gray-700 p-1 rounded-lg">
+            {/* Mobile: Stacked tabs */}
+            <div className="sm:hidden space-y-1">
+              {[
+                { id: 'basic', label: 'Basic', icon: Settings },
+                { id: 'display', label: 'Display', icon: Eye },
+                { id: 'values', label: 'Values', icon: List }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Desktop: Horizontal tabs */}
+            <div className="hidden sm:flex space-x-1">
+              {[
+                { id: 'basic', label: 'Basic Settings', icon: Settings },
+                { id: 'display', label: 'Display & Style', icon: Eye },
+                { id: 'values', label: 'Option Values', icon: List }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span className="font-medium">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -351,7 +376,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl">
+        <div className="p-4 sm:p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl">
           {/* Validation Feedback - Only show when flash is triggered and there are errors */}
           {showValidationFlash && validationErrors.length > 0 && (
             <motion.div
@@ -376,7 +401,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             </motion.div>
           )}
 
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
             <button
               type="button"
               onClick={onClose}
