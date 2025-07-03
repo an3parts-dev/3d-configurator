@@ -16,7 +16,7 @@ interface OptionsListProps {
   onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
 }
 
-// Group Content Drop Zone Component
+// Enhanced Group Content Drop Zone Component
 const GroupContentDropZone: React.FC<{
   groupId: string;
   children: React.ReactNode;
@@ -25,14 +25,14 @@ const GroupContentDropZone: React.FC<{
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
     drop: (item: { id: string; isGroup: boolean; currentGroupId?: string }, monitor) => {
-      if (!monitor.didDrop() && !item.isGroup) {
-        // Moving an option into this group
+      // Only handle the drop if it wasn't handled by a child component
+      if (!monitor.didDrop() && !item.isGroup && item.currentGroupId !== groupId) {
         onMoveToGroup(item.id, groupId);
       }
     },
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop() && !monitor.getItem()?.isGroup,
+      canDrop: monitor.canDrop() && !monitor.getItem()?.isGroup && monitor.getItem()?.currentGroupId !== groupId,
     }),
   });
 
@@ -45,16 +45,19 @@ const GroupContentDropZone: React.FC<{
           : ''
       }`}
     >
-      {children}
-      
-      {/* Drop zone indicator */}
+      {/* Overlay drop indicator that covers the entire area */}
       {isOver && canDrop && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-purple-500/5 rounded-xl">
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-purple-500/10 rounded-xl z-10 border-2 border-dashed border-purple-400">
           <div className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
             Drop here to add to group
           </div>
         </div>
       )}
+      
+      {/* Content area */}
+      <div className="relative z-0">
+        {children}
+      </div>
     </div>
   );
 };
@@ -101,7 +104,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 groupedOptions={groupedOptions}
               />
               
-              {/* Enhanced group content area with drop zone */}
+              {/* Enhanced group content area with full coverage drop zone */}
               <AnimatePresence>
                 {option.groupData?.isExpanded && (
                   <motion.div
@@ -114,7 +117,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                       groupId={option.id}
                       onMoveToGroup={onMoveToGroup}
                     >
-                      <div className="space-y-4 min-h-[60px] p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
+                      <div className="space-y-4 min-h-[80px] p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
                         {groupedOptions.length === 0 ? (
                           <div className="text-center py-8 text-purple-300/60">
                             <div className="text-sm font-medium mb-1">No options in this group</div>

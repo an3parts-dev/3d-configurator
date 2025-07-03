@@ -64,6 +64,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       }
     },
     drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string }, monitor) => {
+      // Only handle drops that weren't handled by child components
       if (!monitor.didDrop()) {
         // Handle group assignment - only for group headers and standalone options
         if (props.option.isGroup && !item.isGroup && props.onMoveToGroup) {
@@ -94,6 +95,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
   const getDropZoneStyle = () => {
     if (!isOver || !canDrop) return '';
     
+    // Only show drop indicators for group headers and standalone options
     if (props.option.isGroup) {
       return 'ring-2 ring-purple-400 ring-opacity-50 bg-purple-500/10';
     } else if (!props.isGrouped) {
@@ -113,7 +115,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       
       {/* Drop zone indicator for group headers */}
       {isOver && canDrop && props.option.isGroup && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center z-10">
           <div className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
             Drop to add to group
           </div>
@@ -122,7 +124,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       
       {/* Drop zone indicator for removing from group */}
       {isOver && canDrop && !props.option.isGroup && !props.isGrouped && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-blue-500/5 flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-blue-500/5 flex items-center justify-center z-10">
           <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
             Drop to remove from group
           </div>
