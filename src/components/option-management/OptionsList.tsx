@@ -117,7 +117,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                       groupId={option.id}
                       onMoveToGroup={onMoveToGroup}
                     >
-                      <div className="space-y-4 min-h-[80px] p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
+                      <div className="space-y-4 min-h-[80px] p-4 rounded-xl bg-purple-500/5">
                         {groupedOptions.length === 0 ? (
                           <div className="text-center py-8 text-purple-300/60">
                             <div className="text-sm font-medium mb-1">No options in this group</div>
