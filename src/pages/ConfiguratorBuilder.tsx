@@ -111,22 +111,25 @@ const ConfiguratorBuilder: React.FC = () => {
       return;
     }
 
-    const overOption = configuratorData.options.find(opt => opt.id === over.id);
-    if (!overOption) return;
+    // Handle group assignment - only change groupId, don't reorder
+    if (overData.type === 'group-drop-zone' && !activeOption.isGroup) {
+      const targetGroupId = overData.groupId;
+      
+      if (activeOption.groupId !== targetGroupId) {
+        setConfiguratorData(prev => ({
+          ...prev,
+          options: prev.options.map(option => 
+            option.id === activeOption.id 
+              ? { ...option, groupId: targetGroupId }
+              : option
+          )
+        }));
+      }
+      return;
+    }
 
-    // Handle group assignment
-    if (overOption.isGroup && !activeOption.isGroup) {
-      // Moving an option into a group
-      setConfiguratorData(prev => ({
-        ...prev,
-        options: prev.options.map(option => 
-          option.id === activeOption.id 
-            ? { ...option, groupId: overOption.id }
-            : option
-        )
-      }));
-    } else if (!overOption.isGroup && !overOption.groupId && activeOption.groupId) {
-      // Moving an option out of a group
+    // Handle moving to ungrouped area
+    if (overData.type === 'ungrouped-zone' && activeOption.groupId) {
       setConfiguratorData(prev => ({
         ...prev,
         options: prev.options.map(option => 
@@ -135,6 +138,7 @@ const ConfiguratorBuilder: React.FC = () => {
             : option
         )
       }));
+      return;
     }
   }, [configuratorData.options]);
 
@@ -150,17 +154,29 @@ const ConfiguratorBuilder: React.FC = () => {
     
     if (!activeOption || !overOption) return;
 
-    // Only reorder if both options are in the same context (same group or both ungrouped)
-    const sameContext = (
+    // Determine if reordering should happen based on context
+    const shouldReorder = () => {
       // Both are group headers
-      (activeOption.isGroup && overOption.isGroup) ||
+      if (activeOption.isGroup && overOption.isGroup) {
+        return true;
+      }
+      
       // Both are ungrouped options
-      (!activeOption.isGroup && !overOption.isGroup && !activeOption.groupId && !overOption.groupId) ||
+      if (!activeOption.isGroup && !overOption.isGroup && 
+          !activeOption.groupId && !overOption.groupId) {
+        return true;
+      }
+      
       // Both are in the same group
-      (!activeOption.isGroup && !overOption.isGroup && activeOption.groupId === overOption.groupId)
-    );
+      if (!activeOption.isGroup && !overOption.isGroup && 
+          activeOption.groupId && activeOption.groupId === overOption.groupId) {
+        return true;
+      }
+      
+      return false;
+    };
 
-    if (sameContext) {
+    if (shouldReorder()) {
       const oldIndex = configuratorData.options.findIndex(opt => opt.id === active.id);
       const newIndex = configuratorData.options.findIndex(opt => opt.id === over.id);
 
