@@ -25,8 +25,8 @@ const OptionsList: React.FC<OptionsListProps> = ({
   onToggleGroup,
   onMoveToGroup
 }) => {
-  // Drop zone for empty space - removes items from groups
-  const [{ isOver: isEmptySpaceOver, canDrop: canDropInEmptySpace }, emptySpaceDrop] = useDrop({
+  // Silent drop zone for empty space - removes items from groups without visual feedback
+  const [, emptySpaceDrop] = useDrop({
     accept: 'option',
     drop: (item: { 
       id: string; 
@@ -38,14 +38,11 @@ const OptionsList: React.FC<OptionsListProps> = ({
     }, monitor) => {
       // Only handle if not dropped on a specific element
       if (!monitor.didDrop() && item.currentGroupId && !item.isGroup) {
-        // Remove from group and place at root level
+        // Remove from group and place at root level at the end
         onMoveToGroup(item.id, null);
       }
     },
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
-    }),
+    collect: () => ({}), // No visual feedback
   });
 
   if (options.length === 0) {
@@ -63,21 +60,8 @@ const OptionsList: React.FC<OptionsListProps> = ({
   return (
     <div 
       ref={emptySpaceDrop}
-      className={`space-y-3 min-h-[400px] relative ${
-        isEmptySpaceOver && canDropInEmptySpace 
-          ? 'bg-blue-500/5 border-2 border-dashed border-blue-400 rounded-lg' 
-          : ''
-      }`}
+      className="space-y-3 min-h-[400px] relative"
     >
-      {/* Empty space drop indicator */}
-      {isEmptySpaceOver && canDropInEmptySpace && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-          <div className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
-            Drop here to remove from group
-          </div>
-        </div>
-      )}
-
       {options.map((option, index) => {
         if (option.isGroup && option.groupData) {
           // Find all options that belong to this group
