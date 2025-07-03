@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -235,6 +235,45 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     });
   };
 
+  // Memoize tab content to prevent unnecessary re-renders
+  const tabContent = useMemo(() => {
+    switch (activeTab) {
+      case 'basic':
+        return (
+          <BasicSettings
+            formData={formData}
+            setFormData={setFormData}
+            modelComponents={modelComponents}
+            availableGroups={availableGroups}
+          />
+        );
+      case 'display':
+        return (
+          <DisplaySettings
+            formData={formData}
+            setFormData={setFormData}
+            option={option}
+          />
+        );
+      case 'values':
+        return (
+          <OptionValues
+            option={option}
+            formData={formData}
+            localValues={localValues}
+            modelComponents={modelComponents}
+            allOptions={allOptions}
+            onAddValue={handleAddValue}
+            onUpdateValue={handleUpdateValue}
+            onDeleteValue={handleDeleteValue}
+            onMoveValue={handleMoveValue}
+          />
+        );
+      default:
+        return null;
+    }
+  }, [activeTab, formData, option, localValues, modelComponents, allOptions, availableGroups]);
+
   if (!isOpen) return null;
 
   const isEditing = !!option;
@@ -271,7 +310,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             </button>
           </div>
 
-          {/* Mobile-Optimized Tabs */}
+          {/* Optimized Tabs - Reduced animation complexity */}
           <div className="bg-gray-700 p-1 rounded-lg">
             {/* Mobile: Stacked tabs */}
             <div className="sm:hidden space-y-1">
@@ -283,7 +322,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                  className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-150 text-sm font-medium ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-gray-400 hover:text-white hover:bg-gray-600'
@@ -305,7 +344,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors duration-150 ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-gray-400 hover:text-white hover:bg-gray-600'
@@ -319,61 +358,11 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content - Simplified animation for better performance */}
         <div className="flex-1 overflow-auto">
-          <AnimatePresence mode="wait">
-            {activeTab === 'basic' && (
-              <motion.div
-                key="basic"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <BasicSettings
-                  formData={formData}
-                  setFormData={setFormData}
-                  modelComponents={modelComponents}
-                  availableGroups={availableGroups}
-                />
-              </motion.div>
-            )}
-
-            {activeTab === 'display' && (
-              <motion.div
-                key="display"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <DisplaySettings
-                  formData={formData}
-                  setFormData={setFormData}
-                  option={option}
-                />
-              </motion.div>
-            )}
-
-            {activeTab === 'values' && (
-              <motion.div
-                key="values"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <OptionValues
-                  option={option}
-                  formData={formData}
-                  localValues={localValues}
-                  modelComponents={modelComponents}
-                  allOptions={allOptions}
-                  onAddValue={handleAddValue}
-                  onUpdateValue={handleUpdateValue}
-                  onDeleteValue={handleDeleteValue}
-                  onMoveValue={handleMoveValue}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div key={activeTab} className="animate-in fade-in duration-200">
+            {tabContent}
+          </div>
         </div>
 
         {/* Footer */}
