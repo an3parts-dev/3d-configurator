@@ -321,9 +321,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     const organized: any[] = [];
     const processedOptionIds = new Set<string>();
 
+    // First, process all groups and their options
     configuratorData.options.forEach(option => {
-      if (processedOptionIds.has(option.id)) return;
-
       if (option.isGroup && option.groupData) {
         // Find all visible options that belong to this group
         const groupedOptions = visibleOptions.filter(opt => opt.groupId === option.id);
@@ -339,18 +338,16 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         // Mark grouped options as processed
         groupedOptions.forEach(opt => processedOptionIds.add(opt.id));
       }
-      
-      processedOptionIds.add(option.id);
     });
 
-    // Add standalone options (not in groups)
-    const standaloneOptions = visibleOptions.filter(opt => !opt.groupId);
-    standaloneOptions.forEach(option => {
-      if (!processedOptionIds.has(option.id)) {
+    // Then, add all standalone visible options (not in groups and not already processed)
+    visibleOptions.forEach(option => {
+      if (!option.groupId && !processedOptionIds.has(option.id)) {
         organized.push({
           type: 'option',
           option
         });
+        processedOptionIds.add(option.id);
       }
     });
 
