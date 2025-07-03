@@ -94,9 +94,25 @@ const ConfiguratorBuilder: React.FC = () => {
     if (!over || active.id === over.id) return;
 
     const activeOption = configuratorData.options.find(opt => opt.id === active.id);
-    const overOption = configuratorData.options.find(opt => opt.id === over.id);
+    const overData = over.data.current;
     
-    if (!activeOption || !overOption) return;
+    if (!activeOption || !overData) return;
+
+    // Handle ungrouping when dropped on ungroup zone
+    if (overData.type === 'ungroup-zone' && activeOption.groupId) {
+      setConfiguratorData(prev => ({
+        ...prev,
+        options: prev.options.map(option => 
+          option.id === activeOption.id 
+            ? { ...option, groupId: undefined }
+            : option
+        )
+      }));
+      return;
+    }
+
+    const overOption = configuratorData.options.find(opt => opt.id === over.id);
+    if (!overOption) return;
 
     // Handle group assignment
     if (overOption.isGroup && !activeOption.isGroup) {

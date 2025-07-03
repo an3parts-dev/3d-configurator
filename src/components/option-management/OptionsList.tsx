@@ -1,6 +1,7 @@
 import React from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, ArrowLeft } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import DragDropOptionWrapper from './DragDropOptionWrapper';
 import { EmptyState } from '../ui';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
@@ -64,25 +65,31 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 
                 {/* Grouped Options - Displayed inline when group is expanded */}
                 {option.groupData?.isExpanded && groupedOptions.length > 0 && (
-                  <div className="ml-6 space-y-3">
-                    <SortableContext items={groupedOptions.map(opt => opt.id)} strategy={verticalListSortingStrategy}>
-                      {groupedOptions.map((groupedOption: ConfiguratorOption) => {
-                        const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
-                        return (
-                          <DragDropOptionWrapper
-                            key={groupedOption.id}
-                            option={groupedOption}
-                            index={groupedOptionIndex}
-                            onMove={onMove}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            onEditConditionalLogic={onEditConditionalLogic}
-                            onMoveToGroup={onMoveToGroup}
-                            isGrouped={true}
-                          />
-                        );
-                      })}
-                    </SortableContext>
+                  <div className="relative">
+                    {/* Ungroup Drop Zone - Left side */}
+                    <UngroupDropZone />
+                    
+                    {/* Grouped Options Container */}
+                    <div className="ml-6 space-y-3">
+                      <SortableContext items={groupedOptions.map(opt => opt.id)} strategy={verticalListSortingStrategy}>
+                        {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+                          const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+                          return (
+                            <DragDropOptionWrapper
+                              key={groupedOption.id}
+                              option={groupedOption}
+                              index={groupedOptionIndex}
+                              onMove={onMove}
+                              onEdit={onEdit}
+                              onDelete={onDelete}
+                              onEditConditionalLogic={onEditConditionalLogic}
+                              onMoveToGroup={onMoveToGroup}
+                              isGrouped={true}
+                            />
+                          );
+                        })}
+                      </SortableContext>
+                    </div>
                   </div>
                 )}
               </div>
@@ -108,6 +115,35 @@ const OptionsList: React.FC<OptionsListProps> = ({
         })}
       </div>
     </SortableContext>
+  );
+};
+
+// Ungroup Drop Zone Component
+const UngroupDropZone: React.FC = () => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'ungroup-drop-zone',
+    data: {
+      type: 'ungroup-zone'
+    }
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`absolute left-0 top-0 bottom-0 w-6 transition-all duration-200 ${
+        isOver 
+          ? 'bg-blue-500/20 border-r-2 border-blue-400' 
+          : 'bg-transparent hover:bg-gray-600/10'
+      }`}
+    >
+      {isOver && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-blue-600 text-white p-1 rounded-full shadow-lg">
+            <ArrowLeft className="w-3 h-3" />
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
