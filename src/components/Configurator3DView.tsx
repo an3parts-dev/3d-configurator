@@ -9,12 +9,14 @@ interface Configurator3DViewProps {
   configuratorData: ConfiguratorData;
   isPreviewMode: boolean;
   onComponentsLoaded: (components: ModelComponent[]) => void;
+  onTogglePreviewMode: () => void;
 }
 
 const Configurator3DView: React.FC<Configurator3DViewProps> = ({
   configuratorData,
   isPreviewMode,
-  onComponentsLoaded
+  onComponentsLoaded,
+  onTogglePreviewMode
 }) => {
   return (
     <div className={`transition-all duration-300 ${
@@ -23,6 +25,8 @@ const Configurator3DView: React.FC<Configurator3DViewProps> = ({
       <ThreeJSPreview
         configuratorData={configuratorData}
         onComponentsLoaded={onComponentsLoaded}
+        isPreviewMode={isPreviewMode}
+        onTogglePreviewMode={onTogglePreviewMode}
       />
     </div>
   );

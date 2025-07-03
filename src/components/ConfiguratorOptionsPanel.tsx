@@ -3,7 +3,7 @@ import {
   Plus, 
   Download, 
   Upload, 
-  Eye,
+  Maximize2,
   FolderPlus
 } from 'lucide-react';
 import DashboardHeader from './layout/DashboardHeader';
@@ -73,12 +73,12 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
                 onClick={onTogglePreviewMode}
                 className={`p-2 rounded-lg transition-colors flex-shrink-0 ml-2 ${
                   isPreviewMode 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
                 }`}
-                title={isPreviewMode ? 'Show Builder' : 'Preview Mode'}
+                title={isPreviewMode ? 'Exit Preview' : 'Fullscreen Preview'}
               >
-                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 

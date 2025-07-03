@@ -390,6 +390,7 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
           configuratorData={configuratorData}
           isPreviewMode={isPreviewMode}
           onComponentsLoaded={setModelComponents}
+          onTogglePreviewMode={handleTogglePreviewMode}
         />
 
         {/* Modals */}

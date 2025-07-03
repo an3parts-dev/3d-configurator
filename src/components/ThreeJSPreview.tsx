@@ -3,6 +3,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
+import { Maximize2, X } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -14,6 +15,8 @@ import { Layers } from 'lucide-react';
 interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
   onComponentsLoaded?: (components: ModelComponent[]) => void;
+  isPreviewMode?: boolean;
+  onTogglePreviewMode?: () => void;
 }
 
 // Enhanced GLB Model Component with automatic camera setup
@@ -237,7 +240,9 @@ const GLBModel = ({
 
 const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({ 
   configuratorData, 
-  onComponentsLoaded 
+  onComponentsLoaded,
+  isPreviewMode = false,
+  onTogglePreviewMode
 }) => {
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
@@ -430,6 +435,32 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           configuratorData={configuratorData}
           visibleOptionsCount={visibleOptions.length}
         />
+
+        {/* Fullscreen Preview Button - Only show when not in preview mode */}
+        {!isPreviewMode && onTogglePreviewMode && (
+          <div className="absolute top-4 right-4 z-20">
+            <button
+              onClick={onTogglePreviewMode}
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl"
+              title="Fullscreen Preview"
+            >
+              <Maximize2 className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Exit Fullscreen Button - Only show when in preview mode */}
+        {isPreviewMode && onTogglePreviewMode && (
+          <div className="absolute top-4 right-4 z-20">
+            <button
+              onClick={onTogglePreviewMode}
+              className="bg-red-500/90 backdrop-blur-sm text-white hover:bg-red-600 p-3 rounded-lg shadow-lg hover:shadow-xl transition-all"
+              title="Exit Fullscreen"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Options Panel - Mobile optimized with better text sizing */}
