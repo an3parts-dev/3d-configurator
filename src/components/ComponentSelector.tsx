@@ -19,6 +19,40 @@ interface ComponentSelectorProps {
   alwaysModal?: boolean;
 }
 
+// Enhanced search function with fuzzy matching
+const fuzzySearch = (searchTerm: string, text: string): boolean => {
+  if (!searchTerm.trim()) return true;
+  
+  // Normalize both strings: lowercase and remove special characters
+  const normalizeString = (str: string) => 
+    str.toLowerCase()
+       .replace(/[_\-\s\.]/g, '') // Remove underscores, hyphens, spaces, dots
+       .replace(/[^\w]/g, '');    // Remove any remaining special characters
+  
+  const normalizedSearch = normalizeString(searchTerm);
+  const normalizedText = normalizeString(text);
+  
+  // If normalized search is empty after removing special chars, fall back to original
+  if (!normalizedSearch) {
+    return text.toLowerCase().includes(searchTerm.toLowerCase());
+  }
+  
+  // Check if normalized text contains normalized search
+  if (normalizedText.includes(normalizedSearch)) {
+    return true;
+  }
+  
+  // Fuzzy matching: check if all characters of search exist in order
+  let searchIndex = 0;
+  for (let i = 0; i < normalizedText.length && searchIndex < normalizedSearch.length; i++) {
+    if (normalizedText[i] === normalizedSearch[searchIndex]) {
+      searchIndex++;
+    }
+  }
+  
+  return searchIndex === normalizedSearch.length;
+};
+
 // Virtual list item component for performance
 const VirtualListItem = React.memo<{
   component: ModelComponent;
@@ -77,7 +111,7 @@ const VirtualListItem = React.memo<{
 
 VirtualListItem.displayName = 'VirtualListItem';
 
-// Simple virtual scrolling implementation
+// Enhanced virtual scrolling with preloading
 const VirtualizedList: React.FC<{
   items: ModelComponent[];
   selectedComponents: string[];
@@ -93,10 +127,13 @@ const VirtualizedList: React.FC<{
   const containerHeight = height;
   const totalHeight = items.length * itemHeight;
   
-  // Calculate visible range
-  const startIndex = Math.floor(scrollTop / itemHeight);
+  // Enhanced visible range calculation with preloading
+  const preloadCount = 5; // Preload 5 items above and below visible area
+  const visibleCount = Math.ceil(containerHeight / itemHeight);
+  
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - preloadCount);
   const endIndex = Math.min(
-    startIndex + Math.ceil(containerHeight / itemHeight) + 1,
+    startIndex + visibleCount + (preloadCount * 2),
     items.length
   );
   
@@ -149,19 +186,28 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   alwaysModal = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [highlightedComponents, setHighlightedComponents] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  // Memoize filtered components for performance
-  const filteredComponents = useMemo(() => {
-    if (!searchTerm.trim()) return availableComponents;
+  // Debounced search with faster response for better UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 100); // Reduced from 150ms to 100ms for snappier response
     
-    const searchLower = searchTerm.toLowerCase();
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Enhanced filtering with fuzzy search
+  const filteredComponents = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return availableComponents;
+    
     return availableComponents.filter(component =>
-      component.name.toLowerCase().includes(searchLower)
+      fuzzySearch(debouncedSearchTerm, component.name)
     );
-  }, [availableComponents, searchTerm]);
+  }, [availableComponents, debouncedSearchTerm]);
 
   // Memoize callbacks to prevent unnecessary re-renders
   const toggleComponent = useCallback((componentName: string, event?: React.MouseEvent) => {
@@ -228,27 +274,6 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
     toggleComponent(componentName);
   }, [toggleComponent]);
 
-  // Debounced search to improve performance
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 150);
-    
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Use debounced search term for filtering
-  const debouncedFilteredComponents = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) return availableComponents;
-    
-    const searchLower = debouncedSearchTerm.toLowerCase();
-    return availableComponents.filter(component =>
-      component.name.toLowerCase().includes(searchLower)
-    );
-  }, [availableComponents, debouncedSearchTerm]);
-
   const ComponentList = () => (
     <div className="h-full flex flex-col">
       {/* Search and Actions Header */}
@@ -259,10 +284,20 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search components..."
+            placeholder="Search components... (ignores _, -, spaces)"
             className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             autoFocus
           />
+          {searchTerm && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center justify-between">
@@ -271,7 +306,7 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
               onClick={selectAll}
               className="text-blue-400 hover:text-blue-300 text-sm font-medium px-3 py-2 rounded-lg hover:bg-blue-500/10 transition-colors"
             >
-              Select All ({debouncedFilteredComponents.length})
+              Select All ({filteredComponents.length})
             </button>
             <button
               onClick={clearAll}
@@ -284,9 +319,16 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
             {selectedComponents.length} selected
           </span>
         </div>
+        
+        {/* Search hint */}
+        {searchTerm && filteredComponents.length > 0 && (
+          <div className="mt-3 text-xs text-gray-500">
+            💡 Smart search ignores underscores, hyphens, and spaces for better matching
+          </div>
+        )}
       </div>
 
-      {/* Components List with Virtualization */}
+      {/* Components List with Enhanced Virtualization */}
       <div className="flex-1 overflow-hidden p-4">
         {availableComponents.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
@@ -294,15 +336,23 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
             <p className="text-lg font-medium">No components available</p>
             <p className="text-sm mt-2">Make sure target components are selected first</p>
           </div>
-        ) : debouncedFilteredComponents.length === 0 ? (
+        ) : filteredComponents.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">No components match your search</p>
-            <p className="text-sm mt-2">Try a different search term</p>
+            <p className="text-sm mt-2">Try a different search term or check for typos</p>
+            <div className="mt-4 text-xs text-gray-500 bg-gray-800 rounded-lg p-3 max-w-md mx-auto">
+              <p className="font-medium mb-1">Search tips:</p>
+              <ul className="text-left space-y-1">
+                <li>• Ignores underscores, hyphens, spaces</li>
+                <li>• Try partial matches (e.g., "wheel" for "front_wheel_01")</li>
+                <li>• Case insensitive</li>
+              </ul>
+            </div>
           </div>
         ) : (
           <VirtualizedList
-            items={debouncedFilteredComponents}
+            items={filteredComponents}
             selectedComponents={selectedComponents}
             highlightedComponents={highlightedComponents}
             onToggle={toggleComponent}
@@ -316,7 +366,8 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
       <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex-shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-gray-400 text-sm font-medium">
-            Showing {debouncedFilteredComponents.length} of {availableComponents.length} components
+            Showing {filteredComponents.length} of {availableComponents.length} components
+            {searchTerm && ` (filtered by "${searchTerm}")`}
           </span>
           <button
             onClick={() => setShowModal(false)}
