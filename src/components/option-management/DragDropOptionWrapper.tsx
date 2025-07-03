@@ -26,7 +26,8 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       index: props.index, 
       type: 'option',
       isGroup: props.option.isGroup,
-      currentGroupId: props.option.groupId
+      currentGroupId: props.option.groupId,
+      name: props.option.name // Add the option name to the drag item
     }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -35,7 +36,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
-    hover: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string }, monitor) => {
+    hover: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
       if (!ref.current) return;
       
       const dragIndex = item.index;
@@ -63,7 +64,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
         item.index = hoverIndex;
       }
     },
-    drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string }, monitor) => {
+    drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
       // Only handle drops that weren't handled by child components
       if (!monitor.didDrop()) {
         // Handle group assignment - only for group headers and standalone options

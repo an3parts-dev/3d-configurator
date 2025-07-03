@@ -19,10 +19,11 @@ interface OptionsListProps {
 // Enhanced Group Content Drop Zone Component
 const GroupContentDropZone: React.FC<{
   groupId: string;
+  groupName: string;
   children: React.ReactNode;
   onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
-}> = ({ groupId, children, onMoveToGroup }) => {
-  const [{ isOver, canDrop }, drop] = useDrop({
+}> = ({ groupId, groupName, children, onMoveToGroup }) => {
+  const [{ isOver, canDrop, draggedItem }, drop] = useDrop({
     accept: 'option',
     drop: (item: { id: string; isGroup: boolean; currentGroupId?: string }, monitor) => {
       // Only handle the drop if it wasn't handled by a child component
@@ -33,8 +34,19 @@ const GroupContentDropZone: React.FC<{
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop() && !monitor.getItem()?.isGroup && monitor.getItem()?.currentGroupId !== groupId,
+      draggedItem: monitor.getItem(),
     }),
   });
+
+  // Get the dragged option name for display
+  const getDraggedOptionName = () => {
+    if (draggedItem && !draggedItem.isGroup) {
+      // You might need to pass the options array to get the actual name
+      // For now, we'll use a generic message
+      return draggedItem.name || 'option';
+    }
+    return 'option';
+  };
 
   return (
     <div 
@@ -49,7 +61,7 @@ const GroupContentDropZone: React.FC<{
       {isOver && canDrop && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-purple-500/10 rounded-xl z-10 border-2 border-dashed border-purple-400">
           <div className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
-            Drop here to add to group
+            Add {getDraggedOptionName()} to {groupName}
           </div>
         </div>
       )}
@@ -115,11 +127,12 @@ const OptionsList: React.FC<OptionsListProps> = ({
                   >
                     <GroupContentDropZone
                       groupId={option.id}
+                      groupName={option.name}
                       onMoveToGroup={onMoveToGroup}
                     >
-                      <div className="space-y-4 min-h-[80px] p-4 rounded-xl bg-purple-500/5">
+                      <div className="space-y-4 min-h-[80px] p-4 rounded-xl">
                         {groupedOptions.length === 0 ? (
-                          <div className="text-center py-8 text-purple-300/60">
+                          <div className="text-center py-8 text-gray-400">
                             <div className="text-sm font-medium mb-1">No options in this group</div>
                             <div className="text-xs">Drag options here to add them to this group</div>
                           </div>
