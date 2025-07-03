@@ -67,8 +67,8 @@ const VirtualListItem = React.memo<{
       style={style}
       className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
         isSelected 
-          ? 'bg-blue-600/20 border-blue-500/40 shadow-sm' 
-          : 'hover:bg-gray-700/50 border-gray-600/50'
+          ? 'bg-blue-100 dark:bg-blue-600/20 border-blue-300 dark:border-blue-500/40 shadow-sm' 
+          : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-200 dark:border-gray-600/50'
       } ${isHighlighted ? 'ring-2 ring-green-400 ring-opacity-50' : ''}`}
       onClick={(e) => onToggle(component.name, e)}
     >
@@ -76,14 +76,14 @@ const VirtualListItem = React.memo<{
         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
           isSelected 
             ? 'bg-blue-600 border-blue-600' 
-            : 'border-gray-500 hover:border-gray-400'
+            : 'border-gray-400 dark:border-gray-500 hover:border-gray-500 dark:hover:border-gray-400'
         }`}>
           {isSelected && <Check className="w-3 h-3 text-white" />}
         </div>
         
         <div className="flex items-center space-x-3 flex-1 min-w-0">
-          <Box className="w-5 h-5 text-gray-400 flex-shrink-0" />
-          <span className="text-white font-medium truncate" title={component.name}>
+          <Box className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+          <span className="text-gray-900 dark:text-white font-medium truncate" title={component.name}>
             {component.name}
           </span>
         </div>
@@ -99,7 +99,7 @@ const VirtualListItem = React.memo<{
         
         <button
           onClick={(e) => onHighlight(component.name, e)}
-          className="p-2 hover:bg-gray-600 rounded-lg text-gray-400 hover:text-yellow-400 transition-colors"
+          className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors"
           title="Highlight in 3D view"
         >
           <Eye className="w-4 h-4" />
@@ -277,22 +277,22 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   const ComponentList = () => (
     <div className="h-full flex flex-col">
       {/* Search and Actions Header */}
-      <div className="p-6 border-b border-gray-700 bg-gray-750 rounded-t-xl flex-shrink-0">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-750 rounded-t-xl flex-shrink-0">
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search components... (ignores _, -, spaces)"
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg pl-12 pr-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             autoFocus
           />
           {searchTerm && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               <button
                 onClick={() => setSearchTerm('')}
-                className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white p-1 rounded transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -304,25 +304,25 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
           <div className="flex space-x-4">
             <button
               onClick={selectAll}
-              className="text-blue-400 hover:text-blue-300 text-sm font-medium px-3 py-2 rounded-lg hover:bg-blue-500/10 transition-colors"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
             >
               Select All ({filteredComponents.length})
             </button>
             <button
               onClick={clearAll}
-              className="text-red-400 hover:text-red-300 text-sm font-medium px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors"
+              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
             >
               Clear All
             </button>
           </div>
-          <span className="text-gray-400 text-sm font-medium">
+          <span className="text-gray-600 dark:text-gray-400 text-sm font-medium">
             {selectedComponents.length} selected
           </span>
         </div>
         
         {/* Search hint */}
         {searchTerm && filteredComponents.length > 0 && (
-          <div className="mt-3 text-xs text-gray-500">
+          <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
             💡 Smart search ignores underscores, hyphens, and spaces for better matching
           </div>
         )}
@@ -331,17 +331,17 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
       {/* Components List with Enhanced Virtualization */}
       <div className="flex-1 overflow-hidden p-4">
         {availableComponents.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-500 dark:text-gray-400">
             <Box className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">No components available</p>
             <p className="text-sm mt-2">Make sure target components are selected first</p>
           </div>
         ) : filteredComponents.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-500 dark:text-gray-400">
             <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">No components match your search</p>
             <p className="text-sm mt-2">Try a different search term or check for typos</p>
-            <div className="mt-4 text-xs text-gray-500 bg-gray-800 rounded-lg p-3 max-w-md mx-auto">
+            <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 max-w-md mx-auto">
               <p className="font-medium mb-1">Search tips:</p>
               <ul className="text-left space-y-1">
                 <li>• Ignores underscores, hyphens, spaces</li>
@@ -363,9 +363,9 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl flex-shrink-0">
+      <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-750 rounded-b-xl flex-shrink-0">
         <div className="flex items-center justify-between">
-          <span className="text-gray-400 text-sm font-medium">
+          <span className="text-gray-600 dark:text-gray-400 text-sm font-medium">
             Showing {filteredComponents.length} of {availableComponents.length} components
             {searchTerm && ` (filtered by "${searchTerm}")`}
           </span>
@@ -382,37 +382,37 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
 
   return (
     <div className="relative">
-      <label className="block text-gray-400 text-sm mb-2 font-medium">{label}</label>
+      <label className="block text-gray-700 dark:text-gray-400 text-sm mb-2 font-medium">{label}</label>
       
       {/* Selected Components Display - Always triggers modal */}
       <div 
         ref={triggerRef}
         onClick={handleTriggerClick}
-        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white cursor-pointer hover:bg-gray-650 hover:border-gray-500 transition-all duration-200 flex items-center justify-between min-h-[48px] focus-within:ring-2 focus-within:ring-blue-500/50"
+        className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-650 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 flex items-center justify-between min-h-[48px] focus-within:ring-2 focus-within:ring-blue-500/50"
       >
         <div className="flex-1 min-w-0">
           {selectedComponents.length === 0 ? (
-            <span className="text-gray-400">{placeholder}</span>
+            <span className="text-gray-500 dark:text-gray-400">{placeholder}</span>
           ) : (
             <div className="flex flex-wrap gap-2">
               {selectedComponents.slice(0, 4).map(componentName => (
                 <span
                   key={componentName}
-                  className="inline-flex items-center bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-sm"
+                  className="inline-flex items-center bg-blue-100 dark:bg-blue-600 text-blue-800 dark:text-white text-sm px-3 py-1 rounded-full font-medium shadow-sm"
                 >
                   <span className="truncate max-w-[140px]" title={componentName}>
                     {componentName}
                   </span>
                   <button
                     onClick={(e) => handleRemoveTag(componentName, e)}
-                    className="ml-2 hover:bg-blue-700 rounded-full p-0.5 transition-colors"
+                    className="ml-2 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-full p-0.5 transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
               {selectedComponents.length > 4 && (
-                <span className="text-gray-400 text-sm px-3 py-1 bg-gray-600 rounded-full font-medium">
+                <span className="text-gray-600 dark:text-gray-400 text-sm px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-full font-medium">
                   +{selectedComponents.length - 4} more
                 </span>
               )}
@@ -420,7 +420,7 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
           )}
         </div>
         <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
-          <Maximize2 className="w-5 h-5 text-gray-400" />
+          <Maximize2 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </div>
       </div>
 
@@ -432,20 +432,20 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-800 rounded-xl border border-gray-600 shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col"
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col"
               role="dialog"
             >
               {/* Modal Header */}
-              <div className="p-6 border-b border-gray-700 flex items-center justify-between bg-gray-750 rounded-t-xl flex-shrink-0">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-750 rounded-t-xl flex-shrink-0">
                 <div>
-                  <h3 className="text-white font-semibold text-xl">{label}</h3>
-                  <p className="text-gray-400 text-sm mt-1">
+                  <h3 className="text-gray-900 dark:text-white font-semibold text-xl">{label}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                     Select from {availableComponents.length} available components
                   </p>
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <X className="w-6 h-6" />
                 </button>
