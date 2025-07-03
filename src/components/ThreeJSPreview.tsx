@@ -8,6 +8,7 @@ import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
 import { LoadingSpinner, EmptyState } from './ui';
 import { ModelInfoOverlays, OptionRenderer, GroupRenderer } from './preview';
+import { ModelCameraSetup } from './3d';
 import { Layers } from 'lucide-react';
 
 interface ThreeJSPreviewProps {
@@ -15,7 +16,7 @@ interface ThreeJSPreviewProps {
   onComponentsLoaded?: (components: ModelComponent[]) => void;
 }
 
-// Enhanced GLB Model Component with precise component targeting
+// Enhanced GLB Model Component with automatic camera setup
 const GLBModel = ({ 
   modelUrl, 
   selectedValues, 
@@ -27,9 +28,9 @@ const GLBModel = ({
   onComponentsLoaded: (components: ModelComponent[]) => void;
   configuratorData: ConfiguratorData;
 }) => {
-  const groupRef = useRef<THREE.Group>(null);
   const [components, setComponents] = useState<ModelComponent[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [modelForCamera, setModelForCamera] = useState<THREE.Object3D | null>(null);
   
   // Load the GLB model once
   const gltf = useLoader(GLTFLoader, modelUrl);
@@ -41,19 +42,9 @@ const GLBModel = ({
       
       const modelComponents: ModelComponent[] = [];
       
-      // Calculate model bounds for optimal scaling
-      const box = new THREE.Box3().setFromObject(gltf.scene);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      
-      // Center the model
-      gltf.scene.position.sub(center);
-      
-      // Scale the model to fill viewport optimally
-      const maxDimension = Math.max(size.x, size.y, size.z);
-      const targetSize = 4;
-      const scale = targetSize / maxDimension;
-      gltf.scene.scale.setScalar(scale);
+      // Clone the scene for camera setup to avoid modifying the original
+      const modelForCameraSetup = gltf.scene.clone();
+      setModelForCamera(modelForCameraSetup);
       
       // Traverse scene to collect all mesh components
       gltf.scene.traverse((child) => {
@@ -230,21 +221,18 @@ const GLBModel = ({
 
   }, [selectedValues, components, configuratorData, isInitialized]);
 
-  // Subtle animation
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.03;
-    }
-  });
-
-  if (!gltf || !isInitialized) {
+  if (!gltf || !isInitialized || !modelForCamera) {
     return null;
   }
 
   return (
-    <group ref={groupRef}>
-      <primitive object={gltf.scene} />
-    </group>
+    <ModelCameraSetup 
+      model={modelForCamera}
+      enableAutoRotation={true}
+      rotationSpeed={0.15}
+      cameraDistance={1.8}
+      verticalOffset={0.2}
+    />
   );
 };
 
@@ -377,8 +365,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
-            position={[2, 1.5, 3]} 
-            fov={45}
+            position={[3, 2, 4]} 
+            fov={50}
             near={0.1}
             far={100}
           />
@@ -386,10 +374,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             enablePan={true} 
             enableZoom={true} 
             enableRotate={true}
-            minDistance={1.5}
-            maxDistance={8}
-            maxPolarAngle={Math.PI * 0.75}
-            minPolarAngle={Math.PI * 0.25}
+            minDistance={2}
+            maxDistance={12}
+            maxPolarAngle={Math.PI * 0.8}
+            minPolarAngle={Math.PI * 0.2}
             target={[0, 0, 0]}
             enableDamping={true}
             dampingFactor={0.05}
@@ -416,7 +404,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           
           <Environment preset="studio" />
           
-          {/* Single model instance */}
+          {/* Single model instance with automatic camera setup */}
           <GLBModel 
             key={configuratorData.model} // Force remount on model change
             modelUrl={configuratorData.model}
