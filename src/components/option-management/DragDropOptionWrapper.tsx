@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { motion } from 'framer-motion';
 import OptionCard from './OptionCard';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
 
@@ -42,21 +43,26 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
     transition,
   };
 
-  // Determine drop zone styling
+  // Enhanced drop zone styling with better visual feedback
   const getDropZoneStyle = () => {
     if (!isOver) return '';
     
     if (props.option.isGroup) {
-      return 'ring-2 ring-purple-400 ring-opacity-50 bg-purple-500/10';
+      return 'ring-2 ring-purple-400 ring-opacity-60 bg-purple-500/15 shadow-lg shadow-purple-500/25';
     } else if (!props.isGrouped) {
-      return 'ring-2 ring-blue-400 ring-opacity-50 bg-blue-500/10';
+      return 'ring-2 ring-blue-400 ring-opacity-60 bg-blue-500/15 shadow-lg shadow-blue-500/25';
     }
     
     return '';
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`relative ${getDropZoneStyle()}`}>
+    <div ref={setNodeRef} style={style} className={`relative transition-all duration-300 ${getDropZoneStyle()}`}>
+      {/* Enhanced glow effect for better visual feedback */}
+      {isDragging && (
+        <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse" />
+      )}
+      
       <OptionCard
         {...props}
         isDragging={isDragging}
@@ -67,22 +73,40 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
         }}
       />
       
-      {/* Drop zone indicator for group headers */}
+      {/* Enhanced drop zone indicator for group headers */}
       {isOver && props.option.isGroup && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center z-10">
-          <div className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
-            Drop to add to group
-          </div>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center z-20 backdrop-blur-sm"
+        >
+          <motion.div 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg border border-purple-400/50 flex items-center space-x-2"
+          >
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <span>Drop to add to group</span>
+          </motion.div>
+        </motion.div>
       )}
       
-      {/* Drop zone indicator for removing from group */}
+      {/* Enhanced drop zone indicator for removing from group */}
       {isOver && !props.option.isGroup && !props.isGrouped && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-blue-500/5 flex items-center justify-center z-10">
-          <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
-            Drop to remove from group
-          </div>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center z-20 backdrop-blur-sm"
+        >
+          <motion.div 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg border border-blue-400/50 flex items-center space-x-2"
+          >
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <span>Drop to remove from group</span>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );
