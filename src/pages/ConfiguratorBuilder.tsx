@@ -22,7 +22,7 @@ const ConfiguratorBuilder: React.FC = () => {
     id: 'default',
     name: 'New Configurator',
     description: 'A new 3D configurator',
-    model: '', // Start with empty model path to avoid loading errors
+    model: 'https://an3parts.com/cdn/shop/3d/models/o/c4d8a4d66933dbe5/brakeline-v2.glb?v=0',
     options: []
   });
 
