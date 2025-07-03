@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Settings, 
-  Layers, 
   Eye, 
   List,
   AlertCircle
@@ -284,36 +283,35 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-gray-800 rounded-xl border border-gray-600 shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col"
+        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col"
       >
-        {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-700 bg-gray-750 rounded-t-xl">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
+        {/* Minimal Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Layers className="w-5 h-5 text-white" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-600/20 rounded-lg border border-blue-200 dark:border-blue-500/30">
+                <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-lg sm:text-xl">
+                <h3 className="text-gray-900 dark:text-white font-semibold text-lg sm:text-xl">
                   {isEditing ? 'Edit Option' : 'Create Option'}
                 </h3>
-                <p className="text-gray-400 text-xs sm:text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
                   {isEditing ? 'Modify option settings and values' : 'Configure a new configurator option'}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          {/* Optimized Tabs - Reduced animation complexity */}
-          <div className="bg-gray-700 p-1 rounded-lg">
-            {/* Mobile: Stacked tabs */}
-            <div className="sm:hidden space-y-1">
+          {/* Minimal Tab Navigation */}
+          <div className="mt-6">
+            <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
               {[
                 { id: 'basic', label: 'Basic', icon: Settings },
                 { id: 'display', label: 'Display', icon: Eye },
@@ -322,66 +320,44 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-150 text-sm font-medium ${
+                  className={`flex-1 flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all duration-200 text-sm font-medium ${
                     activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-600/50'
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Desktop: Horizontal tabs */}
-            <div className="hidden sm:flex space-x-1">
-              {[
-                { id: 'basic', label: 'Basic Settings', icon: Settings },
-                { id: 'display', label: 'Display & Style', icon: Eye },
-                { id: 'values', label: 'Option Values', icon: List }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors duration-150 ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  <span className="font-medium">{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Content - Simplified animation for better performance */}
-        <div className="flex-1 overflow-auto">
+        {/* Content */}
+        <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-750">
           <div key={activeTab} className="animate-in fade-in duration-200">
             {tabContent}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-700 bg-gray-750 rounded-b-xl">
+        {/* Minimal Footer */}
+        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           {/* Validation Feedback - Only show when flash is triggered and there are errors */}
           {showValidationFlash && validationErrors.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 rounded-lg border bg-red-500/10 border-red-500/20"
+              className="mb-4 p-3 rounded-lg border bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20"
             >
               <div className="flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-400" />
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-500 dark:text-red-400" />
                 <div>
-                  <h4 className="font-semibold text-sm text-red-300">
+                  <h4 className="font-medium text-sm text-red-800 dark:text-red-300">
                     Required to save:
                   </h4>
-                  <ul className="text-sm mt-1 space-y-1 text-red-200/80">
+                  <ul className="text-sm mt-1 space-y-1 text-red-700 dark:text-red-200/80">
                     {validationErrors.map((error, index) => (
                       <li key={index}>• {error}</li>
                     ))}
@@ -395,7 +371,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-3 px-4 rounded-lg transition-colors font-medium"
             >
               Cancel
             </button>

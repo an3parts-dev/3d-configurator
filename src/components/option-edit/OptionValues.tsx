@@ -35,11 +35,11 @@ const OptionValues: React.FC<OptionValuesProps> = ({
   onMoveValue
 }) => {
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h4 className="text-white font-semibold text-lg">Option Values</h4>
-          <p className="text-gray-400 text-sm mt-1">
+          <h4 className="text-gray-900 dark:text-white font-semibold text-lg">Option Values</h4>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
             Configure the different choices users can select for this option
           </p>
         </div>
