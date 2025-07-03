@@ -30,7 +30,7 @@ const GLBModel = ({
 }) => {
   const [components, setComponents] = useState<ModelComponent[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [modelForCamera, setModelForCamera] = useState<THREE.Object3D | null>(null);
+  const [renderModel, setRenderModel] = useState<THREE.Object3D | null>(null);
   
   // Load the GLB model once
   const gltf = useLoader(GLTFLoader, modelUrl);
@@ -42,9 +42,8 @@ const GLBModel = ({
       
       const modelComponents: ModelComponent[] = [];
       
-      // Create a clean copy of the scene for camera setup
-      const sceneForCamera = gltf.scene.clone();
-      setModelForCamera(sceneForCamera);
+      // Use the original scene for rendering (don't modify it for camera setup)
+      setRenderModel(gltf.scene);
       
       // Traverse scene to collect all mesh components
       gltf.scene.traverse((child) => {
@@ -221,13 +220,13 @@ const GLBModel = ({
 
   }, [selectedValues, components, configuratorData, isInitialized]);
 
-  if (!gltf || !isInitialized || !modelForCamera) {
+  if (!gltf || !isInitialized || !renderModel) {
     return null;
   }
 
   return (
     <ModelCameraSetup 
-      model={modelForCamera}
+      model={renderModel}
       enableAutoRotation={true}
       rotationSpeed={0.15}
       viewportCoverage={0.8}
@@ -365,7 +364,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
-            position={[4, 3, 5]} 
+            position={[5, 3, 5]} 
             fov={50}
             near={0.1}
             far={100}
@@ -374,10 +373,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             enablePan={true} 
             enableZoom={true} 
             enableRotate={true}
-            minDistance={2}
-            maxDistance={15}
+            minDistance={1}
+            maxDistance={20}
             maxPolarAngle={Math.PI * 0.8}
-            minPolarAngle={Math.PI * 0.2}
+            minPolarAngle={Math.PI * 0.1}
             target={[0, 0, 0]}
             enableDamping={true}
             dampingFactor={0.05}

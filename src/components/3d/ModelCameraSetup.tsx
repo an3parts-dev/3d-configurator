@@ -31,73 +31,55 @@ const ModelCameraSetup: React.FC<ModelCameraSetupProps> = ({
 
     console.log('🎯 Setting up model camera positioning for 80% viewport coverage...');
 
-    // Create a clone to avoid modifying the original
-    const modelClone = model.clone();
-    
-    // Calculate model bounding box
-    const box = new THREE.Box3().setFromObject(modelClone);
-    const modelSize = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
+    // Step 1: Calculate original model bounds BEFORE any modifications
+    const originalBox = new THREE.Box3().setFromObject(model);
+    const originalSize = originalBox.getSize(new THREE.Vector3());
+    const originalCenter = originalBox.getCenter(new THREE.Vector3());
 
-    console.log('📏 Model bounds:', {
-      size: { x: modelSize.x.toFixed(2), y: modelSize.y.toFixed(2), z: modelSize.z.toFixed(2) },
-      center: { x: center.x.toFixed(2), y: center.y.toFixed(2), z: center.z.toFixed(2) }
+    console.log('📏 Original model bounds:', {
+      size: { x: originalSize.x.toFixed(2), y: originalSize.y.toFixed(2), z: originalSize.z.toFixed(2) },
+      center: { x: originalCenter.x.toFixed(2), y: originalCenter.y.toFixed(2), z: originalCenter.z.toFixed(2) }
     });
 
-    // Center the model at origin
-    model.position.sub(center);
+    // Step 2: Center the model at origin
+    model.position.copy(originalCenter.negate());
     console.log('📍 Model centered at origin');
 
-    // Get camera properties
+    // Step 3: Calculate viewport dimensions and target size
     const camera3D = camera as THREE.PerspectiveCamera;
     const fov = camera3D.fov * Math.PI / 180;
     const aspect = size.width / size.height;
     
-    // Calculate viewport dimensions at distance 1
-    const viewportHeight = 2 * Math.tan(fov / 2);
-    const viewportWidth = viewportHeight * aspect;
+    // Step 4: Calculate how much space the model should occupy
+    const maxOriginalDimension = Math.max(originalSize.x, originalSize.y, originalSize.z);
     
-    console.log('📺 Viewport dimensions:', {
-      width: viewportWidth.toFixed(2),
-      height: viewportHeight.toFixed(2),
-      aspect: aspect.toFixed(2),
-      fov: camera3D.fov
-    });
-
-    // Calculate the maximum dimension of the model for proper scaling
-    const maxModelDimension = Math.max(modelSize.x, modelSize.y, modelSize.z);
-    
-    // For 80% viewport coverage, we want the model to fill 80% of the viewport width
-    const targetSize = viewportWidth * viewportCoverage;
-    
-    // Calculate scale factor to make the model fit the target size
-    const scale = targetSize / maxModelDimension;
+    // We want the model to appear to cover 80% of the viewport width
+    // Calculate the scale needed to achieve this
+    const targetWorldSize = 4; // Target size in world units
+    const scale = targetWorldSize / maxOriginalDimension;
     model.scale.setScalar(scale);
     
-    console.log(`🔍 Model scaled by factor: ${scale.toFixed(3)} to cover ${(viewportCoverage * 100)}% of viewport width`);
+    console.log(`🔍 Model scaled by factor: ${scale.toFixed(3)}`);
 
-    // Calculate optimal camera distance
-    // We need the scaled model to appear at the correct size in the viewport
-    const scaledModelSize = modelSize.multiplyScalar(scale);
-    const maxScaledDimension = Math.max(scaledModelSize.x, scaledModelSize.y, scaledModelSize.z);
+    // Step 5: Calculate optimal camera distance
+    // After scaling, calculate the new model dimensions
+    const scaledSize = originalSize.clone().multiplyScalar(scale);
+    const maxScaledDimension = Math.max(scaledSize.x, scaledSize.y, scaledSize.z);
     
-    // Calculate distance so the model appears at the desired size
-    // Using the horizontal dimension for width-based coverage
-    const horizontalSize = Math.max(scaledModelSize.x, scaledModelSize.z);
-    const distance = horizontalSize / (2 * Math.tan(fov / 2) * viewportCoverage);
+    // Calculate distance so the scaled model covers the desired viewport percentage
+    // Using trigonometry: distance = (model_size / 2) / tan(fov/2) / coverage_percentage
+    const distance = (maxScaledDimension / 2) / Math.tan(fov / 2) / viewportCoverage;
     
-    // Add padding to ensure full visibility and comfortable viewing
-    const paddedDistance = distance * 1.3;
+    // Add some padding for comfortable viewing
+    const finalDistance = distance * 1.2;
     
-    // Calculate optimal camera height
-    const height = scaledModelSize.y * 0.3 + paddedDistance * 0.15;
+    // Step 6: Position camera for optimal viewing angle
+    const cameraHeight = scaledSize.y * 0.4; // Slightly above center
+    const cameraX = finalDistance * 0.6;     // Slightly to the side for 3/4 view
+    const cameraZ = finalDistance * 0.8;     // Main viewing distance
     
-    // Position camera for optimal 3/4 view
-    const cameraX = paddedDistance * 0.7;  // Slightly to the side
-    const cameraY = height;                // Elevated view
-    const cameraZ = paddedDistance * 0.8;  // Main distance
-    
-    camera.position.set(cameraX, cameraY, cameraZ);
+    // Set camera position
+    camera.position.set(cameraX, cameraHeight, cameraZ);
     
     // Make camera look at the model center (now at origin)
     camera.lookAt(0, 0, 0);
@@ -107,11 +89,11 @@ const ModelCameraSetup: React.FC<ModelCameraSetupProps> = ({
       x: camera.position.x.toFixed(2),
       y: camera.position.y.toFixed(2),
       z: camera.position.z.toFixed(2),
-      distance: paddedDistance.toFixed(2),
-      targetSize: targetSize.toFixed(2)
+      distance: finalDistance.toFixed(2),
+      scaledModelSize: maxScaledDimension.toFixed(2)
     });
 
-    console.log('✅ Model setup complete - covers 80% of viewport width');
+    console.log('✅ Model setup complete - should cover 80% of viewport');
 
     setupComplete.current = true;
   }, [model, camera, size, viewportCoverage, verticalOffset]);
