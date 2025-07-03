@@ -1,7 +1,6 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDrop } from 'react-dnd';
 import DragDropOptionWrapper from './DragDropOptionWrapper';
 import { EmptyState } from '../ui';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
@@ -36,7 +35,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {options.map((option, index) => {
         if (option.isGroup && option.groupData) {
           // Find all options that belong to this group
@@ -58,14 +57,14 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 groupedOptions={groupedOptions}
               />
               
-              {/* Group content area - direct rendering without wrapper */}
+              {/* Group content area */}
               <AnimatePresence>
                 {option.groupData?.isExpanded && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="ml-8 mt-4 space-y-4"
+                    className="ml-6 mt-2 space-y-2"
                   >
                     {groupedOptions.map((groupedOption: ConfiguratorOption) => {
                       const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
@@ -80,6 +79,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                           onEditConditionalLogic={onEditConditionalLogic}
                           onMoveToGroup={onMoveToGroup}
                           isGrouped={true}
+                          parentGroupId={option.id}
                         />
                       );
                     })}

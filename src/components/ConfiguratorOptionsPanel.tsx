@@ -52,20 +52,20 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
       isPreviewMode ? 'w-0 overflow-hidden' : 'w-1/2'
     }`}>
       <div className="h-full flex flex-col">
-        {/* Fixed Header Section - Outside drag-drop area */}
+        {/* Fixed Header Section */}
         <div className="flex-shrink-0 bg-gray-750 border-b border-gray-700">
           {/* Main Header */}
-          <div className="p-6 border-b border-gray-700">
+          <div className="p-4 border-b border-gray-700">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-white font-bold text-2xl">3D Configurator Builder</h1>
+                <h1 className="text-white font-bold text-xl">3D Configurator Builder</h1>
                 <p className="text-gray-400 text-sm mt-1">
                   Design interactive 3D product configurators
                 </p>
               </div>
               <button
                 onClick={onTogglePreviewMode}
-                className={`p-3 rounded-lg transition-colors ${
+                className={`p-2 rounded-lg transition-colors ${
                   isPreviewMode 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -77,10 +77,10 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
             </div>
 
             {/* Import/Export Buttons */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={onExport}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
               >
                 <Download className="w-4 h-4" />
                 <span>Export</span>
@@ -88,7 +88,7 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
 
               <button
                 onClick={onImport}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
               >
                 <Upload className="w-4 h-4" />
                 <span>Import</span>
@@ -96,15 +96,15 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
             </div>
 
             {lastSaved && (
-              <p className="text-gray-500 text-xs mt-3">
+              <p className="text-gray-500 text-xs mt-2">
                 Last saved: {lastSaved.toLocaleTimeString()}
               </p>
             )}
           </div>
 
           {/* Configuration Options Header */}
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <h2 className="text-white font-semibold text-lg">Configuration Options</h2>
                 <p className="text-gray-400 text-sm mt-1">
@@ -114,10 +114,10 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={onCreateOption}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Option</span>
@@ -125,7 +125,7 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
 
               <button
                 onClick={onCreateGroup}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm"
               >
                 <FolderPlus className="w-4 h-4" />
                 <span>Add Group</span>
@@ -134,8 +134,8 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
           </div>
         </div>
 
-        {/* Drag & Drop Options Area - Dedicated scrollable zone */}
-        <div className="flex-1 overflow-auto p-6 bg-gray-800">
+        {/* Drag & Drop Options Area */}
+        <div className="flex-1 overflow-auto p-4 bg-gray-800">
           <OptionsList
             options={configuratorData.options}
             onMove={onMoveOption}

@@ -14,6 +14,7 @@ interface DragDropOptionWrapperProps {
   onMoveToGroup?: (optionId: string, targetGroupId: string | null) => void;
   isGrouped?: boolean;
   groupedOptions?: ConfiguratorOption[];
+  parentGroupId?: string;
 }
 
 const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
@@ -27,6 +28,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       type: 'option',
       isGroup: props.option.isGroup,
       currentGroupId: props.option.groupId,
+      parentGroupId: props.parentGroupId,
       name: props.option.name
     }),
     collect: (monitor) => ({
@@ -36,7 +38,14 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
-    hover: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
+    hover: (item: { 
+      id: string; 
+      index: number; 
+      isGroup: boolean; 
+      currentGroupId?: string; 
+      parentGroupId?: string;
+      name?: string 
+    }, monitor) => {
       if (!ref.current) return;
       
       const dragIndex = item.index;
@@ -44,41 +53,10 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
       if (dragIndex === hoverIndex) return;
 
-      // Don't allow dropping a group into itself or its children
+      // Prevent dropping a group into itself or its children
       if (item.isGroup && props.option.groupId === item.id) return;
 
-      // CRITICAL FIX: Don't trigger reordering when hovering over a group header
-      // if the dragged item is not a group (this prevents the flicker)
-      if (props.option.isGroup && !item.isGroup) {
-        return; // Exit early to prevent reordering
-      }
-
-      // CRITICAL FIX: Don't trigger reordering when hovering over a standalone option
-      // if the dragged item is coming from a group (this is likely a group removal operation)
-      // BUT ALLOW reordering within the same group or between grouped items
-      if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && !props.option.groupId) {
-        return; // Exit early to prevent reordering
-      }
-
-      // NEW: Allow reordering within groups - if both items are in the same group or both are grouped
-      const bothInSameGroup = item.currentGroupId && props.option.groupId && item.currentGroupId === props.option.groupId;
-      const bothAreGrouped = props.isGrouped && item.currentGroupId;
-      const draggedItemIsBeingAddedToGroup = !item.currentGroupId && props.isGrouped;
-
-      // Allow reordering if:
-      // 1. Both items are in the same group
-      // 2. Both items are grouped (even if in different groups)
-      // 3. An ungrouped item is being dragged into a group
-      // 4. Both items are standalone (not grouped)
-      const shouldAllowReordering = bothInSameGroup || 
-                                   bothAreGrouped || 
-                                   draggedItemIsBeingAddedToGroup ||
-                                   (!item.currentGroupId && !props.option.groupId && !props.isGrouped);
-
-      if (!shouldAllowReordering) {
-        return; // Exit early to prevent unwanted reordering
-      }
-
+      // Get the bounding rectangle of the hovered element
       const hoverBoundingRect = ref.current.getBoundingClientRect();
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
@@ -86,26 +64,46 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Only proceed with reordering for same-level items
-      if (dragIndex < hoverIndex && hoverClientY > hoverMiddleY * 0.1) {
-        props.onMove(dragIndex, hoverIndex);
-        item.index = hoverIndex;
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
       }
-      
-      if (dragIndex > hoverIndex && hoverClientY < hoverMiddleY * 1.9) {
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      // Determine if we should allow reordering based on context
+      const bothInSameContext = (
+        // Both are in the same group
+        (item.currentGroupId === props.option.groupId) ||
+        // Both are at root level
+        (!item.currentGroupId && !props.option.groupId && !props.isGrouped) ||
+        // Both are groups at root level
+        (item.isGroup && props.option.isGroup)
+      );
+
+      if (bothInSameContext) {
         props.onMove(dragIndex, hoverIndex);
         item.index = hoverIndex;
       }
     },
-    drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string; name?: string }, monitor) => {
-      // Only handle drops that weren't handled by child components
-      if (!monitor.didDrop()) {
-        // Handle group assignment - only for group headers and standalone options
-        if (props.option.isGroup && !item.isGroup && props.onMoveToGroup) {
-          // Moving an option into a group (dropping on group header)
+    drop: (item: { 
+      id: string; 
+      index: number; 
+      isGroup: boolean; 
+      currentGroupId?: string; 
+      parentGroupId?: string;
+      name?: string 
+    }, monitor) => {
+      if (!monitor.didDrop() && props.onMoveToGroup) {
+        // Handle group assignment
+        if (props.option.isGroup && !item.isGroup) {
+          // Moving an option into a group
           props.onMoveToGroup(item.id, props.option.id);
-        } else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && props.onMoveToGroup) {
-          // Moving an option out of a group (dropping on standalone option)
+        } else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId) {
+          // Moving an option out of a group to root level
           props.onMoveToGroup(item.id, null);
         }
       }
@@ -116,7 +114,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
     }),
   });
 
-  // Create invisible drag preview for smooth dragging
+  // Create invisible drag preview
   React.useEffect(() => {
     const emptyImg = new Image();
     emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
@@ -125,11 +123,10 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const dragDropRef = drag(drop(ref));
 
-  // Determine drop zone styling - only for group headers and standalone options
+  // Determine drop zone styling
   const getDropZoneStyle = () => {
     if (!isOver || !canDrop) return '';
     
-    // Only show drop indicators for group headers and standalone options
     if (props.option.isGroup) {
       return 'ring-2 ring-purple-400 ring-opacity-50 bg-purple-500/10';
     } else if (!props.isGrouped) {
@@ -151,7 +148,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       {isOver && canDrop && props.option.isGroup && (
         <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center z-10">
           <div className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
-            Drop to add to group
+            Add to group
           </div>
         </div>
       )}
@@ -160,7 +157,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       {isOver && canDrop && !props.option.isGroup && !props.isGrouped && (
         <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-blue-500/5 flex items-center justify-center z-10">
           <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
-            Drop to remove from group
+            Remove from group
           </div>
         </div>
       )}
