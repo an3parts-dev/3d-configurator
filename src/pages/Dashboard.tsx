@@ -4,7 +4,7 @@ import { Plus, Search, Grid3X3, List } from 'lucide-react';
 import ProjectCard from '../components/dashboard/ProjectCard';
 import ProjectEditModal from '../components/dashboard/ProjectEditModal';
 import ConfirmationDialog from '../components/ConfirmationDialog';
-import { EmptyState } from '../components/ui';
+import { EmptyState, ThemeToggle } from '../components/ui';
 
 interface Project {
   id: string;
@@ -91,22 +91,25 @@ const Dashboard: React.FC<DashboardProps> = ({ onConfigureProject }) => {
   }, [deletingProjectId]);
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-white font-bold text-2xl">Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">Manage your 3D configurator projects</p>
+            <h1 className="text-gray-900 dark:text-white font-bold text-2xl">Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Manage your 3D configurator projects</p>
           </div>
           
-          <button
-            onClick={handleCreateProject}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Project</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
+            <button
+              onClick={handleCreateProject}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Project</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -115,13 +118,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onConfigureProject }) => {
         {/* Search and View Controls */}
         <div className="flex items-center justify-between mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search projects..."
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -131,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onConfigureProject }) => {
               className={`p-2 rounded-lg transition-colors ${
                 viewMode === 'grid'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:text-white'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-700'
               }`}
             >
               <Grid3X3 className="w-4 h-4" />
@@ -141,7 +144,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onConfigureProject }) => {
               className={`p-2 rounded-lg transition-colors ${
                 viewMode === 'list'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:text-white'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-700'
               }`}
             >
               <List className="w-4 h-4" />

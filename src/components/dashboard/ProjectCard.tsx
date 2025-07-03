@@ -29,7 +29,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all duration-200 overflow-hidden group"
+      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 overflow-hidden group"
     >
       {/* Thumbnail/Preview */}
       <div 
@@ -43,7 +43,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             className="w-full h-full object-cover"
           />
         ) : (
-          <Layers className="w-12 h-12 text-gray-500" />
+          <Layers className="w-12 h-12 text-gray-400 dark:text-gray-500" />
         )}
       </div>
 
@@ -52,13 +52,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className="flex items-start justify-between mb-2">
           <div className="min-w-0 flex-1">
             <h3 
-              className="text-white font-medium text-sm truncate cursor-pointer hover:text-blue-400 transition-colors"
+              className="text-gray-900 dark:text-white font-medium text-sm truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               onClick={() => onConfigure(project)}
             >
               {project.name}
             </h3>
             {project.description && (
-              <p className="text-gray-400 text-xs mt-1 line-clamp-2">
+              <p className="text-gray-600 dark:text-gray-400 text-xs mt-1 line-clamp-2">
                 {project.description}
               </p>
             )}
@@ -67,14 +67,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           <div className="flex items-center space-x-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(project)}
-              className="p-1 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded transition-colors"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded transition-colors"
               title="Edit Project"
             >
               <Edit className="w-3 h-3" />
             </button>
             <button
               onClick={() => onDelete(project.id)}
-              className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
               title="Delete Project"
             >
               <Trash2 className="w-3 h-3" />
@@ -83,7 +83,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
 
         {/* Meta Info */}
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center space-x-1">
             <Layers className="w-3 h-3" />
             <span>{project.optionsCount} options</span>
