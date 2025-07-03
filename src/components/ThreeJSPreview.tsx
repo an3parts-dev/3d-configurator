@@ -42,9 +42,9 @@ const GLBModel = ({
       
       const modelComponents: ModelComponent[] = [];
       
-      // Clone the scene for camera setup to avoid modifying the original
-      const modelForCameraSetup = gltf.scene.clone();
-      setModelForCamera(modelForCameraSetup);
+      // Create a clean copy of the scene for camera setup
+      const sceneForCamera = gltf.scene.clone();
+      setModelForCamera(sceneForCamera);
       
       // Traverse scene to collect all mesh components
       gltf.scene.traverse((child) => {
@@ -230,7 +230,7 @@ const GLBModel = ({
       model={modelForCamera}
       enableAutoRotation={true}
       rotationSpeed={0.15}
-      viewportCoverage={0.75}
+      viewportCoverage={0.8}
       verticalOffset={0.1}
     />
   );
@@ -365,7 +365,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
-            position={[3, 2, 4]} 
+            position={[4, 3, 5]} 
             fov={50}
             near={0.1}
             far={100}
@@ -375,7 +375,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
             enableZoom={true} 
             enableRotate={true}
             minDistance={2}
-            maxDistance={12}
+            maxDistance={15}
             maxPolarAngle={Math.PI * 0.8}
             minPolarAngle={Math.PI * 0.2}
             target={[0, 0, 0]}
