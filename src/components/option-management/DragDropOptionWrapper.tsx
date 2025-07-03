@@ -133,14 +133,14 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const dragDropRef = drag(drop(ref));
 
-  // Determine drop zone styling with enhanced visual feedback
+  // Enhanced drop zone styling with better light mode support
   const getDropZoneStyle = () => {
     if (!isOver || !canDrop) return '';
     
     if (props.option.isGroup) {
-      return 'ring-2 ring-purple-400 ring-opacity-60 bg-purple-500/10 scale-[1.02]';
+      return 'ring-2 ring-purple-400 dark:ring-purple-400 ring-opacity-60 bg-purple-100/20 dark:bg-purple-500/10 scale-[1.02] shadow-lg shadow-purple-200/50 dark:shadow-purple-500/20';
     } else if (!props.isGrouped) {
-      return 'ring-2 ring-blue-400 ring-opacity-60 bg-blue-500/10 scale-[1.01]';
+      return 'ring-2 ring-blue-400 dark:ring-blue-400 ring-opacity-60 bg-blue-100/20 dark:bg-blue-500/10 scale-[1.01] shadow-md shadow-blue-200/50 dark:shadow-blue-500/20';
     }
     
     return '';
@@ -156,8 +156,8 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       
       {/* Enhanced drop zone indicator for group headers */}
       {isOver && canDrop && props.option.isGroup && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-lg bg-purple-500/10 flex items-center justify-center z-10">
-          <div className="bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center space-x-2">
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 dark:border-purple-400 rounded-lg bg-purple-100/30 dark:bg-purple-500/10 flex items-center justify-center z-10">
+          <div className="bg-purple-600 dark:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center space-x-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             <span>Add to group</span>
           </div>
@@ -166,8 +166,8 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       
       {/* Enhanced drop zone indicator for removing from group */}
       {isOver && canDrop && !props.option.isGroup && !props.isGrouped && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-lg bg-blue-500/10 flex items-center justify-center z-10">
-          <div className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center space-x-2">
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 dark:border-blue-400 rounded-lg bg-blue-100/30 dark:bg-blue-500/10 flex items-center justify-center z-10">
+          <div className="bg-blue-600 dark:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center space-x-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             <span>Remove from group</span>
           </div>

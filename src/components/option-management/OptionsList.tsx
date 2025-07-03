@@ -133,7 +133,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
   );
 };
 
-// Simplified group content area - clean minimal design
+// Clean group content area with enhanced light mode design
 const GroupContentArea: React.FC<{
   groupId: string;
   groupedOptions: ConfiguratorOption[];
@@ -153,7 +153,7 @@ const GroupContentArea: React.FC<{
   onMoveToGroup,
   options
 }) => {
-  // Clean drop zone for empty groups - no text, just visual feedback
+  // Enhanced drop zone for empty groups with better light mode styling
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
     drop: (item: { 
@@ -176,20 +176,20 @@ const GroupContentArea: React.FC<{
   });
 
   if (groupedOptions.length === 0) {
-    // Empty group - minimal drop zone
+    // Empty group - enhanced minimal drop zone
     return (
       <div 
         ref={drop}
         className={`relative min-h-[40px] transition-all duration-200 rounded-lg ${
           isOver && canDrop 
-            ? 'bg-purple-500/10 border-2 border-dashed border-purple-400' 
-            : 'border-2 border-dashed border-gray-600/20 hover:border-purple-400/30'
+            ? 'bg-purple-100/50 dark:bg-purple-500/10 border-2 border-dashed border-purple-400 dark:border-purple-400' 
+            : 'border-2 border-dashed border-gray-200 dark:border-gray-600/20 hover:border-purple-300 dark:hover:border-purple-400/30 hover:bg-purple-50/30 dark:hover:bg-purple-500/5'
         }`}
       />
     );
   }
 
-  // Group has items - just render them cleanly
+  // Group has items - render them with enhanced styling
   return (
     <div className="space-y-2">
       {groupedOptions.map((groupedOption: ConfiguratorOption) => {
