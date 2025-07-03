@@ -16,43 +16,6 @@ interface OptionsListProps {
   onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
 }
 
-// Enhanced Group Content Drop Zone Component
-const GroupContentDropZone: React.FC<{
-  groupId: string;
-  children: React.ReactNode;
-  onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
-}> = ({ groupId, children, onMoveToGroup }) => {
-  const [{ isOver, canDrop }, drop] = useDrop({
-    accept: 'option',
-    drop: (item: { id: string; isGroup: boolean; currentGroupId?: string }, monitor) => {
-      // Only handle the drop if it wasn't handled by a child component
-      if (!monitor.didDrop() && !item.isGroup && item.currentGroupId !== groupId) {
-        onMoveToGroup(item.id, groupId);
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop() && !monitor.getItem()?.isGroup && monitor.getItem()?.currentGroupId !== groupId,
-    }),
-  });
-
-  return (
-    <div 
-      ref={drop}
-      className={`relative transition-all duration-200 min-h-[80px] ${
-        isOver && canDrop 
-          ? 'bg-purple-500/10 border-2 border-dashed border-purple-400 rounded-xl' 
-          : ''
-      }`}
-    >
-      {/* Content area */}
-      <div className="relative z-0 space-y-4">
-        {children}
-      </div>
-    </div>
-  );
-};
-
 const OptionsList: React.FC<OptionsListProps> = ({
   options,
   onMove,
@@ -95,36 +58,31 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 groupedOptions={groupedOptions}
               />
               
-              {/* Enhanced group content area with full coverage drop zone */}
+              {/* Group content area - direct rendering without wrapper */}
               <AnimatePresence>
                 {option.groupData?.isExpanded && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="ml-8 mt-4"
+                    className="ml-8 mt-4 space-y-4"
                   >
-                    <GroupContentDropZone
-                      groupId={option.id}
-                      onMoveToGroup={onMoveToGroup}
-                    >
-                      {groupedOptions.map((groupedOption: ConfiguratorOption) => {
-                        const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
-                        return (
-                          <DragDropOptionWrapper
-                            key={groupedOption.id}
-                            option={groupedOption}
-                            index={groupedOptionIndex}
-                            onMove={onMove}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            onEditConditionalLogic={onEditConditionalLogic}
-                            onMoveToGroup={onMoveToGroup}
-                            isGrouped={true}
-                          />
-                        );
-                      })}
-                    </GroupContentDropZone>
+                    {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+                      const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+                      return (
+                        <DragDropOptionWrapper
+                          key={groupedOption.id}
+                          option={groupedOption}
+                          index={groupedOptionIndex}
+                          onMove={onMove}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                          onEditConditionalLogic={onEditConditionalLogic}
+                          onMoveToGroup={onMoveToGroup}
+                          isGrouped={true}
+                        />
+                      );
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
