@@ -64,8 +64,8 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
 
-      // Enhanced reordering logic for precise positioning
-      const bothInSameContext = (
+      // Enhanced logic for cross-group and same-context moves
+      const isSameContext = (
         // Both are in the same group
         (item.currentGroupId === props.option.groupId && item.currentGroupId) ||
         // Both are at root level
@@ -76,10 +76,19 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
         (props.isGrouped && item.parentGroupId === props.parentGroupId && props.parentGroupId)
       );
 
-      if (bothInSameContext) {
-        // Immediate switching - trigger move as soon as items touch
-        // Use a smaller threshold for more responsive switching
-        const threshold = 0.1; // 10% from edges instead of 50% from middle
+      const isCrossGroupMove = (
+        // Moving from one group to another group's item
+        (!item.isGroup && !props.option.isGroup && 
+         item.currentGroupId !== props.option.groupId) ||
+        // Moving from root to group or vice versa
+        (!item.isGroup && !props.option.isGroup &&
+         ((item.currentGroupId && !props.option.groupId) || 
+          (!item.currentGroupId && props.option.groupId)))
+      );
+
+      // Handle same-context reordering with immediate switching
+      if (isSameContext) {
+        const threshold = 0.1; // 10% from edges for immediate response
         
         if (dragIndex < hoverIndex) {
           // Dragging downward - switch when touching the top 10% of target
@@ -95,6 +104,12 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
           }
         }
       }
+
+      // Handle cross-group moves - show visual feedback but don't reorder
+      if (isCrossGroupMove && props.onMoveToGroup) {
+        // Visual feedback will be handled by the drop zone styling
+        // Actual move happens in the drop handler
+      }
     },
     drop: (item: { 
       id: string; 
@@ -105,14 +120,27 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       name?: string 
     }, monitor) => {
       if (!monitor.didDrop() && props.onMoveToGroup) {
-        // Handle group assignment only for direct drops on this element
+        // Handle cross-group moves
+        if (!item.isGroup && !props.option.isGroup) {
+          const targetGroupId = props.isGrouped ? props.parentGroupId : props.option.groupId;
+          
+          // Only move if it's actually a different group
+          if (item.currentGroupId !== targetGroupId) {
+            props.onMoveToGroup(item.id, targetGroupId || null);
+          }
+        }
+        
+        // Handle group assignment for non-group items dropped on groups
         if (props.option.isGroup && !item.isGroup && item.currentGroupId !== props.option.id) {
           // Moving an option into a group - expand the group if collapsed
           if (!props.option.groupData?.isExpanded && props.onToggleGroup) {
             props.onToggleGroup(props.option.id);
           }
           props.onMoveToGroup(item.id, props.option.id);
-        } else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && !item.isGroup) {
+        } 
+        
+        // Handle moving options out of groups to root level
+        else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && !item.isGroup) {
           // Moving an option out of a group to root level (drop on standalone option)
           props.onMoveToGroup(item.id, null);
         }
@@ -133,7 +161,7 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const dragDropRef = drag(drop(ref));
 
-  // Determine drop zone styling with enhanced visual feedback
+  // Enhanced drop zone styling for cross-group moves
   const getDropZoneStyle = () => {
     if (!isOver || !canDrop) return '';
     
@@ -141,9 +169,10 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
       return 'ring-2 ring-purple-400 ring-opacity-60 bg-purple-500/10 scale-[1.02]';
     } else if (!props.isGrouped) {
       return 'ring-2 ring-blue-400 ring-opacity-60 bg-blue-500/10 scale-[1.01]';
+    } else {
+      // Grouped item - show different styling for cross-group moves
+      return 'ring-2 ring-green-400 ring-opacity-60 bg-green-500/10 scale-[1.01]';
     }
-    
-    return '';
   };
 
   return (
@@ -164,12 +193,22 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
         </div>
       )}
       
+      {/* Enhanced drop zone indicator for cross-group moves */}
+      {isOver && canDrop && !props.option.isGroup && props.isGrouped && (
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-green-400 rounded-lg bg-green-500/10 flex items-center justify-center z-10">
+          <div className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span>Move to this group</span>
+          </div>
+        </div>
+      )}
+      
       {/* Enhanced drop zone indicator for removing from group */}
       {isOver && canDrop && !props.option.isGroup && !props.isGrouped && (
         <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-lg bg-blue-500/10 flex items-center justify-center z-10">
           <div className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center space-x-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span>Remove from group</span>
+            <span>Move to root level</span>
           </div>
         </div>
       )}
