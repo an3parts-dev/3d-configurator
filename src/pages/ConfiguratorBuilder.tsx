@@ -3,10 +3,10 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import ConfiguratorOptionsPanel from '../components/ConfiguratorOptionsPanel';
 import Configurator3DView from '../components/Configurator3DView';
-import OptionEditModal from '../components/OptionEditModal';
-import { ConditionalLogicModal } from '../components/conditional-logic';
-import { GroupEditModal } from '../components/groups';
-import ConfirmationDialog from '../components/ConfirmationDialog';
+import OptionEditPanel from '../components/OptionEditPanel';
+import ConditionalLogicPanel from '../components/ConditionalLogicPanel';
+import GroupEditPanel from '../components/GroupEditPanel';
+import ConfirmationPanel from '../components/ConfirmationPanel';
 import { 
   ConfiguratorData, 
   ConfiguratorOption, 
@@ -31,6 +31,13 @@ interface ConfiguratorBuilderProps {
   onNavigateHome: () => void;
 }
 
+type PanelView = 
+  | 'main'
+  | 'option-edit'
+  | 'group-edit'
+  | 'conditional-logic'
+  | 'confirmation';
+
 const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
   project,
   onNavigateHome
@@ -45,10 +52,7 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
   });
 
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
-  const [showOptionModal, setShowOptionModal] = useState(false);
-  const [showGroupModal, setShowGroupModal] = useState(false);
-  const [showConditionalLogicModal, setShowConditionalLogicModal] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [currentPanel, setCurrentPanel] = useState<PanelView>('main');
   const [editingOption, setEditingOption] = useState<ConfiguratorOption | null>(null);
   const [editingGroup, setEditingGroup] = useState<ConfiguratorOptionGroup | null>(null);
   const [conditionalLogicOption, setConditionalLogicOption] = useState<ConfiguratorOption | null>(null);
@@ -258,14 +262,14 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
     updateOption(optionId, { values: newValues });
   }, [configuratorData.options, updateOption]);
 
-  // Modal handlers
+  // Panel navigation handlers
   const handleEditOption = useCallback((option: ConfiguratorOption) => {
     if (option.isGroup && option.groupData) {
       setEditingGroup(option.groupData);
-      setShowGroupModal(true);
+      setCurrentPanel('group-edit');
     } else {
       setEditingOption(option);
-      setShowOptionModal(true);
+      setCurrentPanel('option-edit');
     }
   }, []);
 
@@ -276,7 +280,7 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
       createOption(optionData);
     }
     setEditingOption(null);
-    setShowOptionModal(false);
+    setCurrentPanel('main');
   }, [editingOption, updateOption, createOption]);
 
   const handleSaveGroup = useCallback((groupData: ConfiguratorOptionGroup) => {
@@ -286,12 +290,12 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
       createGroup(groupData);
     }
     setEditingGroup(null);
-    setShowGroupModal(false);
+    setCurrentPanel('main');
   }, [editingGroup, updateGroup, createGroup]);
 
   const handleDeleteOption = useCallback((optionId: string) => {
     setDeletingOptionId(optionId);
-    setShowDeleteConfirmation(true);
+    setCurrentPanel('confirmation');
   }, []);
 
   const confirmDelete = useCallback(() => {
@@ -299,12 +303,12 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
       deleteOption(deletingOptionId);
       setDeletingOptionId(null);
     }
-    setShowDeleteConfirmation(false);
+    setCurrentPanel('main');
   }, [deletingOptionId, deleteOption]);
 
   const handleConditionalLogic = useCallback((option: ConfiguratorOption) => {
     setConditionalLogicOption(option);
-    setShowConditionalLogicModal(true);
+    setCurrentPanel('conditional-logic');
   }, []);
 
   const handleSaveConditionalLogic = useCallback((conditionalLogic: any) => {
@@ -312,7 +316,7 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
       updateOption(conditionalLogicOption.id, { conditionalLogic });
     }
     setConditionalLogicOption(null);
-    setShowConditionalLogicModal(false);
+    setCurrentPanel('main');
   }, [conditionalLogicOption, updateOption]);
 
   // File operations
@@ -339,16 +343,24 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
   // UI handlers
   const handleCreateOption = useCallback(() => {
     setEditingOption(null);
-    setShowOptionModal(true);
+    setCurrentPanel('option-edit');
   }, []);
 
   const handleCreateGroup = useCallback(() => {
     setEditingGroup(null);
-    setShowGroupModal(true);
+    setCurrentPanel('group-edit');
   }, []);
 
   const handleTogglePreviewMode = useCallback(() => {
     setIsPreviewMode(prev => !prev);
+  }, []);
+
+  const handleBackToMain = useCallback(() => {
+    setCurrentPanel('main');
+    setEditingOption(null);
+    setEditingGroup(null);
+    setConditionalLogicOption(null);
+    setDeletingOptionId(null);
   }, []);
 
   if (isLoading) {
@@ -365,86 +377,88 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-gray-900 flex flex-col sm:flex-row">
-        {/* Left Panel - Configuration */}
-        <ConfiguratorOptionsPanel
-          configuratorData={configuratorData}
-          modelComponents={modelComponents}
-          lastSaved={lastSaved}
-          isPreviewMode={isPreviewMode}
-          onTogglePreviewMode={handleTogglePreviewMode}
-          onCreateOption={handleCreateOption}
-          onCreateGroup={handleCreateGroup}
-          onExport={handleExport}
-          onImport={handleImport}
-          onMoveOption={moveOption}
-          onEditOption={handleEditOption}
-          onDeleteOption={handleDeleteOption}
-          onEditConditionalLogic={handleConditionalLogic}
-          onToggleGroup={toggleGroupExpansion}
-          onMoveToGroup={moveToGroup}
-          onNavigateHome={onNavigateHome}
-        />
+        {/* Left Panel - 25% width */}
+        <div className={`transition-all duration-300 ${
+          isPreviewMode ? 'w-0 overflow-hidden' : 'w-full sm:w-1/4'
+        }`}>
+          {currentPanel === 'main' && (
+            <ConfiguratorOptionsPanel
+              configuratorData={configuratorData}
+              modelComponents={modelComponents}
+              lastSaved={lastSaved}
+              isPreviewMode={isPreviewMode}
+              onTogglePreviewMode={handleTogglePreviewMode}
+              onCreateOption={handleCreateOption}
+              onCreateGroup={handleCreateGroup}
+              onExport={handleExport}
+              onImport={handleImport}
+              onMoveOption={moveOption}
+              onEditOption={handleEditOption}
+              onDeleteOption={handleDeleteOption}
+              onEditConditionalLogic={handleConditionalLogic}
+              onToggleGroup={toggleGroupExpansion}
+              onMoveToGroup={moveToGroup}
+              onNavigateHome={onNavigateHome}
+            />
+          )}
 
-        {/* Right Panel - 3D Preview */}
-        <Configurator3DView
-          configuratorData={configuratorData}
-          isPreviewMode={isPreviewMode}
-          onComponentsLoaded={setModelComponents}
-          onTogglePreviewMode={handleTogglePreviewMode}
-        />
+          {currentPanel === 'option-edit' && (
+            <OptionEditPanel
+              option={editingOption}
+              modelComponents={modelComponents}
+              allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
+              onSave={handleSaveOption}
+              onCancel={handleBackToMain}
+              onAddValue={addOptionValue}
+              onUpdateValue={updateOptionValue}
+              onDeleteValue={deleteOptionValue}
+              onMoveValue={moveOptionValue}
+              availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
+            />
+          )}
 
-        {/* Modals */}
-        <OptionEditModal
-          isOpen={showOptionModal}
-          onClose={() => {
-            setShowOptionModal(false);
-            setEditingOption(null);
-          }}
-          onSave={handleSaveOption}
-          option={editingOption}
-          modelComponents={modelComponents}
-          allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
-          onAddValue={addOptionValue}
-          onUpdateValue={updateOptionValue}
-          onDeleteValue={deleteOptionValue}
-          onMoveValue={moveOptionValue}
-          availableGroups={configuratorData.options.filter(opt => opt.isGroup && opt.groupData)}
-        />
+          {currentPanel === 'group-edit' && (
+            <GroupEditPanel
+              groupData={editingGroup}
+              onSave={handleSaveGroup}
+              onCancel={handleBackToMain}
+              isEditing={!!editingGroup}
+            />
+          )}
 
-        <GroupEditModal
-          isOpen={showGroupModal}
-          onClose={() => {
-            setShowGroupModal(false);
-            setEditingGroup(null);
-          }}
-          onSave={handleSaveGroup}
-          groupData={editingGroup}
-          isEditing={!!editingGroup}
-        />
+          {currentPanel === 'conditional-logic' && conditionalLogicOption && (
+            <ConditionalLogicPanel
+              currentOption={conditionalLogicOption}
+              allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
+              conditionalLogic={conditionalLogicOption.conditionalLogic}
+              onSave={handleSaveConditionalLogic}
+              onCancel={handleBackToMain}
+            />
+          )}
 
-        {showConditionalLogicModal && conditionalLogicOption && (
-          <ConditionalLogicModal
-            isOpen={showConditionalLogicModal}
-            onClose={() => {
-              setShowConditionalLogicModal(false);
-              setConditionalLogicOption(null);
-            }}
-            onSave={handleSaveConditionalLogic}
-            currentOption={conditionalLogicOption}
-            allOptions={configuratorData.options.filter(opt => !opt.isGroup)}
-            conditionalLogic={conditionalLogicOption.conditionalLogic}
+          {currentPanel === 'confirmation' && (
+            <ConfirmationPanel
+              title="Delete Option"
+              message="Are you sure you want to delete this option? This action cannot be undone."
+              confirmText="Delete"
+              type="danger"
+              onConfirm={confirmDelete}
+              onCancel={handleBackToMain}
+            />
+          )}
+        </div>
+
+        {/* Right Panel - 75% width */}
+        <div className={`transition-all duration-300 ${
+          isPreviewMode ? 'w-full' : 'w-full sm:w-3/4'
+        }`}>
+          <Configurator3DView
+            configuratorData={configuratorData}
+            isPreviewMode={isPreviewMode}
+            onComponentsLoaded={setModelComponents}
+            onTogglePreviewMode={handleTogglePreviewMode}
           />
-        )}
-
-        <ConfirmationDialog
-          isOpen={showDeleteConfirmation}
-          onClose={() => setShowDeleteConfirmation(false)}
-          onConfirm={confirmDelete}
-          title="Delete Option"
-          message="Are you sure you want to delete this option? This action cannot be undone."
-          confirmText="Delete"
-          type="danger"
-        />
+        </div>
       </div>
     </DndProvider>
   );
