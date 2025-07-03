@@ -23,7 +23,7 @@ const ConfiguratorBuilder: React.FC = () => {
     id: 'default',
     name: 'New Configurator',
     description: 'A new 3D configurator',
-    model: 'https://cdn.shopify.com/3d/models/o/a7af059c00ea3c69/angle-3d-generated.glb',
+    model: 'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
     options: []
   });
 
