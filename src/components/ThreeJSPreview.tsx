@@ -3,10 +3,12 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { motion } from 'framer-motion';
-import { Zap, Image as ImageIcon, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
+import { LoadingSpinner, EmptyState } from './ui';
+import { ModelInfoOverlays, OptionRenderer, GroupRenderer } from './preview';
+import { Layers } from 'lucide-react';
 
 interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
@@ -318,397 +320,14 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  // Helper function to get layout classes based on display direction and settings
-  const getLayoutClasses = (option: any) => {
-    const direction = option.displayDirection || 'row';
-    
-    if (direction === 'grid') {
-      const gridSettings = option.gridSettings || { columns: 3, gap: 'medium' };
-      const gapClass = gridSettings.gap === 'small' ? 'gap-2' : gridSettings.gap === 'large' ? 'gap-6' : 'gap-4';
-      
-      if (gridSettings.autoFit) {
-        return `grid ${gapClass}`;
-      } else {
-        return `grid grid-cols-1 sm:grid-cols-${gridSettings.columnsTablet || 2} lg:grid-cols-${gridSettings.columns || 3} ${gapClass}`;
-      }
-    } else if (direction === 'row') {
-      return 'flex gap-2 sm:gap-4 overflow-x-auto pb-2';
-    } else {
-      // Column layout
-      const columnSettings = option.columnSettings || { alignment: 'left', spacing: 'normal' };
-      const alignmentClass = columnSettings.alignment === 'center' ? 'items-center' : columnSettings.alignment === 'right' ? 'items-end' : 'items-start';
-      const spacingClass = columnSettings.spacing === 'compact' ? 'gap-2' : columnSettings.spacing === 'relaxed' ? 'gap-6' : 'gap-4';
-      return `flex flex-col ${alignmentClass} ${spacingClass}`;
-    }
-  };
-
-  // Helper function to render image with title positioning - FIXED for row layout
-  const renderImageWithTitle = (value: any, option: any, index: number, isSelected: boolean = false) => {
-    const imageSettings = option.imageSettings;
-    const hideTitle = value.hideTitle || imageSettings?.hideTitle || false;
-    const titlePosition = imageSettings?.titlePosition || 'below';
-    const direction = option.displayDirection || 'row';
-
-    // Generate precise image styles based on settings
-    const getImageStyles = () => {
-      if (!imageSettings) {
-        return {
-          containerStyle: { width: '80px', height: '80px' },
-          imageObjectFitClass: 'object-cover',
-          borderRadius: '8px'
-        };
-      }
-      
-      let baseSizePx = 80;
-      
-      switch (imageSettings.size) {
-        case 'x-small': baseSizePx = 48; break;
-        case 'small': baseSizePx = 64; break;
-        case 'medium': baseSizePx = 80; break;
-        case 'large': baseSizePx = 96; break;
-        case 'x-large': baseSizePx = 128; break;
-      }
-
-      let containerStyle: React.CSSProperties = {};
-      let imageObjectFitClass = 'object-cover';
-
-      // Handle aspect ratios with precise container sizing
-      switch (imageSettings.aspectRatio) {
-        case 'square':
-          containerStyle = {
-            width: `${baseSizePx}px`,
-            height: `${baseSizePx}px`
-          };
-          imageObjectFitClass = 'object-cover';
-          break;
-        case 'round':
-          containerStyle = {
-            width: `${baseSizePx}px`,
-            height: `${baseSizePx}px`
-          };
-          imageObjectFitClass = 'object-cover';
-          break;
-        case '3:2':
-          containerStyle = {
-            width: `${baseSizePx}px`,
-            height: `${Math.round(baseSizePx * 2 / 3)}px`
-          };
-          imageObjectFitClass = 'object-cover';
-          break;
-        case '2:3':
-          containerStyle = {
-            width: `${Math.round(baseSizePx * 2 / 3)}px`,
-            height: `${baseSizePx}px`
-          };
-          imageObjectFitClass = 'object-cover';
-          break;
-        case 'auto':
-          containerStyle = {
-            width: 'auto',
-            height: 'auto',
-            maxWidth: `${baseSizePx}px`,
-            maxHeight: `${baseSizePx}px`
-          };
-          imageObjectFitClass = 'object-contain';
-          break;
-      }
-
-      // Handle corner styles
-      let borderRadius = '0px';
-      switch (imageSettings.cornerStyle) {
-        case 'squared': 
-          borderRadius = '0px'; 
-          break;
-        case 'soft': 
-          borderRadius = '4px'; 
-          break;
-        case 'softer': 
-          borderRadius = '8px'; 
-          break;
-      }
-
-      // Force round shape for round aspect ratio
-      if (imageSettings.aspectRatio === 'round') {
-        borderRadius = '50%';
-      }
-
-      containerStyle.borderRadius = borderRadius;
-
-      return {
-        containerStyle,
-        imageObjectFitClass,
-        borderRadius
-      };
-    };
-
-    const { containerStyle, imageObjectFitClass, borderRadius } = getImageStyles();
-
-    const imageElement = (
-      <div 
-        className="flex items-center justify-center overflow-hidden"
-        style={containerStyle}
-      >
-        {value.image ? (
-          <img
-            src={value.image}
-            alt={value.name}
-            className={`w-full h-full ${imageObjectFitClass}`}
-            style={{ borderRadius }}
-          />
-        ) : (
-          <div 
-            className="w-full h-full flex items-center justify-center"
-            style={{ 
-              borderRadius,
-              background: `linear-gradient(135deg, ${value.color || '#3B82F6'}88, ${value.color || '#3B82F6'})`
-            }}
-          >
-            <ImageIcon className="w-6 h-6 text-white opacity-80" />
-          </div>
-        )}
-      </div>
-    );
-
-    const titleElement = !hideTitle ? (
-      <p className="text-white text-xs font-medium text-center">
-        {value.name}
-      </p>
-    ) : null;
-
-    // FIXED: Use proper layout based on direction and title position
-    if (direction === 'row') {
-      // For row layout, always use flex-col for individual items
-      switch (titlePosition) {
-        case 'above':
-          return (
-            <div className="flex flex-col items-center space-y-1 flex-shrink-0">
-              {titleElement}
-              {imageElement}
-            </div>
-          );
-        case 'below':
-          return (
-            <div className="flex flex-col items-center space-y-1 flex-shrink-0">
-              {imageElement}
-              {titleElement}
-            </div>
-          );
-        case 'left':
-          return (
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              {titleElement}
-              {imageElement}
-            </div>
-          );
-        case 'right':
-          return (
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              {imageElement}
-              {titleElement}
-            </div>
-          );
-        case 'center':
-          return (
-            <div className="relative flex-shrink-0">
-              {imageElement}
-              {titleElement && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
-                    {value.name}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        default:
-          return (
-            <div className="flex flex-col items-center space-y-1 flex-shrink-0">
-              {imageElement}
-              {titleElement}
-            </div>
-          );
-      }
-    } else {
-      // For column and grid layouts, use the original logic
-      switch (titlePosition) {
-        case 'above':
-          return (
-            <div className="flex flex-col items-center space-y-1">
-              {titleElement}
-              {imageElement}
-            </div>
-          );
-        case 'below':
-          return (
-            <div className="flex flex-col items-center space-y-1">
-              {imageElement}
-              {titleElement}
-            </div>
-          );
-        case 'left':
-          return (
-            <div className="flex items-center space-x-2">
-              {titleElement}
-              {imageElement}
-            </div>
-          );
-        case 'right':
-          return (
-            <div className="flex items-center space-x-2">
-              {imageElement}
-              {titleElement}
-            </div>
-          );
-        case 'center':
-          return (
-            <div className="relative">
-              {imageElement}
-              {titleElement && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-xs font-medium">
-                    {value.name}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        default:
-          return (
-            <div className="flex flex-col items-center space-y-1">
-              {imageElement}
-              {titleElement}
-            </div>
-          );
-      }
-    }
-  };
-
-  const renderOption = (option: any) => {
-    const visibleValues = ConditionalLogicEngine.getVisibleOptionValues(
+  // Helper function to get visible option values
+  const getVisibleOptionValues = useCallback((option: any) => {
+    return ConditionalLogicEngine.getVisibleOptionValues(
       option,
       selectedValues,
       configuratorData.options.filter(opt => !opt.isGroup)
     );
-
-    if (visibleValues.length === 0) return null;
-
-    return (
-      <div key={option.id} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-white font-semibold text-xl">
-              {option.name}
-              {option.conditionalLogic?.enabled && (
-                <span className="ml-2 inline-flex items-center px-2 py-1 bg-purple-500/20 rounded-full">
-                  <Zap className="w-3 h-3 text-purple-400" />
-                </span>
-              )}
-            </h4>
-            {option.description && (
-              <p className="text-gray-400 text-sm mt-1">{option.description}</p>
-            )}
-          </div>
-          <div className="flex items-center space-x-2 text-xs text-gray-400">
-            <span className="px-2 py-1 bg-gray-700 rounded-full capitalize font-medium">
-              {option.manipulationType}
-            </span>
-            <span className="px-2 py-1 bg-gray-700 rounded-full capitalize font-medium flex items-center space-x-1">
-              {option.displayType === 'images' && <ImageIcon className="w-3 h-3" />}
-              <span>{option.displayType}</span>
-            </span>
-            {option.displayDirection && (
-              <span className="px-2 py-1 bg-gray-700 rounded-full capitalize font-medium">
-                {option.displayDirection}
-              </span>
-            )}
-            {option.defaultBehavior && (
-              <span className={`px-2 py-1 rounded-full font-medium ${
-                option.defaultBehavior === 'hide' 
-                  ? 'bg-red-500/20 text-red-300' 
-                  : 'bg-green-500/20 text-green-300'
-              }`}>
-                {option.defaultBehavior === 'hide' ? 'Hide Default' : 'Show Default'}
-              </span>
-            )}
-          </div>
-        </div>
-        
-        {option.displayType === 'images' ? (
-          <div className={getLayoutClasses(option)}>
-            {visibleValues.map((value: any) => (
-              <button
-                key={value.id}
-                onClick={() => handleValueChange(option.id, value.id)}
-                className={`relative group transition-all duration-200 ${
-                  selectedValues[option.id] === value.id
-                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'hover:scale-102'
-                }`}
-              >
-                {renderImageWithTitle(value, option, 0, selectedValues[option.id] === value.id)}
-                
-                {selectedValues[option.id] === value.id && (
-                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white p-1 rounded-full">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-
-                {/* Conditional Logic Indicator */}
-                {value.conditionalLogic?.enabled && (
-                  <div className="absolute top-1 right-1 bg-orange-600 text-white p-1 rounded-full">
-                    <Zap className="w-2 h-2" />
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : option.displayType === 'buttons' ? (
-          <div className={getLayoutClasses(option)}>
-            {visibleValues.map((value: any) => (
-              <button
-                key={value.id}
-                onClick={() => handleValueChange(option.id, value.id)}
-                className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative flex-shrink-0 whitespace-nowrap ${
-                  selectedValues[option.id] === value.id
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'
-                }`}
-              >
-                {option.manipulationType === 'material' && value.color && (
-                  <div 
-                    className="w-3 h-3 rounded-full border border-white/20 shadow-inner"
-                    style={{ backgroundColor: value.color }}
-                  />
-                )}
-                <span>{value.name}</span>
-                
-                {/* Conditional Logic Indicator */}
-                {value.conditionalLogic?.enabled && (
-                  <div className="absolute -top-1 -right-1 bg-orange-600 text-white p-0.5 rounded-full">
-                    <Zap className="w-2 h-2" />
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <select
-            value={selectedValues[option.id] || ''}
-            onChange={(e) => handleValueChange(option.id, e.target.value)}
-            className="w-full bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-3 text-white font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-          >
-            {visibleValues.map((value: any) => (
-              <option key={value.id} value={value.id}>
-                {value.name} {value.conditionalLogic?.enabled ? '⚡' : ''}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-    );
-  };
+  }, [selectedValues, configuratorData.options]);
 
   // Organize options by groups for display
   const organizeOptionsForDisplay = () => {
@@ -810,79 +429,36 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-10">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-xl font-semibold">Loading 3D Model</p>
-              <p className="text-gray-400 text-sm mt-2">Analyzing components...</p>
-            </div>
+            <LoadingSpinner 
+              size="lg" 
+              text="Loading 3D Model" 
+              subText="Analyzing components..." 
+            />
           </div>
         )}
         
-        {/* Info overlays - Mobile optimized */}
-        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-black/70 backdrop-blur-md rounded-xl px-3 sm:px-5 py-2 sm:py-4 border border-gray-600">
-          <p className="text-white text-xs sm:text-sm font-semibold mb-1">3D Model Preview</p>
-          <div className="flex items-center space-x-2 sm:space-x-4 text-xs text-gray-300">
-            <span>Components: {modelComponents.length}</span>
-            <span>•</span>
-            <span className="flex items-center">
-              <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
-              Visible: {modelComponents.filter(c => c.visible).length}
-            </span>
-          </div>
-        </div>
-
-        {/* Conditional Logic Status - Mobile optimized */}
-        {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-          <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-purple-500/30">
-            <div className="flex items-center space-x-2 text-purple-300">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-              </motion.div>
-              <span className="text-xs sm:text-sm font-medium">Smart Logic Active</span>
-            </div>
-            <p className="text-xs text-purple-200/80 mt-1">
-              {visibleOptions.length} of {configuratorData.options.filter(opt => !opt.isGroup).length} options visible
-            </p>
-          </div>
-        )}
-
-        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-black/70 backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600">
-          <div className="text-xs text-gray-300 space-y-1">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span>Drag to rotate</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>Scroll to zoom</span>
-            </div>
-          </div>
-        </div>
+        {/* Info overlays */}
+        <ModelInfoOverlays
+          modelComponents={modelComponents}
+          configuratorData={configuratorData}
+          visibleOptionsCount={visibleOptions.length}
+        />
       </div>
 
       {/* Sticky Options Panel - Mobile optimized */}
       <div className="bg-gray-900 flex flex-col h-[60vh] sm:h-[55vh] lg:h-[50vh] sticky top-0 z-10">
         <div className="flex-1 overflow-auto p-3 sm:p-6">
           {organizeOptionsForDisplay().length === 0 ? (
-            <div className="text-center py-8 sm:py-12 text-gray-500">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-gray-500 border-t-blue-400 rounded-full"
-                />
-              </div>
-              <p className="text-base sm:text-lg font-medium">No options available</p>
-              <p className="text-xs sm:text-sm mt-1">
-                {configuratorData.options.filter(opt => !opt.isGroup).length > 0 
+            <EmptyState
+              icon={Layers}
+              title="No options available"
+              description={
+                configuratorData.options.filter(opt => !opt.isGroup).length > 0 
                   ? 'Options are hidden by conditional logic'
                   : 'Add options in the left panel to see them here'
-                }
-              </p>
-            </div>
+              }
+              className="py-8 sm:py-12"
+            />
           ) : (
             <div className="space-y-6 sm:space-y-8">
               {organizeOptionsForDisplay().map((item, index) => {
@@ -891,65 +467,16 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                   const isExpanded = expandedGroups.has(group.id);
                   
                   return (
-                    <motion.div
+                    <GroupRenderer
                       key={group.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-4"
-                    >
-                      {/* Group Header */}
-                      <div 
-                        className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-3 sm:p-4 rounded-xl border border-purple-700/50 cursor-pointer hover:border-purple-600/50 transition-colors"
-                        onClick={() => toggleGroup(group.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
-                              <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-                            </div>
-                            <div>
-                              <h3 className="text-white font-semibold text-base sm:text-lg flex items-center space-x-2">
-                                <span>{group.name}</span>
-                                <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
-                                  {options.length} options
-                                </span>
-                              </h3>
-                              {group.description && (
-                                <p className="text-purple-200/80 text-xs sm:text-sm mt-1">{group.description}</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-purple-400">
-                            {isExpanded ? (
-                              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Group Options */}
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="ml-3 sm:ml-6 space-y-4 sm:space-y-6 border-l-2 border-purple-500/20 pl-3 sm:pl-6"
-                        >
-                          {options.map((option: any) => (
-                            <motion.div
-                              key={option.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              className="space-y-4"
-                            >
-                              {renderOption(option)}
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </motion.div>
+                      group={group}
+                      options={options}
+                      isExpanded={isExpanded}
+                      selectedValues={selectedValues}
+                      onToggleGroup={toggleGroup}
+                      onValueChange={handleValueChange}
+                      getVisibleOptionValues={getVisibleOptionValues}
+                    />
                   );
                 } else {
                   // Standalone option
@@ -961,7 +488,12 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       className="space-y-4"
                     >
-                      {renderOption(option)}
+                      <OptionRenderer
+                        option={option}
+                        visibleValues={getVisibleOptionValues(option)}
+                        selectedValues={selectedValues}
+                        onValueChange={handleValueChange}
+                      />
                     </motion.div>
                   );
                 }

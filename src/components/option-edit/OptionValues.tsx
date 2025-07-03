@@ -1,6 +1,7 @@
 import React from 'react';
-import { Plus, List } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import DragDropOptionValue from '../DragDropOptionValue';
+import { EmptyState } from '../ui';
 import { ConfiguratorOption, ConfiguratorOptionValue } from '../../types/ConfiguratorTypes';
 
 interface ModelComponent {
@@ -33,8 +34,6 @@ const OptionValues: React.FC<OptionValuesProps> = ({
   onDeleteValue,
   onMoveValue
 }) => {
-  const isEditing = !!option;
-
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -55,11 +54,15 @@ const OptionValues: React.FC<OptionValuesProps> = ({
       </div>
 
       {localValues.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <List className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">No values yet</p>
-          <p className="text-sm mt-2">Add your first value to get started</p>
-        </div>
+        <EmptyState
+          icon={Plus}
+          title="No values yet"
+          description="Add your first value to get started"
+          action={{
+            label: "Add Value",
+            onClick: onAddValue
+          }}
+        />
       ) : (
         <div className="space-y-4">
           {localValues.map((value, index) => (

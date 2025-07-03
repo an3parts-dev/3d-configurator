@@ -1,7 +1,8 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Layers } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import DragDropOptionWrapper from './DragDropOptionWrapper';
+import { EmptyState } from '../ui';
 import { ConfiguratorOption } from '../../types/ConfiguratorTypes';
 
 interface OptionsListProps {
@@ -61,11 +62,11 @@ const OptionsList: React.FC<OptionsListProps> = ({
 
   if (options.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        <Layers className="w-16 h-16 mx-auto mb-4 opacity-50" />
-        <p className="text-lg font-medium">No options yet</p>
-        <p className="text-sm mt-2">Add your first option or group to get started</p>
-      </div>
+      <EmptyState
+        icon={Layers}
+        title="No options yet"
+        description="Add your first option or group to get started"
+      />
     );
   }
 
