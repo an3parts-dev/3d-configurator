@@ -1,6 +1,5 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import DragDropOptionWrapper from './DragDropOptionWrapper';
 import { EmptyState } from '../ui';
@@ -49,7 +48,8 @@ const OptionsList: React.FC<OptionsListProps> = ({
             );
             
             return (
-              <div key={option.id}>
+              <div key={option.id} className="space-y-3">
+                {/* Group Header */}
                 <DragDropOptionWrapper
                   option={option}
                   index={index}
@@ -62,45 +62,29 @@ const OptionsList: React.FC<OptionsListProps> = ({
                   groupedOptions={groupedOptions}
                 />
                 
-                {/* Group content area */}
-                <AnimatePresence>
-                  {option.groupData?.isExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="ml-8 mt-4"
-                    >
-                      <SortableContext items={groupedOptions.map(opt => opt.id)} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-4 min-h-[80px] p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
-                          {groupedOptions.length === 0 ? (
-                            <div className="text-center py-8 text-purple-300/60">
-                              <div className="text-sm font-medium mb-1">No options in this group</div>
-                              <div className="text-xs">Drag options here to add them to this group</div>
-                            </div>
-                          ) : (
-                            groupedOptions.map((groupedOption: ConfiguratorOption) => {
-                              const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
-                              return (
-                                <DragDropOptionWrapper
-                                  key={groupedOption.id}
-                                  option={groupedOption}
-                                  index={groupedOptionIndex}
-                                  onMove={onMove}
-                                  onEdit={onEdit}
-                                  onDelete={onDelete}
-                                  onEditConditionalLogic={onEditConditionalLogic}
-                                  onMoveToGroup={onMoveToGroup}
-                                  isGrouped={true}
-                                />
-                              );
-                            })
-                          )}
-                        </div>
-                      </SortableContext>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Grouped Options - Displayed inline when group is expanded */}
+                {option.groupData?.isExpanded && groupedOptions.length > 0 && (
+                  <div className="ml-6 space-y-3">
+                    <SortableContext items={groupedOptions.map(opt => opt.id)} strategy={verticalListSortingStrategy}>
+                      {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+                        const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+                        return (
+                          <DragDropOptionWrapper
+                            key={groupedOption.id}
+                            option={groupedOption}
+                            index={groupedOptionIndex}
+                            onMove={onMove}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            onEditConditionalLogic={onEditConditionalLogic}
+                            onMoveToGroup={onMoveToGroup}
+                            isGrouped={true}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </div>
+                )}
               </div>
             );
           } else if (!option.groupId) {
