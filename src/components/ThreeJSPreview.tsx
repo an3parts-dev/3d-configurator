@@ -316,13 +316,15 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     );
   }, [selectedValues, configuratorData.options]);
 
-  // Organize options by groups for display
+  // Organize options by groups for display - PRESERVE ORIGINAL ORDER
   const organizeOptionsForDisplay = () => {
     const organized: any[] = [];
     const processedOptionIds = new Set<string>();
 
-    // First, process all groups and their options
+    // Process options in their original order from configuratorData.options
     configuratorData.options.forEach(option => {
+      if (processedOptionIds.has(option.id)) return;
+
       if (option.isGroup && option.groupData) {
         // Find all visible options that belong to this group
         const groupedOptions = visibleOptions.filter(opt => opt.groupId === option.id);
@@ -337,18 +339,18 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         
         // Mark grouped options as processed
         groupedOptions.forEach(opt => processedOptionIds.add(opt.id));
+      } else if (!option.isGroup) {
+        // Check if this option is visible and not in a group
+        const isVisible = visibleOptions.some(visOpt => visOpt.id === option.id);
+        if (isVisible && !option.groupId) {
+          organized.push({
+            type: 'option',
+            option
+          });
+        }
       }
-    });
-
-    // Then, add all standalone visible options (not in groups and not already processed)
-    visibleOptions.forEach(option => {
-      if (!option.groupId && !processedOptionIds.has(option.id)) {
-        organized.push({
-          type: 'option',
-          option
-        });
-        processedOptionIds.add(option.id);
-      }
+      
+      processedOptionIds.add(option.id);
     });
 
     return organized;
