@@ -49,7 +49,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
             onChange={(e) => setFormData(prev => ({ ...prev, groupId: e.target.value || undefined }))}
             className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           >
-            <option value="">No Group (Standalone)</option>
+            <option value="" className="text-gray-500 dark:text-gray-400">None</option>
             {availableGroups.map(group => (
               <option key={group.id} value={group.id}>
                 {group.name}
