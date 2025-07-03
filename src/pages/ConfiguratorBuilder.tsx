@@ -145,14 +145,31 @@ const ConfiguratorBuilder: React.FC = () => {
     
     if (!over || active.id === over.id) return;
 
-    const oldIndex = configuratorData.options.findIndex(opt => opt.id === active.id);
-    const newIndex = configuratorData.options.findIndex(opt => opt.id === over.id);
+    const activeOption = configuratorData.options.find(opt => opt.id === active.id);
+    const overOption = configuratorData.options.find(opt => opt.id === over.id);
+    
+    if (!activeOption || !overOption) return;
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      setConfiguratorData(prev => ({
-        ...prev,
-        options: arrayMove(prev.options, oldIndex, newIndex)
-      }));
+    // Only reorder if both options are in the same context (same group or both ungrouped)
+    const sameContext = (
+      // Both are group headers
+      (activeOption.isGroup && overOption.isGroup) ||
+      // Both are ungrouped options
+      (!activeOption.isGroup && !overOption.isGroup && !activeOption.groupId && !overOption.groupId) ||
+      // Both are in the same group
+      (!activeOption.isGroup && !overOption.isGroup && activeOption.groupId === overOption.groupId)
+    );
+
+    if (sameContext) {
+      const oldIndex = configuratorData.options.findIndex(opt => opt.id === active.id);
+      const newIndex = configuratorData.options.findIndex(opt => opt.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setConfiguratorData(prev => ({
+          ...prev,
+          options: arrayMove(prev.options, oldIndex, newIndex)
+        }));
+      }
     }
   }, [configuratorData.options]);
 
