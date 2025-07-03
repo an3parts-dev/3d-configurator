@@ -135,7 +135,7 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
         </div>
 
         {/* Drag & Drop Options Area - Dedicated scrollable zone */}
-        <div className="flex-1 overflow-auto p-6 bg-white">
+        <div className="flex-1 overflow-auto p-6 bg-gray-800">
           <OptionsList
             options={configuratorData.options}
             onMove={onMoveOption}
