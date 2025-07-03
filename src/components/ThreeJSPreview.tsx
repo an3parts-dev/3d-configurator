@@ -318,15 +318,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
     selectedValues
   );
 
-  const getBorderStyles = (imageSettings?: any) => {
-    if (!imageSettings?.showBorder) return {};
-    
-    return {
-      borderRadius: `${imageSettings.borderRadius || 8}px`,
-      border: '2px solid #4b5563'
-    };
-  };
-
   // Helper function to get layout classes based on display direction and settings
   const getLayoutClasses = (option: any) => {
     const direction = option.displayDirection || 'row';
@@ -349,6 +340,15 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       const spacingClass = columnSettings.spacing === 'compact' ? 'gap-2' : columnSettings.spacing === 'relaxed' ? 'gap-6' : 'gap-4';
       return `flex flex-col ${alignmentClass} ${spacingClass}`;
     }
+  };
+
+  const getBorderStyles = (imageSettings?: any) => {
+    if (!imageSettings?.showBorder) return {};
+    
+    return {
+      borderRadius: `${imageSettings.borderRadius || 8}px`,
+      border: '2px solid #4b5563'
+    };
   };
 
   const renderOption = (option: any) => {
@@ -452,7 +452,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                   </div>
                   
                   {!value.hideTitle && !option.imageSettings?.hideTitle && (
-                    <p className="text-white text-xs font-medium text-center max-w-20 truncate">
+                    <p className="text-white text-xs font-medium text-center">
                       {value.name}
                     </p>
                   )}
