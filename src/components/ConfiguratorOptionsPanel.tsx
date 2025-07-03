@@ -72,24 +72,8 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
             </button>
           </div>
 
-          {/* Action Buttons */}
+          {/* Import/Export Buttons */}
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={onCreateOption}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Option</span>
-            </button>
-
-            <button
-              onClick={onCreateGroup}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-            >
-              <FolderPlus className="w-4 h-4" />
-              <span>Add Group</span>
-            </button>
-
             <button
               onClick={onExport}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
@@ -114,8 +98,39 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
           )}
         </div>
 
-        {/* Options List */}
+        {/* Options List with Action Buttons */}
         <div className="flex-1 overflow-auto p-6">
+          {/* Action Buttons Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-white font-semibold text-lg">Configuration Options</h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  Create and manage your configurator options and groups
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={onCreateOption}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Option</span>
+              </button>
+
+              <button
+                onClick={onCreateGroup}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              >
+                <FolderPlus className="w-4 h-4" />
+                <span>Add Group</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Options List */}
           <OptionsList
             options={configuratorData.options}
             onMove={onMoveOption}
