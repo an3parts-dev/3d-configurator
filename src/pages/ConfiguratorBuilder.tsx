@@ -364,34 +364,36 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-900 flex flex-col sm:flex-row">
-        {/* Left Panel - Configuration */}
-        <ConfiguratorOptionsPanel
-          configuratorData={configuratorData}
-          modelComponents={modelComponents}
-          lastSaved={lastSaved}
-          isPreviewMode={isPreviewMode}
-          onTogglePreviewMode={handleTogglePreviewMode}
-          onCreateOption={handleCreateOption}
-          onCreateGroup={handleCreateGroup}
-          onExport={handleExport}
-          onImport={handleImport}
-          onMoveOption={moveOption}
-          onEditOption={handleEditOption}
-          onDeleteOption={handleDeleteOption}
-          onEditConditionalLogic={handleConditionalLogic}
-          onToggleGroup={toggleGroupExpansion}
-          onMoveToGroup={moveToGroup}
-          onNavigateHome={onNavigateHome}
-        />
-
-        {/* Right Panel - 3D Preview */}
-        <Configurator3DView
-          configuratorData={configuratorData}
-          isPreviewMode={isPreviewMode}
-          onComponentsLoaded={setModelComponents}
-          onTogglePreviewMode={handleTogglePreviewMode}
-        />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        {isPreviewMode ? (
+          /* Fullscreen 3D Preview Mode */
+          <Configurator3DView
+            configuratorData={configuratorData}
+            isPreviewMode={isPreviewMode}
+            onComponentsLoaded={setModelComponents}
+            onTogglePreviewMode={handleTogglePreviewMode}
+          />
+        ) : (
+          /* Builder Mode - Only Options Panel */
+          <ConfiguratorOptionsPanel
+            configuratorData={configuratorData}
+            modelComponents={modelComponents}
+            lastSaved={lastSaved}
+            isPreviewMode={isPreviewMode}
+            onTogglePreviewMode={handleTogglePreviewMode}
+            onCreateOption={handleCreateOption}
+            onCreateGroup={handleCreateGroup}
+            onExport={handleExport}
+            onImport={handleImport}
+            onMoveOption={moveOption}
+            onEditOption={handleEditOption}
+            onDeleteOption={handleDeleteOption}
+            onEditConditionalLogic={handleConditionalLogic}
+            onToggleGroup={toggleGroupExpansion}
+            onMoveToGroup={moveToGroup}
+            onNavigateHome={onNavigateHome}
+          />
+        )}
 
         {/* Modals */}
         <OptionEditModal

@@ -19,9 +19,7 @@ const Configurator3DView: React.FC<Configurator3DViewProps> = ({
   onTogglePreviewMode
 }) => {
   return (
-    <div className={`transition-all duration-300 ${
-      isPreviewMode ? 'w-full' : 'w-full sm:w-1/2'
-    }`}>
+    <div className="w-full h-screen">
       <ThreeJSPreview
         configuratorData={configuratorData}
         onComponentsLoaded={onComponentsLoaded}
