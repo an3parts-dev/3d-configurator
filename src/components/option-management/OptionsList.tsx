@@ -22,44 +22,6 @@ const OptionsList: React.FC<OptionsListProps> = ({
   onEditConditionalLogic,
   onToggleGroup
 }) => {
-  // Organize options by groups for display
-  const organizeOptionsForDisplay = () => {
-    const organized: any[] = [];
-    const processedOptionIds = new Set<string>();
-
-    options.forEach(option => {
-      if (processedOptionIds.has(option.id)) return;
-
-      if (option.isGroup && option.groupData) {
-        // Find all options that belong to this group
-        const groupedOptions = options.filter(opt => 
-          !opt.isGroup && opt.groupId === option.id
-        );
-        
-        // Mark grouped options as processed
-        groupedOptions.forEach(opt => processedOptionIds.add(opt.id));
-        
-        organized.push({
-          type: 'group',
-          group: option,
-          options: groupedOptions
-        });
-      } else if (!option.groupId) {
-        // Standalone option (not in a group)
-        organized.push({
-          type: 'option',
-          option
-        });
-      }
-      
-      processedOptionIds.add(option.id);
-    });
-
-    return organized;
-  };
-
-  const organizedOptions = organizeOptionsForDisplay();
-
   if (options.length === 0) {
     return (
       <EmptyState
@@ -72,13 +34,17 @@ const OptionsList: React.FC<OptionsListProps> = ({
 
   return (
     <div className="space-y-4">
-      {organizedOptions.map((item, index) => {
-        if (item.type === 'group') {
-          const { group, options: groupedOptions } = item;
+      {options.map((option, index) => {
+        if (option.isGroup && option.groupData) {
+          // Find all options that belong to this group
+          const groupedOptions = options.filter(opt => 
+            !opt.isGroup && opt.groupId === option.id
+          );
+          
           return (
-            <div key={group.id}>
+            <div key={option.id}>
               <DragDropOptionWrapper
-                option={group}
+                option={option}
                 index={index}
                 onMove={onMove}
                 onEdit={onEdit}
@@ -90,33 +56,35 @@ const OptionsList: React.FC<OptionsListProps> = ({
               
               {/* Render grouped options when expanded */}
               <AnimatePresence>
-                {group.groupData?.isExpanded && (
+                {option.groupData?.isExpanded && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     className="ml-8 mt-4 space-y-4"
                   >
-                    {groupedOptions.map((option: ConfiguratorOption) => (
-                      <DragDropOptionWrapper
-                        key={option.id}
-                        option={option}
-                        index={options.findIndex(opt => opt.id === option.id)}
-                        onMove={onMove}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onEditConditionalLogic={onEditConditionalLogic}
-                        isGrouped={true}
-                      />
-                    ))}
+                    {groupedOptions.map((groupedOption: ConfiguratorOption) => {
+                      const groupedOptionIndex = options.findIndex(opt => opt.id === groupedOption.id);
+                      return (
+                        <DragDropOptionWrapper
+                          key={groupedOption.id}
+                          option={groupedOption}
+                          index={groupedOptionIndex}
+                          onMove={onMove}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                          onEditConditionalLogic={onEditConditionalLogic}
+                          isGrouped={true}
+                        />
+                      );
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           );
-        } else {
-          // Standalone option
-          const { option } = item;
+        } else if (!option.groupId) {
+          // Standalone option (not in a group)
           return (
             <DragDropOptionWrapper
               key={option.id}
@@ -129,6 +97,9 @@ const OptionsList: React.FC<OptionsListProps> = ({
             />
           );
         }
+        
+        // Skip options that are in groups (they're rendered above)
+        return null;
       })}
     </div>
   );
