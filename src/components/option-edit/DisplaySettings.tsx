@@ -368,14 +368,14 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
   return (
     <div className="p-6 space-y-8">
-      {/* Live Preview Section */}
-      <div className="bg-gray-750 p-6 rounded-xl border border-gray-600">
+      {/* Sticky Live Preview Section */}
+      <div className="sticky top-0 z-10 bg-gray-750 p-4 sm:p-6 rounded-xl border border-gray-600 shadow-lg">
         <h4 className="text-white font-semibold text-lg mb-4 flex items-center">
           <Eye className="w-5 h-5 mr-2 text-blue-400" />
           Live Preview
         </h4>
         
-        <div className="flex items-center justify-center min-h-[120px]">
+        <div className="flex items-center justify-center min-h-[100px] sm:min-h-[120px]">
           {formData.displayType === 'list' && renderListPreview()}
           {formData.displayType === 'buttons' && renderButtonsPreview(formData.displayDirection || 'row')}
           {formData.displayType === 'images' && renderImagesPreview(formData.displayDirection || 'row')}
@@ -387,52 +387,52 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         <label className="block text-gray-400 text-sm mb-4 font-medium">
           Display Type
         </label>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, displayType: 'list' }))}
-            className={`p-6 rounded-xl border-2 transition-all ${
+            className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
               formData.displayType === 'list'
                 ? 'border-blue-500 bg-blue-500/20 text-blue-300'
                 : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
             }`}
           >
             <div className="text-center">
-              <List className="w-8 h-8 mx-auto mb-3" />
-              <div className="font-semibold text-lg">List</div>
-              <div className="text-sm opacity-80 mt-1">Dropdown selection</div>
+              <List className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3" />
+              <div className="font-semibold text-base sm:text-lg">List</div>
+              <div className="text-xs sm:text-sm opacity-80 mt-1">Dropdown selection</div>
             </div>
           </button>
           
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, displayType: 'buttons' }))}
-            className={`p-6 rounded-xl border-2 transition-all ${
+            className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
               formData.displayType === 'buttons'
                 ? 'border-blue-500 bg-blue-500/20 text-blue-300'
                 : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
             }`}
           >
             <div className="text-center">
-              <Grid3X3 className="w-8 h-8 mx-auto mb-3" />
-              <div className="font-semibold text-lg">Buttons</div>
-              <div className="text-sm opacity-80 mt-1">Button selection</div>
+              <Grid3X3 className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3" />
+              <div className="font-semibold text-base sm:text-lg">Buttons</div>
+              <div className="text-xs sm:text-sm opacity-80 mt-1">Button selection</div>
             </div>
           </button>
           
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, displayType: 'images' }))}
-            className={`p-6 rounded-xl border-2 transition-all ${
+            className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
               formData.displayType === 'images'
                 ? 'border-blue-500 bg-blue-500/20 text-blue-300'
                 : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
             }`}
           >
             <div className="text-center">
-              <ImageIcon className="w-8 h-8 mx-auto mb-3" />
-              <div className="font-semibold text-lg">Images</div>
-              <div className="text-sm opacity-80 mt-1">Visual selection</div>
+              <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3" />
+              <div className="font-semibold text-base sm:text-lg">Images</div>
+              <div className="text-xs sm:text-sm opacity-80 mt-1">Visual selection</div>
             </div>
           </button>
         </div>
@@ -444,62 +444,62 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
           <label className="block text-gray-400 text-sm mb-4 font-medium">
             Layout
           </label>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'row' }))}
-              className={`p-6 rounded-xl border-2 transition-all ${
+              className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
                 formData.displayDirection === 'row'
                   ? 'border-blue-500 bg-blue-500/20 text-blue-300'
                   : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
               }`}
             >
               <div className="text-center">
-                <div className="flex justify-center mb-3">
+                <div className="flex justify-center mb-2 sm:mb-3">
                   <div className="flex space-x-1">
                     <div className="w-3 h-3 bg-current rounded"></div>
                     <div className="w-3 h-3 bg-current rounded"></div>
                     <div className="w-3 h-3 bg-current rounded"></div>
                   </div>
                 </div>
-                <div className="font-semibold text-lg">Row</div>
-                <div className="text-sm opacity-80">Horizontal arrangement</div>
+                <div className="font-semibold text-base sm:text-lg">Row</div>
+                <div className="text-xs sm:text-sm opacity-80">Horizontal arrangement</div>
               </div>
             </button>
             
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'column' }))}
-              className={`p-6 rounded-xl border-2 transition-all ${
+              className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
                 formData.displayDirection === 'column'
                   ? 'border-blue-500 bg-blue-500/20 text-blue-300'
                   : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
               }`}
             >
               <div className="text-center">
-                <div className="flex justify-center mb-3">
+                <div className="flex justify-center mb-2 sm:mb-3">
                   <div className="flex flex-col space-y-1">
                     <div className="w-3 h-3 bg-current rounded"></div>
                     <div className="w-3 h-3 bg-current rounded"></div>
                     <div className="w-3 h-3 bg-current rounded"></div>
                   </div>
                 </div>
-                <div className="font-semibold text-lg">Column</div>
-                <div className="text-sm opacity-80">Vertical arrangement</div>
+                <div className="font-semibold text-base sm:text-lg">Column</div>
+                <div className="text-xs sm:text-sm opacity-80">Vertical arrangement</div>
               </div>
             </button>
 
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, displayDirection: 'grid' }))}
-              className={`p-6 rounded-xl border-2 transition-all ${
+              className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
                 formData.displayDirection === 'grid'
                   ? 'border-blue-500 bg-blue-500/20 text-blue-300'
                   : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
               }`}
             >
               <div className="text-center">
-                <div className="flex justify-center mb-3">
+                <div className="flex justify-center mb-2 sm:mb-3">
                   <div className="grid grid-cols-2 gap-1">
                     <div className="w-3 h-3 bg-current rounded"></div>
                     <div className="w-3 h-3 bg-current rounded"></div>
@@ -507,8 +507,8 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                     <div className="w-3 h-3 bg-current rounded"></div>
                   </div>
                 </div>
-                <div className="font-semibold text-lg">Grid</div>
-                <div className="text-sm opacity-80">Grid arrangement</div>
+                <div className="font-semibold text-base sm:text-lg">Grid</div>
+                <div className="text-xs sm:text-sm opacity-80">Grid arrangement</div>
               </div>
             </button>
           </div>
@@ -517,13 +517,13 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
       {/* Grid Settings */}
       {(formData.displayType === 'buttons' || formData.displayType === 'images') && formData.displayDirection === 'grid' && (
-        <div className="bg-gray-750 p-6 rounded-xl border border-gray-600 space-y-6">
+        <div className="bg-gray-750 p-4 sm:p-6 rounded-xl border border-gray-600 space-y-6">
           <h4 className="text-white font-semibold text-lg flex items-center">
             <Grid2X2 className="w-5 h-5 mr-2 text-blue-400" />
             Grid Settings
           </h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Columns Configuration */}
             <div className="space-y-4">
               <div>
@@ -638,13 +638,13 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
 
       {/* Column Settings */}
       {(formData.displayType === 'buttons' || formData.displayType === 'images') && formData.displayDirection === 'column' && (
-        <div className="bg-gray-750 p-6 rounded-xl border border-gray-600 space-y-6">
+        <div className="bg-gray-750 p-4 sm:p-6 rounded-xl border border-gray-600 space-y-6">
           <h4 className="text-white font-semibold text-lg flex items-center">
             <AlignLeft className="w-5 h-5 mr-2 text-blue-400" />
             Column Settings
           </h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Alignment */}
             <div>
               <label className="block text-gray-400 text-sm mb-3 font-medium">Alignment</label>
@@ -734,9 +734,9 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
         <div className="space-y-6">
           <h4 className="text-white font-semibold text-lg">Image Settings</h4>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Size and Aspect Ratio */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6">
               {/* Image Size */}
               <div>
                 <label className="block text-gray-400 text-sm mb-2 font-medium">Size</label>
@@ -898,73 +898,60 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
               </div>
             </div>
 
-            {/* Right Column - Preview */}
-            <div className="flex flex-col items-center justify-center">
-              <label className="block text-gray-400 text-sm mb-3 font-medium text-center">Single Image Preview</label>
-              <div className="flex items-center justify-center">
-                {renderImageWithTitle(sampleValues[0], 0, false)}
-              </div>
-              <p className="text-gray-500 text-xs mt-2 text-center">
-                {formData.imageSettings?.size} • {formData.imageSettings?.aspectRatio} • {formData.imageSettings?.cornerStyle}
-              </p>
-              {sampleValues[0].image && (
-                <p className="text-green-400 text-xs mt-1 text-center">
-                  Using uploaded image
-                </p>
+            {/* Right Column - Corner Style */}
+            <div className="space-y-6">
+              {/* Corner Style - Hidden when Round aspect ratio is selected */}
+              {!isRoundAspectRatio && (
+                <div>
+                  <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        formData.imageSettings?.cornerStyle === 'squared'
+                          ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                          : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '0px' }}></div>
+                        <div className="font-semibold text-sm">Squared</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        formData.imageSettings?.cornerStyle === 'soft'
+                          ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                          : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
+                        <div className="font-semibold text-sm">Soft</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateImageSettings({ cornerStyle: 'softer' })}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        formData.imageSettings?.cornerStyle === 'softer'
+                          ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                          : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '8px' }}></div>
+                        <div className="font-semibold text-sm">Softer</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-
-          {/* Corner Style - Hidden when Round aspect ratio is selected */}
-          {!isRoundAspectRatio && (
-            <div>
-              <label className="block text-gray-400 text-sm mb-3 font-medium">Corner Style</label>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'squared' })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'squared'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '0px' }}></div>
-                    <div className="font-semibold text-sm">Squared</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'soft' })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'soft'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '4px' }}></div>
-                    <div className="font-semibold text-sm">Soft</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateImageSettings({ cornerStyle: 'softer' })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.imageSettings?.cornerStyle === 'softer'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="w-10 h-10 bg-gray-500 mx-auto mb-2" style={{ borderRadius: '8px' }}></div>
-                    <div className="font-semibold text-sm">Softer</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

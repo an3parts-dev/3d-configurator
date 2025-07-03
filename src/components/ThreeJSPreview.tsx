@@ -329,10 +329,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       if (gridSettings.autoFit) {
         return `grid ${gapClass}`;
       } else {
-        return `grid grid-cols-1 md:grid-cols-${gridSettings.columnsTablet || 2} lg:grid-cols-${gridSettings.columns || 3} ${gapClass}`;
+        return `grid grid-cols-1 sm:grid-cols-${gridSettings.columnsTablet || 2} lg:grid-cols-${gridSettings.columns || 3} ${gapClass}`;
       }
     } else if (direction === 'row') {
-      return 'flex gap-4 overflow-x-auto pb-2';
+      return 'flex gap-2 sm:gap-4 overflow-x-auto pb-2';
     } else {
       // Column layout
       const columnSettings = option.columnSettings || { alignment: 'left', spacing: 'normal' };
@@ -340,15 +340,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
       const spacingClass = columnSettings.spacing === 'compact' ? 'gap-2' : columnSettings.spacing === 'relaxed' ? 'gap-6' : 'gap-4';
       return `flex flex-col ${alignmentClass} ${spacingClass}`;
     }
-  };
-
-  const getBorderStyles = (imageSettings?: any) => {
-    if (!imageSettings?.showBorder) return {};
-    
-    return {
-      borderRadius: `${imageSettings.borderRadius || 8}px`,
-      border: '2px solid #4b5563'
-    };
   };
 
   // Helper function to render image with title positioning - FIXED for row layout
@@ -679,7 +670,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               <button
                 key={value.id}
                 onClick={() => handleValueChange(option.id, value.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative ${
+                className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 relative flex-shrink-0 whitespace-nowrap ${
                   selectedValues[option.id] === value.id
                     ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-105'
                     : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500 hover:scale-102'
@@ -762,8 +753,8 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 3D Canvas - 50% screen height */}
-      <div className="relative" style={{ height: '50vh' }}>
+      {/* 3D Canvas - Responsive height */}
+      <div className="relative h-[40vh] sm:h-[45vh] lg:h-[50vh]">
         <Canvas shadows>
           <PerspectiveCamera 
             makeDefault 
@@ -827,10 +818,10 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           </div>
         )}
         
-        {/* Info overlays */}
-        <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md rounded-xl px-5 py-4 border border-gray-600">
-          <p className="text-white text-sm font-semibold mb-1">3D Model Preview</p>
-          <div className="flex items-center space-x-4 text-xs text-gray-300">
+        {/* Info overlays - Mobile optimized */}
+        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-black/70 backdrop-blur-md rounded-xl px-3 sm:px-5 py-2 sm:py-4 border border-gray-600">
+          <p className="text-white text-xs sm:text-sm font-semibold mb-1">3D Model Preview</p>
+          <div className="flex items-center space-x-2 sm:space-x-4 text-xs text-gray-300">
             <span>Components: {modelComponents.length}</span>
             <span>•</span>
             <span className="flex items-center">
@@ -840,17 +831,17 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           </div>
         </div>
 
-        {/* Conditional Logic Status */}
+        {/* Conditional Logic Status - Mobile optimized */}
         {configuratorData.options.some(opt => opt.conditionalLogic?.enabled || opt.values.some(v => v.conditionalLogic?.enabled)) && (
-          <div className="absolute top-4 right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-4 py-3 border border-purple-500/30">
+          <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-purple-600/20 backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-purple-500/30">
             <div className="flex items-center space-x-2 text-purple-300">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <Zap className="w-4 h-4" />
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
               </motion.div>
-              <span className="text-sm font-medium">Smart Logic Active</span>
+              <span className="text-xs sm:text-sm font-medium">Smart Logic Active</span>
             </div>
             <p className="text-xs text-purple-200/80 mt-1">
               {visibleOptions.length} of {configuratorData.options.filter(opt => !opt.isGroup).length} options visible
@@ -858,7 +849,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
           </div>
         )}
 
-        <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md rounded-xl px-4 py-3 border border-gray-600">
+        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-black/70 backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-600">
           <div className="text-xs text-gray-300 space-y-1">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
@@ -872,20 +863,20 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         </div>
       </div>
 
-      {/* Options Panel - 50% screen height with clean design */}
-      <div className="bg-gray-900 flex flex-col" style={{ height: '50vh' }}>
-        <div className="flex-1 overflow-auto p-6">
+      {/* Sticky Options Panel - Mobile optimized */}
+      <div className="bg-gray-900 flex flex-col h-[60vh] sm:h-[55vh] lg:h-[50vh] sticky top-0 z-10">
+        <div className="flex-1 overflow-auto p-3 sm:p-6">
           {organizeOptionsForDisplay().length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center py-8 sm:py-12 text-gray-500">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-8 h-8 border-2 border-gray-500 border-t-blue-400 rounded-full"
+                  className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-gray-500 border-t-blue-400 rounded-full"
                 />
               </div>
-              <p className="text-lg font-medium">No options available</p>
-              <p className="text-sm mt-1">
+              <p className="text-base sm:text-lg font-medium">No options available</p>
+              <p className="text-xs sm:text-sm mt-1">
                 {configuratorData.options.filter(opt => !opt.isGroup).length > 0 
                   ? 'Options are hidden by conditional logic'
                   : 'Add options in the left panel to see them here'
@@ -893,7 +884,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {organizeOptionsForDisplay().map((item, index) => {
                 if (item.type === 'group') {
                   const { group, options } = item;
@@ -908,31 +899,31 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                     >
                       {/* Group Header */}
                       <div 
-                        className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-4 rounded-xl border border-purple-700/50 cursor-pointer hover:border-purple-600/50 transition-colors"
+                        className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-3 sm:p-4 rounded-xl border border-purple-700/50 cursor-pointer hover:border-purple-600/50 transition-colors"
                         onClick={() => toggleGroup(group.id)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <div className="p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
-                              <FolderOpen className="w-5 h-5 text-purple-400" />
+                              <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                             </div>
                             <div>
-                              <h3 className="text-white font-semibold text-lg flex items-center space-x-2">
+                              <h3 className="text-white font-semibold text-base sm:text-lg flex items-center space-x-2">
                                 <span>{group.name}</span>
                                 <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full font-medium border border-purple-500/30">
                                   {options.length} options
                                 </span>
                               </h3>
                               {group.description && (
-                                <p className="text-purple-200/80 text-sm mt-1">{group.description}</p>
+                                <p className="text-purple-200/80 text-xs sm:text-sm mt-1">{group.description}</p>
                               )}
                             </div>
                           </div>
                           <div className="text-purple-400">
                             {isExpanded ? (
-                              <ChevronDown className="w-5 h-5" />
+                              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                             ) : (
-                              <ChevronRight className="w-5 h-5" />
+                              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                             )}
                           </div>
                         </div>
@@ -944,7 +935,7 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="ml-6 space-y-6 border-l-2 border-purple-500/20 pl-6"
+                          className="ml-3 sm:ml-6 space-y-4 sm:space-y-6 border-l-2 border-purple-500/20 pl-3 sm:pl-6"
                         >
                           {options.map((option: any) => (
                             <motion.div
