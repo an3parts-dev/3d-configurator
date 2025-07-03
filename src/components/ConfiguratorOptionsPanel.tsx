@@ -28,6 +28,7 @@ interface ConfiguratorOptionsPanelProps {
   onDeleteOption: (optionId: string) => void;
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
   onToggleGroup: (groupId: string) => void;
+  onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
 }
 
 const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
@@ -43,7 +44,8 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
   onEditOption,
   onDeleteOption,
   onEditConditionalLogic,
-  onToggleGroup
+  onToggleGroup,
+  onMoveToGroup
 }) => {
   return (
     <div className={`bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
@@ -138,6 +140,7 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
             onDelete={onDeleteOption}
             onEditConditionalLogic={onEditConditionalLogic}
             onToggleGroup={onToggleGroup}
+            onMoveToGroup={onMoveToGroup}
           />
         </div>
       </div>

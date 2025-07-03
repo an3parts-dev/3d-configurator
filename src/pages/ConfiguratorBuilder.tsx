@@ -117,6 +117,18 @@ const ConfiguratorBuilder: React.FC = () => {
     }));
   }, []);
 
+  // Enhanced move to group function
+  const moveToGroup = useCallback((optionId: string, targetGroupId: string | null) => {
+    setConfiguratorData(prev => ({
+      ...prev,
+      options: prev.options.map(option => 
+        option.id === optionId && !option.isGroup
+          ? { ...option, groupId: targetGroupId }
+          : option
+      )
+    }));
+  }, []);
+
   // Option management functions
   const createOption = useCallback((optionData: Omit<ConfiguratorOption, 'id' | 'values'>) => {
     const newOption: ConfiguratorOption = {
@@ -323,6 +335,7 @@ const ConfiguratorBuilder: React.FC = () => {
           onDeleteOption={handleDeleteOption}
           onEditConditionalLogic={handleConditionalLogic}
           onToggleGroup={toggleGroupExpansion}
+          onMoveToGroup={moveToGroup}
         />
 
         {/* Right Panel - 3D Preview */}

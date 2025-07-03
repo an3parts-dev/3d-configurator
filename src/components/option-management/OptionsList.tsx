@@ -12,6 +12,7 @@ interface OptionsListProps {
   onDelete: (optionId: string) => void;
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
   onToggleGroup: (groupId: string) => void;
+  onMoveToGroup: (optionId: string, targetGroupId: string | null) => void;
 }
 
 const OptionsList: React.FC<OptionsListProps> = ({
@@ -20,7 +21,8 @@ const OptionsList: React.FC<OptionsListProps> = ({
   onEdit,
   onDelete,
   onEditConditionalLogic,
-  onToggleGroup
+  onToggleGroup,
+  onMoveToGroup
 }) => {
   if (options.length === 0) {
     return (
@@ -51,6 +53,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                 onDelete={onDelete}
                 onEditConditionalLogic={onEditConditionalLogic}
                 onToggleGroup={onToggleGroup}
+                onMoveToGroup={onMoveToGroup}
                 groupedOptions={groupedOptions}
               />
               
@@ -74,6 +77,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
                           onEdit={onEdit}
                           onDelete={onDelete}
                           onEditConditionalLogic={onEditConditionalLogic}
+                          onMoveToGroup={onMoveToGroup}
                           isGrouped={true}
                         />
                       );
@@ -94,6 +98,7 @@ const OptionsList: React.FC<OptionsListProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onEditConditionalLogic={onEditConditionalLogic}
+              onMoveToGroup={onMoveToGroup}
             />
           );
         }

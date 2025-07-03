@@ -11,6 +11,7 @@ interface DragDropOptionWrapperProps {
   onDelete: (optionId: string) => void;
   onEditConditionalLogic: (option: ConfiguratorOption) => void;
   onToggleGroup?: (groupId: string) => void;
+  onMoveToGroup?: (optionId: string, targetGroupId: string | null) => void;
   isGrouped?: boolean;
   groupedOptions?: ConfiguratorOption[];
 }
@@ -23,22 +24,27 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
     item: () => ({ 
       id: props.option.id, 
       index: props.index, 
-      type: 'option'
+      type: 'option',
+      isGroup: props.option.isGroup,
+      currentGroupId: props.option.groupId
     }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
 
-  const [{ isOver }, drop] = useDrop({
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'option',
-    hover: (item: { id: string; index: number }, monitor) => {
+    hover: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string }, monitor) => {
       if (!ref.current) return;
       
       const dragIndex = item.index;
       const hoverIndex = props.index;
 
       if (dragIndex === hoverIndex) return;
+
+      // Don't allow dropping a group into itself or its children
+      if (item.isGroup && props.option.groupId === item.id) return;
 
       const hoverBoundingRect = ref.current.getBoundingClientRect();
       const clientOffset = monitor.getClientOffset();
@@ -57,8 +63,21 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
         item.index = hoverIndex;
       }
     },
+    drop: (item: { id: string; index: number; isGroup: boolean; currentGroupId?: string }, monitor) => {
+      if (!monitor.didDrop()) {
+        // Handle group assignment
+        if (props.option.isGroup && !item.isGroup && props.onMoveToGroup) {
+          // Moving an option into a group
+          props.onMoveToGroup(item.id, props.option.id);
+        } else if (!props.option.isGroup && !props.isGrouped && item.currentGroupId && props.onMoveToGroup) {
+          // Moving an option out of a group (dropping on standalone option)
+          props.onMoveToGroup(item.id, null);
+        }
+      }
+    },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
     }),
   });
 
@@ -71,13 +90,44 @@ const DragDropOptionWrapper: React.FC<DragDropOptionWrapperProps> = (props) => {
 
   const dragDropRef = drag(drop(ref));
 
+  // Determine drop zone styling
+  const getDropZoneStyle = () => {
+    if (!isOver || !canDrop) return '';
+    
+    if (props.option.isGroup) {
+      return 'ring-2 ring-purple-400 ring-opacity-50 bg-purple-500/10';
+    } else if (!props.isGrouped) {
+      return 'ring-2 ring-blue-400 ring-opacity-50 bg-blue-500/10';
+    }
+    
+    return '';
+  };
+
   return (
-    <div ref={dragDropRef}>
+    <div ref={dragDropRef} className={`relative ${getDropZoneStyle()}`}>
       <OptionCard
         {...props}
         isDragging={isDragging}
-        isOver={isOver}
+        isOver={isOver && canDrop}
       />
+      
+      {/* Drop zone indicator for groups */}
+      {isOver && canDrop && props.option.isGroup && (
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-400 rounded-xl bg-purple-500/5 flex items-center justify-center">
+          <div className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
+            Drop to add to group
+          </div>
+        </div>
+      )}
+      
+      {/* Drop zone indicator for removing from group */}
+      {isOver && canDrop && !props.option.isGroup && !props.isGrouped && (
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-400 rounded-xl bg-blue-500/5 flex items-center justify-center">
+          <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
+            Drop to remove from group
+          </div>
+        </div>
+      )}
     </div>
   );
 };
