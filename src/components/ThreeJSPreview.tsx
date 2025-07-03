@@ -2,8 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Settings } from 'lucide-react';
+import { motion } from 'framer-motion';
 import * as THREE from 'three';
 import { ConfiguratorData, ModelComponent } from '../types/ConfiguratorTypes';
 import { ConditionalLogicEngine } from '../utils/ConditionalLogicEngine';
@@ -15,9 +14,6 @@ import { Layers } from 'lucide-react';
 interface ThreeJSPreviewProps {
   configuratorData: ConfiguratorData;
   onComponentsLoaded?: (components: ModelComponent[]) => void;
-  showMobilePreviewToggle?: boolean;
-  onToggleMobilePreview?: () => void;
-  isMobilePreviewMode?: boolean;
 }
 
 // Enhanced GLB Model Component with automatic camera setup
@@ -242,10 +238,7 @@ const GLBModel = ({
 
 const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({ 
   configuratorData, 
-  onComponentsLoaded,
-  showMobilePreviewToggle = false,
-  onToggleMobilePreview,
-  isMobilePreviewMode = false
+  onComponentsLoaded 
 }) => {
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [modelComponents, setModelComponents] = useState<ModelComponent[]>([]);
@@ -429,53 +422,6 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
               text="Loading 3D Model" 
               subText="Analyzing components..." 
             />
-          </div>
-        )}
-        
-        {/* Mobile Preview Toggle Buttons - Top Right Corner */}
-        {showMobilePreviewToggle && onToggleMobilePreview && (
-          <div className="absolute top-4 right-4 z-20">
-            <AnimatePresence mode="wait">
-              {isMobilePreviewMode ? (
-                <motion.button
-                  key="exit-preview"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  onClick={onToggleMobilePreview}
-                  className="bg-red-600/90 hover:bg-red-700/90 backdrop-blur-sm text-white p-3 rounded-xl shadow-lg border border-red-500/30 transition-all duration-200 hover:scale-105"
-                  title="Exit Preview Mode"
-                >
-                  <EyeOff className="w-5 h-5" />
-                </motion.button>
-              ) : (
-                <motion.button
-                  key="enter-preview"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  onClick={onToggleMobilePreview}
-                  className="bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm text-white p-3 rounded-xl shadow-lg border border-blue-500/30 transition-all duration-200 hover:scale-105"
-                  title="Enter Preview Mode"
-                >
-                  <Eye className="w-5 h-5" />
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* Settings Button for Mobile - Bottom Right */}
-        {showMobilePreviewToggle && !isMobilePreviewMode && (
-          <div className="absolute bottom-4 right-4 z-20">
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm text-white p-3 rounded-xl shadow-lg border border-gray-600/30 transition-all duration-200 hover:scale-105"
-              title="Configuration Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </motion.button>
           </div>
         )}
         

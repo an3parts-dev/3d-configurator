@@ -306,73 +306,31 @@ const ConfiguratorBuilder: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-900">
-        {/* Mobile Layout */}
-        <div className="lg:hidden flex flex-col h-screen">
-          {/* Mobile Header */}
-          <div className="bg-gray-800 border-b border-gray-700 p-4">
-            <h1 className="text-white font-bold text-xl text-center">3D Configurator Builder</h1>
-          </div>
+      <div className="min-h-screen bg-gray-900 flex">
+        {/* Left Panel - Configuration */}
+        <ConfiguratorOptionsPanel
+          configuratorData={configuratorData}
+          modelComponents={modelComponents}
+          lastSaved={lastSaved}
+          isPreviewMode={isPreviewMode}
+          onTogglePreviewMode={handleTogglePreviewMode}
+          onCreateOption={handleCreateOption}
+          onCreateGroup={handleCreateGroup}
+          onExport={handleExport}
+          onImport={handleImport}
+          onMoveOption={moveOption}
+          onEditOption={handleEditOption}
+          onDeleteOption={handleDeleteOption}
+          onEditConditionalLogic={handleConditionalLogic}
+          onToggleGroup={toggleGroupExpansion}
+        />
 
-          {/* 3D Model Preview */}
-          <div className="flex-1 relative">
-            <Configurator3DView
-              configuratorData={configuratorData}
-              isPreviewMode={true}
-              onComponentsLoaded={setModelComponents}
-            />
-          </div>
-
-          {/* Configuration Options Panel - Only show when not in preview mode */}
-          {!isPreviewMode && (
-            <div className="bg-gray-800 border-t border-gray-700 max-h-[50vh] overflow-auto">
-              <ConfiguratorOptionsPanel
-                configuratorData={configuratorData}
-                modelComponents={modelComponents}
-                lastSaved={lastSaved}
-                isPreviewMode={false}
-                onTogglePreviewMode={handleTogglePreviewMode}
-                onCreateOption={handleCreateOption}
-                onCreateGroup={handleCreateGroup}
-                onExport={handleExport}
-                onImport={handleImport}
-                onMoveOption={moveOption}
-                onEditOption={handleEditOption}
-                onDeleteOption={handleDeleteOption}
-                onEditConditionalLogic={handleConditionalLogic}
-                onToggleGroup={toggleGroupExpansion}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden lg:flex h-screen">
-          {/* Left Panel - Configuration */}
-          <ConfiguratorOptionsPanel
-            configuratorData={configuratorData}
-            modelComponents={modelComponents}
-            lastSaved={lastSaved}
-            isPreviewMode={isPreviewMode}
-            onTogglePreviewMode={handleTogglePreviewMode}
-            onCreateOption={handleCreateOption}
-            onCreateGroup={handleCreateGroup}
-            onExport={handleExport}
-            onImport={handleImport}
-            onMoveOption={moveOption}
-            onEditOption={handleEditOption}
-            onDeleteOption={handleDeleteOption}
-            onEditConditionalLogic={handleConditionalLogic}
-            onToggleGroup={toggleGroupExpansion}
-          />
-
-          {/* Right Panel - 3D Preview */}
-          <Configurator3DView
-            configuratorData={configuratorData}
-            isPreviewMode={isPreviewMode}
-            onComponentsLoaded={setModelComponents}
-          />
-        </div>
+        {/* Right Panel - 3D Preview */}
+        <Configurator3DView
+          configuratorData={configuratorData}
+          isPreviewMode={isPreviewMode}
+          onComponentsLoaded={setModelComponents}
+        />
 
         {/* Modals */}
         <OptionEditModal
