@@ -117,7 +117,7 @@ const ConfiguratorBuilder: React.FC = () => {
     }));
   }, []);
 
-  // Enhanced move to group function
+  // Enhanced move to group function with precise positioning
   const moveToGroup = useCallback((optionId: string, targetGroupId: string | null) => {
     setConfiguratorData(prev => ({
       ...prev,
@@ -127,6 +127,32 @@ const ConfiguratorBuilder: React.FC = () => {
           : option
       )
     }));
+  }, []);
+
+  // New function for precise positioning
+  const insertAtPosition = useCallback((draggedItemId: string, targetIndex: number, targetGroupId?: string) => {
+    setConfiguratorData(prev => {
+      const newOptions = [...prev.options];
+      const draggedItemIndex = newOptions.findIndex(opt => opt.id === draggedItemId);
+      
+      if (draggedItemIndex === -1) return prev;
+      
+      const draggedItem = newOptions[draggedItemIndex];
+      
+      // Remove from current position
+      newOptions.splice(draggedItemIndex, 1);
+      
+      // Update group assignment if specified
+      if (targetGroupId !== undefined) {
+        draggedItem.groupId = targetGroupId;
+      }
+      
+      // Insert at new position
+      const adjustedIndex = draggedItemIndex < targetIndex ? targetIndex - 1 : targetIndex;
+      newOptions.splice(adjustedIndex, 0, draggedItem);
+      
+      return { ...prev, options: newOptions };
+    });
   }, []);
 
   // Option management functions
