@@ -119,14 +119,33 @@ const ConfiguratorBuilder: React.FC = () => {
 
   // Enhanced move to group function with precise positioning
   const moveToGroup = useCallback((optionId: string, targetGroupId: string | null) => {
-    setConfiguratorData(prev => ({
-      ...prev,
-      options: prev.options.map(option => 
-        option.id === optionId && !option.isGroup
-          ? { ...option, groupId: targetGroupId }
-          : option
-      )
-    }));
+    setConfiguratorData(prev => {
+      const newOptions = [...prev.options];
+      const optionIndex = newOptions.findIndex(opt => opt.id === optionId);
+      
+      if (optionIndex === -1) return prev;
+      
+      const option = newOptions[optionIndex];
+      
+      // Update group assignment
+      option.groupId = targetGroupId;
+      
+      // If moving to a group, ensure the group is expanded
+      if (targetGroupId) {
+        const groupIndex = newOptions.findIndex(opt => opt.id === targetGroupId && opt.isGroup);
+        if (groupIndex !== -1 && newOptions[groupIndex].groupData && !newOptions[groupIndex].groupData!.isExpanded) {
+          newOptions[groupIndex] = {
+            ...newOptions[groupIndex],
+            groupData: {
+              ...newOptions[groupIndex].groupData!,
+              isExpanded: true
+            }
+          };
+        }
+      }
+      
+      return { ...prev, options: newOptions };
+    });
   }, []);
 
   // New function for precise positioning
