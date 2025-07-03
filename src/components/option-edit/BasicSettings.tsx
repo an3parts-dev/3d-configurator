@@ -15,15 +15,13 @@ interface BasicSettingsProps {
   setFormData: React.Dispatch<React.SetStateAction<Omit<ConfiguratorOption, 'id' | 'values'>>>;
   modelComponents: ModelComponent[];
   availableGroups: ConfiguratorOption[];
-  onNavigateToValues?: () => void;
 }
 
 const BasicSettings: React.FC<BasicSettingsProps> = ({
   formData,
   setFormData,
   modelComponents,
-  availableGroups,
-  onNavigateToValues
+  availableGroups
 }) => {
   return (
     <div className="p-6 space-y-6">
@@ -127,7 +125,6 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
           onSelectionChange={(components) => setFormData(prev => ({ ...prev, targetComponents: components }))}
           placeholder="Select target components (optional)..."
           label="Target Components"
-          onConfigureTargets={onNavigateToValues}
         />
         <p className="text-gray-500 text-xs mt-2">
           These components will be affected by this option's values. You can add these later.

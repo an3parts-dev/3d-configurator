@@ -235,11 +235,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
     });
   };
 
-  // Handler for navigating to values tab when no target components are selected
-  const handleNavigateToValues = () => {
-    setActiveTab('values');
-  };
-
   // Memoize tab content to prevent unnecessary re-renders
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -250,7 +245,6 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
             setFormData={setFormData}
             modelComponents={modelComponents}
             availableGroups={availableGroups}
-            onNavigateToValues={handleNavigateToValues}
           />
         );
       case 'display':

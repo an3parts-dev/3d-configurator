@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Check, X, Eye, Box, Maximize2, Settings } from 'lucide-react';
+import { Search, Check, X, Eye, Box, Maximize2 } from 'lucide-react';
 import * as THREE from 'three';
 
 interface ModelComponent {
@@ -17,7 +17,6 @@ interface ComponentSelectorProps {
   placeholder?: string;
   label?: string;
   alwaysModal?: boolean;
-  onConfigureTargets?: () => void; // New prop for navigating to target configuration
 }
 
 // Enhanced search function with fuzzy matching
@@ -184,8 +183,7 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   onSelectionChange,
   placeholder = "Select components...",
   label = "Target Components",
-  alwaysModal = false,
-  onConfigureTargets
+  alwaysModal = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -336,19 +334,7 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
           <div className="text-center py-16 text-gray-400">
             <Box className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">No components available</p>
-            <p className="text-sm mt-2 mb-6">Make sure target components are selected first</p>
-            {onConfigureTargets && (
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  onConfigureTargets();
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 mx-auto"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Add Target Components</span>
-              </button>
-            )}
+            <p className="text-sm mt-2">Make sure target components are selected first</p>
           </div>
         ) : filteredComponents.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
