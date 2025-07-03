@@ -189,15 +189,16 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({
   };
 
   const handleAddValue = () => {
+    const newValue: ConfiguratorOptionValue = {
+      id: `temp_value_${Date.now()}`,
+      name: 'New Value'
+    };
+
     if (option) {
       // If option exists, use the real add value function
       onAddValue(option.id);
     } else {
       // If option doesn't exist yet, add to local state only
-      const newValue: ConfiguratorOptionValue = {
-        id: `temp_value_${Date.now()}`,
-        name: 'New Value'
-      };
       setLocalValues(prev => [...prev, newValue]);
     }
   };
