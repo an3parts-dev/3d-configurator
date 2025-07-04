@@ -320,7 +320,7 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
   return (
     <div className="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onCancel}
@@ -370,15 +370,15 @@ const OptionEditPanel: React.FC<OptionEditPanelProps> = ({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Takes remaining space */}
       <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-750">
-        <div key={activeTab} className="animate-in fade-in duration-200">
+        <div key={activeTab} className="animate-in fade-in duration-200 h-full">
           {tabContent}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      {/* Sticky Footer */}
+      <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
         {/* Validation Feedback */}
         {showValidationFlash && validationErrors.length > 0 && (
           <motion.div

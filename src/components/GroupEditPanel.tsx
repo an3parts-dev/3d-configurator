@@ -51,7 +51,7 @@ const GroupEditPanel: React.FC<GroupEditPanelProps> = ({
   return (
     <div className="h-full bg-gray-800 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700 bg-gray-750">
+      <div className="p-6 border-b border-gray-700 bg-gray-750 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onCancel}
@@ -77,7 +77,7 @@ const GroupEditPanel: React.FC<GroupEditPanelProps> = ({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Takes remaining space */}
       <div className="flex-1 p-6 space-y-6 overflow-auto">
         {/* Group Name */}
         <div>
@@ -131,8 +131,8 @@ const GroupEditPanel: React.FC<GroupEditPanelProps> = ({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-6 border-t border-gray-700 bg-gray-750 flex space-x-4">
+      {/* Sticky Footer */}
+      <div className="p-6 border-t border-gray-700 bg-gray-750 flex space-x-4 flex-shrink-0">
         <button
           onClick={onCancel}
           className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"

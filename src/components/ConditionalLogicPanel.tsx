@@ -129,7 +129,7 @@ const ConditionalLogicPanel: React.FC<ConditionalLogicPanelProps> = ({
   return (
     <div className="h-full bg-gray-800 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700 bg-gray-750">
+      <div className="p-6 border-b border-gray-700 bg-gray-750 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onCancel}
@@ -151,7 +151,7 @@ const ConditionalLogicPanel: React.FC<ConditionalLogicPanelProps> = ({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Takes remaining space */}
       <div className="flex-1 overflow-auto p-6">
         <div className="space-y-6">
           {/* Enable/Disable Toggle */}
@@ -422,8 +422,8 @@ const ConditionalLogicPanel: React.FC<ConditionalLogicPanelProps> = ({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-6 border-t border-gray-700 bg-gray-750">
+      {/* Sticky Footer */}
+      <div className="p-6 border-t border-gray-700 bg-gray-750 flex-shrink-0">
         {/* Validation Feedback */}
         {(validationErrors.length > 0 || showValidationFlash) && (
           <motion.div

@@ -117,13 +117,12 @@ const VirtualizedList: React.FC<{
   highlightedComponents: string[];
   onToggle: (componentName: string, event?: React.MouseEvent) => void;
   onHighlight: (componentName: string, event: React.MouseEvent) => void;
-  height: number;
-}> = ({ items, selectedComponents, highlightedComponents, onToggle, onHighlight, height }) => {
+  containerHeight: number;
+}> = ({ items, selectedComponents, highlightedComponents, onToggle, onHighlight, containerHeight }) => {
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const itemHeight = 80; // Height of each item in pixels
-  const containerHeight = height;
   const totalHeight = items.length * itemHeight;
   
   // Enhanced visible range calculation with preloading
@@ -145,8 +144,7 @@ const VirtualizedList: React.FC<{
   return (
     <div
       ref={containerRef}
-      className="overflow-auto"
-      style={{ height: containerHeight }}
+      className="overflow-auto h-full"
       onScroll={handleScroll}
     >
       <div style={{ height: totalHeight, position: 'relative' }}>
@@ -252,7 +250,7 @@ const ComponentSelectorPanel: React.FC<ComponentSelectorPanelProps> = ({
   return (
     <div className="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onCancel}
@@ -328,7 +326,7 @@ const ComponentSelectorPanel: React.FC<ComponentSelectorPanelProps> = ({
         )}
       </div>
 
-      {/* Components List */}
+      {/* Components List - Takes remaining space */}
       <div className="flex-1 overflow-hidden p-4">
         {availableComponents.length === 0 ? (
           <div className="text-center py-16 text-gray-500 dark:text-gray-400">
@@ -357,12 +355,12 @@ const ComponentSelectorPanel: React.FC<ComponentSelectorPanelProps> = ({
             highlightedComponents={highlightedComponents}
             onToggle={toggleComponent}
             onHighlight={highlightComponent}
-            height={400} // Fixed height for virtualization
+            containerHeight={0} // Will be calculated by the component
           />
         )}
       </div>
 
-      {/* Footer */}
+      {/* Sticky Footer */}
       <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-750 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <span className="text-gray-600 dark:text-gray-400 text-sm font-medium">

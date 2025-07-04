@@ -51,7 +51,7 @@ const ConfirmationPanel: React.FC<ConfirmationPanelProps> = ({
   return (
     <div className="h-full bg-gray-800 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700 bg-gray-750">
+      <div className="p-6 border-b border-gray-700 bg-gray-750 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onCancel}
@@ -70,7 +70,7 @@ const ConfirmationPanel: React.FC<ConfirmationPanelProps> = ({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Takes remaining space */}
       <div className="flex-1 p-6">
         <p className="text-gray-300 mb-4 leading-relaxed">{message}</p>
         
@@ -96,8 +96,8 @@ const ConfirmationPanel: React.FC<ConfirmationPanelProps> = ({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-6 border-t border-gray-700 bg-gray-750 flex space-x-3">
+      {/* Sticky Footer */}
+      <div className="p-6 border-t border-gray-700 bg-gray-750 flex space-x-3 flex-shrink-0">
         <button
           onClick={onCancel}
           className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-500"
