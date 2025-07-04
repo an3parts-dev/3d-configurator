@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+<parameter name="filePath">src/components/ThreeJSPreview.tsx</parameter>
+<parameter name="content">import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -463,9 +464,9 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
         )}
       </div>
 
-      {/* Options Panel - Mobile optimized with better text sizing */}
-      <div className="bg-gray-900 dark:bg-gray-900 flex flex-col h-[60vh] sm:h-[55vh] lg:h-[50vh]">
-        <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
+      {/* Options Panel - Updated with bright/dark theme */}
+      <div className="bg-white dark:bg-gray-900 flex flex-col h-[60vh] sm:h-[55vh] lg:h-[50vh]">
+        <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-800">
           {organizeOptionsForDisplay().length === 0 ? (
             <EmptyState
               icon={Layers}
@@ -524,4 +525,5 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 };
 
-export default ThreeJSPreview;
+export default ThreeJSPreview;</parameter>
+</invoke>
