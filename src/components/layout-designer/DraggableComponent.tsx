@@ -23,7 +23,11 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   const [{ isDragging }, drag] = useDrag({
     type: 'layout-component',
-    item: { id: component.id, type: component.type },
+    item: { 
+      id: component.id, 
+      type: component.type,
+      isNew: false
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -31,8 +35,8 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       const delta = monitor.getDifferenceFromInitialOffset();
       if (delta) {
         const newPosition = {
-          x: Math.round(component.position.x + delta.x / zoom),
-          y: Math.round(component.position.y + delta.y / zoom)
+          x: component.position.x + delta.x / zoom,
+          y: component.position.y + delta.y / zoom
         };
         onMove(newPosition);
       }
@@ -45,9 +49,9 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
     <div
       ref={ref}
       onClick={onClick}
-      className={`absolute cursor-move transition-all duration-200 ${
-        isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-      } ${isDragging ? 'opacity-50 z-50' : 'z-10'}`}
+      className={`absolute cursor-move transition-all duration-200 select-none ${
+        isSelected ? 'z-30' : 'z-10'
+      } ${isDragging ? 'opacity-50 z-50' : ''}`}
       style={{
         left: component.position.x,
         top: component.position.y,
@@ -58,12 +62,23 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       {children}
       
       {/* Selection Indicator */}
-      {isSelected && (
+      {isSelected && !isDragging && (
         <div className="absolute -inset-1 border-2 border-blue-500 rounded pointer-events-none">
-          <div className="absolute -top-6 left-0 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
+          {/* Component Label */}
+          <div className="absolute -top-7 left-0 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium whitespace-nowrap shadow-lg">
             {component.name}
           </div>
+          
+          {/* Position Indicator */}
+          <div className="absolute -bottom-7 right-0 bg-gray-900 text-white px-2 py-1 rounded text-xs font-mono whitespace-nowrap shadow-lg">
+            {Math.round(component.position.x)}, {Math.round(component.position.y)}
+          </div>
         </div>
+      )}
+      
+      {/* Drag Indicator */}
+      {isDragging && (
+        <div className="absolute inset-0 border-2 border-dashed border-blue-400 bg-blue-100/20 rounded pointer-events-none" />
       )}
     </div>
   );

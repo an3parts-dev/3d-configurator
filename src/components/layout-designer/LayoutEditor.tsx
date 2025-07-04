@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Copy, Move } from 'lucide-react';
+import { Plus, Trash2, Copy, Move, Grid3X3 } from 'lucide-react';
 import DraggableComponent from './DraggableComponent';
 import ResizableComponent from './ResizableComponent';
 import { LayoutConfiguration, LayoutComponent, DragItem } from '../../types/LayoutTypes';
@@ -17,6 +17,8 @@ interface LayoutEditorProps {
   onAddComponent: (component: LayoutComponent) => void;
 }
 
+const GRID_SIZE = 10; // Snap grid size
+
 const LayoutEditor: React.FC<LayoutEditorProps> = ({
   layout,
   selectedComponent,
@@ -29,6 +31,7 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [dragOverPosition, setDragOverPosition] = useState<{ x: number; y: number } | null>(null);
+  const [showGrid, setShowGrid] = useState(true);
 
   // Get viewport dimensions
   const getViewportDimensions = () => {
@@ -46,6 +49,14 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
 
   const { width: viewportWidth, height: viewportHeight } = getViewportDimensions();
 
+  // Snap to grid function
+  const snapToGrid = useCallback((x: number, y: number) => {
+    return {
+      x: Math.round(x / GRID_SIZE) * GRID_SIZE,
+      y: Math.round(y / GRID_SIZE) * GRID_SIZE
+    };
+  }, []);
+
   // Drop zone for new components
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ['component', 'layout-component'],
@@ -55,8 +66,11 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
         const canvasRect = canvasRef.current?.getBoundingClientRect();
         
         if (offset && canvasRect) {
-          const x = (offset.x - canvasRect.left) / zoom;
-          const y = (offset.y - canvasRect.top) / zoom;
+          const rawX = (offset.x - canvasRect.left) / zoom;
+          const rawY = (offset.y - canvasRect.top) / zoom;
+          
+          // Snap to grid
+          const snapped = snapToGrid(rawX, rawY);
           
           if (item.isNew && item.type) {
             // Create new component
@@ -64,15 +78,20 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
               id: `component_${Date.now()}`,
               type: item.type as any,
               name: `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} Component`,
-              props: {},
+              props: getDefaultProps(item.type),
               style: {
                 position: 'absolute',
-                left: Math.max(0, Math.min(x - 50, viewportWidth - 100)),
-                top: Math.max(0, Math.min(y - 25, viewportHeight - 50)),
                 width: 200,
-                height: 100
+                height: 100,
+                padding: { top: 16, right: 16, bottom: 16, left: 16 },
+                backgroundColor: '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
               },
-              position: { x, y }
+              position: { 
+                x: Math.max(0, Math.min(snapped.x, viewportWidth - 200)), 
+                y: Math.max(0, Math.min(snapped.y, viewportHeight - 100)) 
+              }
             };
             onAddComponent(newComponent);
           }
@@ -85,9 +104,10 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
       const canvasRect = canvasRef.current?.getBoundingClientRect();
       
       if (offset && canvasRect) {
-        const x = (offset.x - canvasRect.left) / zoom;
-        const y = (offset.y - canvasRect.top) / zoom;
-        setDragOverPosition({ x, y });
+        const rawX = (offset.x - canvasRect.left) / zoom;
+        const rawY = (offset.y - canvasRect.top) / zoom;
+        const snapped = snapToGrid(rawX, rawY);
+        setDragOverPosition(snapped);
       }
     },
     collect: (monitor) => ({
@@ -95,6 +115,26 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
       canDrop: monitor.canDrop()
     })
   });
+
+  // Get default props for component types
+  const getDefaultProps = (type: string) => {
+    switch (type) {
+      case 'viewport':
+        return { aspectRatio: '16:9', showControls: true };
+      case 'options':
+        return { layout: 'grid', columns: 2, showImages: true };
+      case 'info':
+        return { showTitle: true, showDescription: true };
+      case 'price':
+        return { showBreakdown: true, currency: 'USD' };
+      case 'cart':
+        return { style: 'button', showQuantity: true };
+      case 'container':
+        return { direction: 'column', gap: 16 };
+      default:
+        return {};
+    }
+  };
 
   const handleComponentClick = useCallback((e: React.MouseEvent, componentId: string) => {
     e.stopPropagation();
@@ -108,25 +148,73 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
   }, [onSelectComponent]);
 
   const handleComponentMove = useCallback((id: string, position: { x: number; y: number }) => {
+    // Snap to grid and constrain to canvas bounds
+    const snapped = snapToGrid(position.x, position.y);
+    const component = layout?.components.find(c => c.id === id);
+    
+    if (component) {
+      const width = typeof component.style.width === 'number' ? component.style.width : 200;
+      const height = typeof component.style.height === 'number' ? component.style.height : 100;
+      
+      const constrainedPosition = {
+        x: Math.max(0, Math.min(snapped.x, viewportWidth - width)),
+        y: Math.max(0, Math.min(snapped.y, viewportHeight - height))
+      };
+      
+      onUpdateComponent(id, {
+        position: constrainedPosition,
+        style: {
+          ...component.style,
+          left: constrainedPosition.x,
+          top: constrainedPosition.y
+        }
+      });
+    }
+  }, [layout, onUpdateComponent, snapToGrid, viewportWidth, viewportHeight]);
+
+  const handleComponentResize = useCallback((id: string, size: { width: number; height: number }) => {
+    // Snap size to grid
+    const snappedSize = {
+      width: Math.round(size.width / GRID_SIZE) * GRID_SIZE,
+      height: Math.round(size.height / GRID_SIZE) * GRID_SIZE
+    };
+    
     onUpdateComponent(id, {
-      position,
       style: {
         ...layout?.components.find(c => c.id === id)?.style,
-        left: position.x,
-        top: position.y
+        width: Math.max(50, snappedSize.width),
+        height: Math.max(30, snappedSize.height)
       }
     });
   }, [layout, onUpdateComponent]);
 
-  const handleComponentResize = useCallback((id: string, size: { width: number; height: number }) => {
-    onUpdateComponent(id, {
-      style: {
-        ...layout?.components.find(c => c.id === id)?.style,
-        width: size.width,
-        height: size.height
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (selectedComponent) {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        onDeleteComponent(selectedComponent);
       }
-    });
-  }, [layout, onUpdateComponent]);
+      
+      // Arrow key movement with snapping
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const component = layout?.components.find(c => c.id === selectedComponent);
+        if (component) {
+          const step = e.shiftKey ? GRID_SIZE * 5 : GRID_SIZE;
+          let newX = component.position.x;
+          let newY = component.position.y;
+          
+          switch (e.key) {
+            case 'ArrowUp': newY -= step; break;
+            case 'ArrowDown': newY += step; break;
+            case 'ArrowLeft': newX -= step; break;
+            case 'ArrowRight': newX += step; break;
+          }
+          
+          handleComponentMove(selectedComponent, { x: newX, y: newY });
+        }
+      }
+    }
+  }, [selectedComponent, layout, onDeleteComponent, handleComponentMove]);
 
   const renderComponent = (component: LayoutComponent) => {
     const isSelected = selectedComponent === component.id;
@@ -153,7 +241,32 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
   };
 
   return (
-    <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-auto">
+    <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-auto" tabIndex={0} onKeyDown={handleKeyDown}>
+      {/* Toolbar */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {viewportWidth} × {viewportHeight} • Zoom: {Math.round(zoom * 100)}%
+          </span>
+          
+          <button
+            onClick={() => setShowGrid(!showGrid)}
+            className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm transition-colors ${
+              showGrid 
+                ? 'bg-blue-100 dark:bg-blue-600/20 text-blue-700 dark:text-blue-300' 
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <Grid3X3 className="w-4 h-4" />
+            <span>Grid</span>
+          </button>
+        </div>
+        
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          💡 Use arrow keys to move selected components • Shift+Arrow for larger steps
+        </div>
+      </div>
+
       <div className="flex items-center justify-center min-h-full p-8">
         <div
           ref={drop(canvasRef)}
@@ -169,16 +282,18 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
           onClick={handleCanvasClick}
         >
           {/* Grid overlay */}
-          <div 
-            className="absolute inset-0 opacity-10 pointer-events-none"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, #000 1px, transparent 1px),
-                linear-gradient(to bottom, #000 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px'
-            }}
-          />
+          {showGrid && (
+            <div 
+              className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                  linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+                `,
+                backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`
+              }}
+            />
+          )}
 
           {/* Components */}
           {layout?.components.map(renderComponent)}
@@ -188,13 +303,48 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute w-4 h-4 bg-blue-500 rounded-full pointer-events-none"
+              className="absolute w-4 h-4 bg-blue-500 rounded-full pointer-events-none border-2 border-white shadow-lg"
               style={{
                 left: dragOverPosition.x - 8,
                 top: dragOverPosition.y - 8,
                 transform: `scale(${1 / zoom})`
               }}
             />
+          )}
+
+          {/* Snap guides */}
+          {selectedComponent && (
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Vertical guide lines */}
+              {layout?.components
+                .filter(c => c.id !== selectedComponent)
+                .map(c => (
+                  <div
+                    key={`guide-v-${c.id}`}
+                    className="absolute w-px bg-blue-400 opacity-50"
+                    style={{
+                      left: c.position.x,
+                      top: 0,
+                      height: '100%'
+                    }}
+                  />
+                ))}
+              
+              {/* Horizontal guide lines */}
+              {layout?.components
+                .filter(c => c.id !== selectedComponent)
+                .map(c => (
+                  <div
+                    key={`guide-h-${c.id}`}
+                    className="absolute h-px bg-blue-400 opacity-50"
+                    style={{
+                      top: c.position.y,
+                      left: 0,
+                      width: '100%'
+                    }}
+                  />
+                ))}
+            </div>
           )}
 
           {/* Empty state */}
@@ -204,6 +354,9 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
                 <Plus className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">Start Building Your Layout</p>
                 <p className="text-sm mt-2">Drag components from the palette to get started</p>
+                <p className="text-xs mt-4 text-gray-400">
+                  Components will snap to a {GRID_SIZE}px grid for precise alignment
+                </p>
               </div>
             </div>
           )}
@@ -213,43 +366,55 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({
   );
 };
 
-// Component renderer based on type
+// Enhanced Component renderer with better styling
 const ComponentRenderer: React.FC<{ component: LayoutComponent }> = ({ component }) => {
-  const baseClasses = "w-full h-full flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg";
+  const baseClasses = "w-full h-full flex items-center justify-center rounded-lg border-2 border-dashed transition-all";
+  const padding = component.style.padding ? 
+    `${component.style.padding.top || 0}px ${component.style.padding.right || 0}px ${component.style.padding.bottom || 0}px ${component.style.padding.left || 0}px` :
+    '16px';
+  
+  const commonStyle = {
+    backgroundColor: component.style.backgroundColor || '#ffffff',
+    borderRadius: component.style.borderRadius || '8px',
+    padding,
+    border: component.style.border || '2px dashed #d1d5db'
+  };
   
   switch (component.type) {
     case 'viewport':
       return (
-        <div className={`${baseClasses} bg-gray-900 text-white`}>
+        <div className={`${baseClasses} border-blue-300 bg-blue-50 text-blue-700`} style={commonStyle}>
           <div className="text-center">
-            <div className="w-8 h-8 bg-blue-500 rounded mx-auto mb-2" />
+            <div className="w-12 h-8 bg-blue-500 rounded mx-auto mb-2 opacity-60" />
             <span className="text-sm font-medium">3D Viewport</span>
+            <div className="text-xs text-blue-500 mt-1">{component.props.aspectRatio || '16:9'}</div>
           </div>
         </div>
       );
     
     case 'options':
       return (
-        <div className={`${baseClasses} bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300`}>
+        <div className={`${baseClasses} border-green-300 bg-green-50 text-green-700`} style={commonStyle}>
           <div className="text-center">
-            <div className="grid grid-cols-2 gap-1 mb-2">
+            <div className="grid grid-cols-2 gap-1 mb-2 max-w-[60px] mx-auto">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="w-3 h-3 bg-current rounded opacity-60" />
+                <div key={i} className="w-3 h-3 bg-green-500 rounded opacity-60" />
               ))}
             </div>
             <span className="text-sm font-medium">Options</span>
+            <div className="text-xs text-green-500 mt-1">{component.props.layout || 'grid'}</div>
           </div>
         </div>
       );
     
     case 'info':
       return (
-        <div className={`${baseClasses} bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300`}>
+        <div className={`${baseClasses} border-purple-300 bg-purple-50 text-purple-700`} style={commonStyle}>
           <div className="text-center">
-            <div className="space-y-1 mb-2">
-              <div className="w-12 h-2 bg-current rounded opacity-60" />
-              <div className="w-8 h-2 bg-current rounded opacity-40" />
-              <div className="w-10 h-2 bg-current rounded opacity-40" />
+            <div className="space-y-1 mb-2 max-w-[80px] mx-auto">
+              <div className="w-full h-2 bg-purple-500 rounded opacity-60" />
+              <div className="w-3/4 h-2 bg-purple-500 rounded opacity-40" />
+              <div className="w-5/6 h-2 bg-purple-500 rounded opacity-40" />
             </div>
             <span className="text-sm font-medium">Product Info</span>
           </div>
@@ -258,19 +423,22 @@ const ComponentRenderer: React.FC<{ component: LayoutComponent }> = ({ component
     
     case 'price':
       return (
-        <div className={`${baseClasses} bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300`}>
+        <div className={`${baseClasses} border-yellow-300 bg-yellow-50 text-yellow-700`} style={commonStyle}>
           <div className="text-center">
-            <div className="text-lg font-bold mb-1">$999</div>
+            <div className="text-2xl font-bold mb-1 text-yellow-600">$999</div>
             <span className="text-sm font-medium">Price</span>
+            <div className="text-xs text-yellow-500 mt-1">{component.props.currency || 'USD'}</div>
           </div>
         </div>
       );
     
     case 'cart':
       return (
-        <div className={`${baseClasses} bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300`}>
+        <div className={`${baseClasses} border-orange-300 bg-orange-50 text-orange-700`} style={commonStyle}>
           <div className="text-center">
-            <div className="w-8 h-6 bg-current rounded mb-2 opacity-60" />
+            <div className="w-16 h-8 bg-orange-500 rounded mb-2 mx-auto opacity-60 flex items-center justify-center">
+              <span className="text-white text-xs font-medium">ADD</span>
+            </div>
             <span className="text-sm font-medium">Add to Cart</span>
           </div>
         </div>
@@ -278,18 +446,19 @@ const ComponentRenderer: React.FC<{ component: LayoutComponent }> = ({ component
     
     case 'container':
       return (
-        <div className={`${baseClasses} bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300`}>
+        <div className={`${baseClasses} border-gray-400 bg-gray-50 text-gray-700`} style={commonStyle}>
           <div className="text-center">
-            <div className="w-8 h-8 border-2 border-current rounded mb-2 opacity-60" />
+            <div className="w-12 h-12 border-2 border-gray-500 rounded mb-2 mx-auto opacity-60" />
             <span className="text-sm font-medium">Container</span>
+            <div className="text-xs text-gray-500 mt-1">{component.props.direction || 'column'}</div>
           </div>
         </div>
       );
     
     default:
       return (
-        <div className={baseClasses}>
-          <span className="text-sm font-medium text-gray-500">Unknown Component</span>
+        <div className={`${baseClasses} border-gray-300 bg-gray-50 text-gray-600`} style={commonStyle}>
+          <span className="text-sm font-medium">Unknown Component</span>
         </div>
       );
   }
