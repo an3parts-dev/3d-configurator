@@ -5,6 +5,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Dashboard from './pages/Dashboard';
 import ConfiguratorBuilder from './pages/ConfiguratorBuilder';
+import LayoutDesigner from './components/layout-designer/LayoutDesigner';
 
 interface Project {
   id: string;
@@ -17,7 +18,7 @@ interface Project {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'configurator'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'configurator' | 'layout-designer'>('dashboard');
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
   const handleConfigureProject = (project: Project) => {
@@ -30,15 +31,30 @@ function App() {
     setCurrentProject(null);
   };
 
+  const handleNavigateToLayoutDesigner = () => {
+    setCurrentView('layout-designer');
+  };
+
   return (
     <ThemeProvider>
       <DndProvider backend={HTML5Backend}>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-          {currentView === 'dashboard' ? (
-            <Dashboard onConfigureProject={handleConfigureProject} />
-          ) : (
+          {currentView === 'dashboard' && (
+            <Dashboard 
+              onConfigureProject={handleConfigureProject}
+              onNavigateToLayoutDesigner={handleNavigateToLayoutDesigner}
+            />
+          )}
+          
+          {currentView === 'configurator' && (
             <ConfiguratorBuilder 
               project={currentProject}
+              onNavigateHome={handleNavigateHome}
+            />
+          )}
+          
+          {currentView === 'layout-designer' && (
+            <LayoutDesigner 
               onNavigateHome={handleNavigateHome}
             />
           )}

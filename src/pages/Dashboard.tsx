@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Grid3X3, List } from 'lucide-react';
+import { Plus, Search, Grid3X3, List, Layout } from 'lucide-react';
 import ProjectCard from '../components/dashboard/ProjectCard';
 import ProjectEditModal from '../components/dashboard/ProjectEditModal';
 import ConfirmationDialog from '../components/ConfirmationDialog';
@@ -18,9 +18,13 @@ interface Project {
 
 interface DashboardProps {
   onConfigureProject: (project: Project) => void;
+  onNavigateToLayoutDesigner?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onConfigureProject }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+  onConfigureProject, 
+  onNavigateToLayoutDesigner 
+}) => {
   const [projects, setProjects] = useState<Project[]>([
     {
       id: 'sample-1',
@@ -102,6 +106,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onConfigureProject }) => {
           
           <div className="flex items-center space-x-3">
             <ThemeToggle />
+            
+            {/* Layout Designer Button */}
+            {onNavigateToLayoutDesigner && (
+              <button
+                onClick={onNavigateToLayoutDesigner}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              >
+                <Layout className="w-4 h-4" />
+                <span>Layout Designer</span>
+              </button>
+            )}
+            
             <button
               onClick={handleCreateProject}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
