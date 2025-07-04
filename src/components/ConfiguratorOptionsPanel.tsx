@@ -6,7 +6,6 @@ import {
   Maximize2,
   FolderPlus
 } from 'lucide-react';
-import DashboardHeader from './layout/DashboardHeader';
 import { OptionsList } from './option-management';
 import { 
   ConfiguratorData, 
@@ -52,12 +51,6 @@ const ConfiguratorOptionsPanel: React.FC<ConfiguratorOptionsPanelProps> = ({
 }) => {
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-      {/* Dashboard Header */}
-      <DashboardHeader
-        projectName={configuratorData.name}
-        onNavigateHome={onNavigateHome}
-      />
-
       {/* Fixed Header Section - Mobile Optimized */}
       <div className="flex-shrink-0 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700">
         {/* Main Header */}
