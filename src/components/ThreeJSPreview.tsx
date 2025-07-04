@@ -1,5 +1,4 @@
-<parameter name="filePath">src/components/ThreeJSPreview.tsx</parameter>
-<parameter name="content">import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -525,5 +524,4 @@ const ThreeJSPreview: React.FC<ThreeJSPreviewProps> = ({
   );
 };
 
-export default ThreeJSPreview;</parameter>
-</invoke>
+export default ThreeJSPreview;
