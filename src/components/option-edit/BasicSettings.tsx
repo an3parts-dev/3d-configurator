@@ -36,13 +36,12 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Scrollable Content */}
+      {/* Scrollable Content with hidden scrollbars */}
       <div 
         className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto"
         style={{
           scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitScrollbar: { display: 'none' }
+          msOverflowStyle: 'none'
         }}
       >
         {/* Basic Information */}
@@ -256,14 +255,10 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({
         )}
       </div>
 
-      {/* Add CSS to hide scrollbars */}
+      {/* CSS to hide scrollbars */}
       <style jsx>{`
         .flex-1::-webkit-scrollbar {
           display: none;
-        }
-        .flex-1 {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
         }
       `}</style>
     </div>

@@ -376,9 +376,9 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-900 flex flex-col sm:flex-row">
-        {/* Left Panel - 25% width */}
-        <div className={`transition-all duration-300 ${
+      <div className="h-screen bg-gray-900 flex flex-col sm:flex-row overflow-hidden">
+        {/* Left Panel - Fixed width, no overflow */}
+        <div className={`transition-all duration-300 flex-shrink-0 ${
           isPreviewMode ? 'w-0 overflow-hidden' : 'w-full sm:w-1/4'
         }`}>
           {currentPanel === 'main' && (
@@ -448,8 +448,8 @@ const ConfiguratorBuilder: React.FC<ConfiguratorBuilderProps> = ({
           )}
         </div>
 
-        {/* Right Panel - 75% width */}
-        <div className={`transition-all duration-300 ${
+        {/* Right Panel - Takes remaining space */}
+        <div className={`transition-all duration-300 flex-1 min-w-0 ${
           isPreviewMode ? 'w-full' : 'w-full sm:w-3/4'
         }`}>
           <Configurator3DView
