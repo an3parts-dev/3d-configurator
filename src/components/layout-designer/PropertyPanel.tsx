@@ -1,15 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Settings, 
-  Palette, 
-  Layout, 
-  Type, 
-  Spacing,
-  Monitor,
-  Smartphone,
-  Tablet
-} from 'lucide-react';
+import { Settings, Palette, Layout, Type, Space as Spacing, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { LayoutComponent, LayoutConfiguration } from '../../types/LayoutTypes';
 
 interface PropertyPanelProps {
