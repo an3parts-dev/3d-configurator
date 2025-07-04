@@ -15,8 +15,7 @@ import {
   Download,
   Upload,
   Eye,
-  Settings,
-  Play
+  Settings
 } from 'lucide-react';
 
 import LayoutEditor from './LayoutEditor';
@@ -24,12 +23,9 @@ import LayoutPreview from './LayoutPreview';
 import ComponentPalette from './ComponentPalette';
 import PropertyPanel from './PropertyPanel';
 import TemplateLibrary from './TemplateLibrary';
-import ConfigurationSelector from './ConfigurationSelector';
 import { layoutReducer, initialLayoutState } from './layoutReducer';
 import { LayoutConfiguration, LayoutComponent, LayoutState } from '../../types/LayoutTypes';
-import { ConfiguratorData } from '../../types/ConfiguratorTypes';
 import { useLayoutPersistence } from '../../hooks/useLayoutPersistence';
-import { useConfiguratorPersistence } from '../../hooks/useConfiguratorPersistence';
 import DashboardHeader from '../layout/DashboardHeader';
 
 interface LayoutDesignerProps {
@@ -40,10 +36,7 @@ const LayoutDesigner: React.FC<LayoutDesignerProps> = ({ onNavigateHome }) => {
   const [state, dispatch] = useReducer(layoutReducer, initialLayoutState);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [leftPanelView, setLeftPanelView] = useState<'components' | 'properties' | 'preview'>('components');
-  const [configurations, setConfigurations] = useState<ConfiguratorData[]>([]);
-  const [selectedConfiguration, setSelectedConfiguration] = useState<ConfiguratorData | null>(null);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [leftPanelView, setLeftPanelView] = useState<'components' | 'properties'>('components');
   
   const {
     saveLayout,
@@ -52,23 +45,6 @@ const LayoutDesigner: React.FC<LayoutDesignerProps> = ({ onNavigateHome }) => {
     importLayout,
     getTemplates
   } = useLayoutPersistence();
-
-  const {
-    loadFromStorage: loadConfigurations
-  } = useConfiguratorPersistence();
-
-  // Load available configurations on mount
-  useEffect(() => {
-    const stored = loadConfigurations();
-    if (stored && stored.configurators.length > 0) {
-      setConfigurations(stored.configurators);
-    }
-  }, [loadConfigurations]);
-
-  // Initialize with empty layout
-  useEffect(() => {
-    dispatch({ type: 'RESET_LAYOUT' });
-  }, []);
 
   // Viewport controls
   const handleViewportChange = useCallback((viewport: 'mobile' | 'tablet' | 'desktop') => {
@@ -145,18 +121,6 @@ const LayoutDesigner: React.FC<LayoutDesignerProps> = ({ onNavigateHome }) => {
   const handleRedo = useCallback(() => {
     dispatch({ type: 'REDO' });
   }, []);
-
-  // Preview operations
-  const handleLoadConfiguration = useCallback(async () => {
-    if (selectedConfiguration) {
-      setIsLoadingPreview(true);
-      // Simulate loading time for better UX
-      setTimeout(() => {
-        setIsLoadingPreview(false);
-        setShowPreview(true);
-      }, 1000);
-    }
-  }, [selectedConfiguration]);
 
   const canUndo = state.historyIndex > 0;
   const canRedo = state.historyIndex < state.history.length - 1;
@@ -327,42 +291,18 @@ const LayoutDesigner: React.FC<LayoutDesignerProps> = ({ onNavigateHome }) => {
                 >
                   Properties
                 </button>
-                <button
-                  onClick={() => setLeftPanelView('preview')}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                    leftPanelView === 'preview'
-                      ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                >
-                  Live Preview
-                </button>
               </div>
 
               {/* Panel Content */}
               <div className="flex-1 overflow-hidden">
-                {leftPanelView === 'components' && (
+                {leftPanelView === 'components' ? (
                   <ComponentPalette onAddComponent={handleAddComponent} />
-                )}
-                
-                {leftPanelView === 'properties' && (
+                ) : (
                   <PropertyPanel
                     selectedComponent={state.selectedComponent}
                     layout={state.currentLayout}
                     onUpdateComponent={handleUpdateComponent}
                   />
-                )}
-                
-                {leftPanelView === 'preview' && (
-                  <div className="p-4 space-y-4">
-                    <ConfigurationSelector
-                      configurations={configurations}
-                      selectedConfiguration={selectedConfiguration}
-                      onSelectConfiguration={setSelectedConfiguration}
-                      onLoadConfiguration={handleLoadConfiguration}
-                      isLoading={isLoadingPreview}
-                    />
-                  </div>
                 )}
               </div>
             </div>
@@ -374,7 +314,6 @@ const LayoutDesigner: React.FC<LayoutDesignerProps> = ({ onNavigateHome }) => {
               <LayoutPreview
                 layout={state.currentLayout}
                 viewport={state.viewport}
-                configuration={selectedConfiguration}
               />
             ) : (
               <LayoutEditor
